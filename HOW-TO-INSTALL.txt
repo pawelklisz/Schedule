@@ -1,0 +1,103 @@
+SCHEDULE ON AN ANDROID TABLET
+=============================
+
+This folder IS the tablet app. Everything in it is needed, and nothing
+else is:
+
+    index.html             the app
+    manifest.webmanifest   makes it installable
+    sw.js                  makes it open with no network
+    icon-192.png           home-screen icons
+    icon-512.png
+    HOW-TO-INSTALL.txt     this file
+
+Don't edit them by hand. On the PC, "python make_single.py" rebuilds this
+folder from static/ every time the app changes.
+
+
+THE ONE THING TO KNOW
+---------------------
+You don't copy these files onto the tablet and tap them. Android only
+installs a web app that it opened from a SECURE address -- https://...,
+or http://localhost. A file opened straight from the tablet's storage is
+neither, and it is not a safe place to keep work: Android can treat each
+opening as a brand-new site with empty storage.
+
+So the folder goes somewhere the tablet can open ONCE over the network.
+After you install it, it runs with no network at all, and your project
+never leaves the tablet.
+
+
+OPTION A -- a free HTTPS host   (recommended; set up once)
+-----------------------------
+Put this folder on any static web host. Only the empty app goes there.
+Your project data stays on each device and is never uploaded.
+
+GitHub Pages, for example:
+
+  1. On github.com, create a new PUBLIC repository, e.g. "schedule".
+  2. "Add file" -> "Upload files". Drag in everything in this folder.
+     "Commit changes".
+  3. Settings -> Pages -> Source: "Deploy from a branch",
+     Branch: "main", folder "/ (root)" -> Save. Wait a minute or two.
+  4. The address is   https://YOUR-GITHUB-NAME.github.io/schedule/
+
+Then on the tablet:
+
+  5. Open that address in Chrome.
+  6. Chrome menu (three dots) -> "Install app".
+     (Some versions: "Add to Home screen" -> "Install".)
+  7. Open it from the home screen. From now on it works offline.
+
+Updating later: rebuild on the PC, upload the new files over the old ones,
+then open the app on the tablet twice. The first opening fetches the
+update in the background; the second one runs it.
+
+
+OPTION B -- USB cable, no hosting   (needs "USB debugging")
+---------------------------------
+Tablet: Settings -> About tablet -> tap "Build number" 7 times, then
+Settings -> Developer options -> turn on "USB debugging".
+
+PC: install Android "platform-tools" (it contains adb), plug the tablet
+in, and in the folder that CONTAINS this Android folder run:
+
+    python -m http.server 8731 -d Android
+    adb reverse tcp:8731 tcp:8731
+
+Tablet: open   http://localhost:8731/   in Chrome, then
+Chrome menu -> "Install app". Unplug when done; it keeps working offline.
+
+
+OPTION C -- just have a look over Wi-Fi   (no install, no offline)
+----------------------------------------
+PC:      python -m http.server 8731 -d Android
+Tablet:  open  http://<the PC's IP address>:8731/   ("ipconfig" on the
+         PC shows the address).
+
+It works and it saves, but only while the PC is on, and it cannot be
+installed. Fine for a look, not for daily use.
+
+
+MOVING YOUR PROJECT ONTO THE TABLET
+-----------------------------------
+The app and the project are separate. The app comes from the steps above;
+the project travels as a file:
+
+  1. PC:      Export   ->  project-YYYY-MM-DD-HHMM.json
+  2. Copy that .json to the tablet (USB, Google Drive, email...).
+     It usually lands in Downloads.
+  3. Tablet:  Import  ->  pick the file  ->  read the dialog  ->  OK.
+
+Tablet back to PC is the same, the other way round. Import REPLACES what
+is on the device, and it downloads a backup of the old copy first.
+
+There is no sync: each device keeps its own copy. Export when you finish
+on one device, import when you start on the other.
+
+
+BACK IT UP
+----------
+The tablet's copy lives in Chrome's storage. Clearing Chrome's site data,
+uninstalling the app, or resetting the tablet erases it, with no warning.
+Export now and then, and keep the file somewhere that is itself backed up.
