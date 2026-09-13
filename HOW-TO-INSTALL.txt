@@ -84,10 +84,11 @@ MOVING YOUR PROJECT ONTO THE TABLET
 The app and the project are separate. The app comes from the steps above;
 the project travels as a file:
 
-  1. PC:      Export   ->  project-YYYY-MM-DD-HHMM.json
+  1. PC:      File -> Export project  ->  project-YYYY-MM-DD-HHMM.json
   2. Copy that .json to the tablet (USB, Google Drive, email...).
      It usually lands in Downloads.
-  3. Tablet:  Import  ->  pick the file  ->  read the dialog  ->  OK.
+  3. Tablet:  File -> Import project  ->  pick the file (the picker's
+     menu also reaches Google Drive directly)  ->  read the dialog  ->  OK.
 
 Tablet back to PC is the same, the other way round. Import REPLACES what
 is on the device, and it downloads a backup of the old copy first.

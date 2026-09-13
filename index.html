@@ -28,6 +28,7 @@
   --on-accent:#fff;
   --sel:#e8eef5; --wknd:#f4f5f6; --arrow:#8b939b; --drop:#eaf0f7;
   --load:#a3b5c8; --over:#8a3fb0; --over-soft:#f1e5f7;
+  --base:#aeb6bf; --prog:rgba(0,0,0,.3);
   --shadow-sm:0 1px 2px rgba(0,0,0,.04);
   --shadow-md:0 8px 22px rgba(0,0,0,.22);
   --shadow-lg:0 12px 40px rgba(0,0,0,.22);
@@ -58,6 +59,7 @@
   --on-accent:#14171a;
   --sel:#25303d; --wknd:#1e2226; --arrow:#717c86; --drop:#22303f;
   --load:#50667b; --over:#c592e6; --over-soft:#3a2748;
+  --base:#5d6873; --prog:rgba(0,0,0,.38);
   --shadow-sm:0 1px 2px rgba(0,0,0,.35);
   --shadow-md:0 8px 22px rgba(0,0,0,.55);
   --shadow-lg:0 12px 40px rgba(0,0,0,.6);
@@ -81,6 +83,10 @@ header{
   background:var(--paper);border-bottom:1px solid var(--rule);flex:none;
 }
 h1{font-size:calc(var(--fs)*1.08);font-weight:var(--fwb);margin:0;letter-spacing:-.01em}
+/* the project name is also the way to rename it */
+#pname{cursor:pointer;border-radius:4px;padding:2px 5px;margin:-2px -5px}
+#pname:hover{background:var(--panel)}
+.ghost.icon{display:inline-grid;place-items:center;padding:4px 8px;line-height:1}
 .spacer{flex:1}
 .grp{display:flex;align-items:center;gap:2px;background:var(--panel);
   border:1px solid var(--rule);border-radius:5px;padding:2px}
@@ -101,6 +107,28 @@ h1{font-size:calc(var(--fs)*1.08);font-weight:var(--fwb);margin:0;letter-spacing
 .ghost:hover{background:var(--panel)}
 .stat{color:var(--muted)}
 .stat b{color:var(--crit);font-weight:var(--fwb)}
+/* toolbar menus: native <details>, so they open by touch and keyboard too */
+details.menu{position:relative}
+details.menu > summary{list-style:none;cursor:pointer;user-select:none}
+details.menu > summary::-webkit-details-marker{display:none}
+details.menu > summary::after{content:" \25BE";color:var(--muted)}
+.menupop{position:absolute;top:calc(100% + 4px);left:0;z-index:40;min-width:max-content;
+  display:flex;flex-direction:column;gap:7px;padding:10px 12px;background:var(--paper);
+  border:1px solid var(--rule);border-radius:7px;box-shadow:var(--shadow-md)}
+details.menu.right .menupop{left:auto;right:0}
+.menupop button{border:1px solid var(--rule);background:var(--paper);padding:5px 11px;
+  border-radius:5px;cursor:pointer;text-align:left}
+.menupop button:hover{background:var(--panel)}
+.menupop hr{border:0;border-top:1px solid var(--rule-soft);margin:2px 0}
+.menupop .hint{margin:0;max-width:calc(var(--fs)*20)}
+/* filters: a search box, whose tasks, and when they are due */
+.filt{padding:4px 7px;border:1px solid var(--rule);border-radius:5px;background:var(--paper)}
+#q{width:calc(var(--fs)*11)}
+#who,#due{max-width:calc(var(--fs)*11)}
+.filt.on{border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
+#nomatch{margin:0;padding:10px 15px;background:var(--panel);color:var(--muted);border-bottom:1px solid var(--rule)}
+#nomatch[hidden]{display:none}
+#nomatch button{margin-left:8px}
 
 /* ---- layout ---- */
 #wrap{flex:1;display:flex;min-height:0;position:relative}
@@ -131,6 +159,18 @@ h1{font-size:calc(var(--fs)*1.08);font-weight:var(--fwb);margin:0;letter-spacing
 .key{color:var(--muted);flex:none}
 .ttl{overflow:hidden;text-overflow:ellipsis}
 .grow[data-sum="1"] .ttl{font-weight:var(--fwb)}
+/* Re-parenting: drag a row by its name onto another row. On touch only the
+   key is a handle -- touch-action:none there and nowhere else, so a swipe on
+   the rest of the row still scrolls the list. */
+.grow{user-select:none;-webkit-user-select:none}
+.grow .key{cursor:grab;touch-action:none}
+@media (pointer:coarse){ .grow .key{padding:8px 5px;margin:-8px -5px} }
+.grow.droptarget{background:var(--drop);box-shadow:inset 0 0 0 2px var(--focus)}
+.grow.dropbad{background:var(--crit-soft)}
+.ghd.droptarget{background:var(--drop);color:var(--ink)}
+.rowghost{position:fixed;z-index:99;pointer-events:none;padding:3px 9px;border-radius:5px;
+  background:var(--ink);color:var(--on-accent);box-shadow:var(--shadow-md);white-space:nowrap;
+  font-size:calc(var(--fs)*.92)}
 .num{text-align:right;padding-right:8px;color:var(--muted)}
 .num.zero{color:var(--crit);font-weight:var(--fwb)}
 
@@ -219,12 +259,30 @@ h1{font-size:calc(var(--fs)*1.08);font-weight:var(--fwb);margin:0;letter-spacing
 .rcell[data-over="1"] .util{background:var(--over)}
 .rtoday{position:absolute;top:0;width:1px;background:var(--today);pointer-events:none}
 
+/* ---- progress, baseline, late, repeating ---- */
+.bar .prog{position:absolute;left:0;top:0;bottom:0;background:var(--prog);border-radius:3px 0 0 3px;pointer-events:none}
+.base{position:absolute;height:3px;border-radius:2px;background:var(--base);pointer-events:none}
+.lbl .late{color:var(--crit);font-weight:var(--fwb)}
+.lbl .rep,.crep{color:var(--muted)}
+/* shown only because something under it matches the filter */
+.grow.ctx .name,.sum.ctx{opacity:.45}
+/* re-ordering: the top or bottom edge of a row means above or below it */
+.grow.dropbefore{box-shadow:inset 0 2px 0 var(--focus)}
+.grow.dropafter{box-shadow:inset 0 -2px 0 var(--focus)}
+/* the task column's right edge: drag to resize, double-click to fit names */
+#gridsizer{position:absolute;top:0;bottom:0;right:-4px;width:8px;cursor:col-resize;z-index:8;touch-action:none}
+#gridsizer:hover,#gridsizer.on{background:linear-gradient(to right,transparent 3px,var(--focus) 3px,var(--focus) 5px,transparent 5px)}
+@media (pointer:coarse){ #gridsizer{width:18px;right:-9px} }
+
 /* ---- board ---- */
 #boardwrap{flex:1;display:flex;flex-direction:column;min-height:0;overflow:auto;background:var(--shell)}
 #boardwrap[hidden]{display:none}
-#board{display:flex;gap:10px;padding:12px;align-items:flex-start;flex:1 0 auto;min-width:max-content}
-.col{flex:0 0 calc(var(--fs)*19.2);background:var(--panel);border:1px solid var(--rule);
-  border-radius:7px;display:flex;flex-direction:column;max-height:100%}
+/* Columns share the width instead of sitting at a fixed 250px, which used
+   half a 1920px screen. Below their minimum the board scrolls sideways:
+   renderBoard() sets #board's min-width from the column count. */
+#board{display:flex;gap:10px;padding:12px;align-items:flex-start;flex:1 0 auto}
+.col{flex:1 1 0;min-width:calc(var(--fs)*16);max-width:calc(var(--fs)*36);background:var(--panel);
+  border:1px solid var(--rule);border-radius:7px;display:flex;flex-direction:column;max-height:100%}
 .colhd{display:flex;align-items:center;gap:8px;padding:8px 10px;
   border-bottom:1px solid var(--rule);font-weight:var(--fwb)}
 .colhd .ccount{margin-left:auto;color:var(--muted);font-weight:400}
@@ -250,7 +308,13 @@ h1{font-size:calc(var(--fs)*1.08);font-weight:var(--fwb);margin:0;letter-spacing
 .cwho{margin-left:auto;color:var(--muted);font-size:calc(var(--fs)*.92)}
 .cstale{background:var(--crit);color:#fff;border-radius:3px;padding:0 5px;
   font-size:calc(var(--fs)*.85);font-weight:var(--fwb)}
-@media (pointer:coarse){ .col{flex-basis:calc(var(--fs)*20.8)} .card{padding:11px} }
+@media (pointer:coarse){ .col{min-width:calc(var(--fs)*18)} .card{padding:11px} }
+.clate{background:var(--crit-soft);color:var(--warn-ink);border-radius:3px;padding:0 5px;
+  font-size:calc(var(--fs)*.85);font-weight:var(--fwb)}
+.csoon{background:var(--panel);border:1px solid var(--rule);border-radius:3px;padding:0 5px;
+  font-size:calc(var(--fs)*.85)}
+.cprog{height:3px;background:var(--rule-soft);border-radius:2px;margin-top:7px;overflow:hidden}
+.cprog i{display:block;height:100%;background:var(--bar)}
 .co{background:var(--over-soft);color:var(--over);border-radius:3px;padding:0 5px;font-size:calc(var(--fs)*.85)}
 /* this week's load per person, above the columns */
 #weekstrip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 12px 0;flex:none}
@@ -261,6 +325,7 @@ h1{font-size:calc(var(--fs)*1.08);font-weight:var(--fwb);margin:0;letter-spacing
 .pchip b{font-weight:var(--fwb)}
 .pchip.over{background:var(--over-soft);border-color:var(--over);color:var(--over)}
 .stat b.ovs{color:var(--over)}
+.stat b.ahead{color:var(--bar-done)}
 
 /* ---- detail drawer ---- */
 #drawer{width:var(--drawer-w);flex:none;background:var(--paper);border-left:1px solid var(--rule);
@@ -275,6 +340,17 @@ h1{font-size:calc(var(--fs)*1.08);font-weight:var(--fwb);margin:0;letter-spacing
 .fld label{color:var(--muted);font-size:calc(var(--fs)*.92)}
 .fld input,.fld select{width:100%;padding:4px 6px;border:1px solid var(--rule);
   border-radius:4px;background:var(--paper)}
+.lk{display:flex;align-items:center;flex-wrap:wrap;gap:3px 6px;padding:5px 0;border-top:1px solid var(--rule-soft)}
+.lk:first-of-type{border-top:0}
+.lk .lkt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lk .lkrel,.lk .lkk{color:var(--muted);font-size:calc(var(--fs)*.92);white-space:nowrap}
+.lk button,.attadd button{border:1px solid var(--rule);background:var(--paper);padding:1px 9px;border-radius:4px;cursor:pointer}
+.att{display:flex;align-items:center;gap:6px;padding:3px 0;color:var(--muted)}
+.att a{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--focus)}
+.att button{border:0;background:none;color:var(--muted);cursor:pointer;padding:0 4px}
+.attadd{display:grid;gap:5px;margin-top:6px}
+.attadd input{padding:4px 6px;border:1px solid var(--rule);border-radius:4px;background:var(--paper)}
+.attadd button{justify-self:end}
 .cmt{padding:8px 0;border-top:1px solid var(--rule-soft)}
 .cmt:first-of-type{border-top:0}
 .cmt .who{color:var(--muted);font-size:calc(var(--fs)*.92);margin-bottom:2px}
@@ -353,11 +429,28 @@ dialog h2+.hint{margin-top:-6px}
     box-shadow:-8px 0 24px var(--scrim)}
   header{gap:12px;flex-wrap:wrap}
 }
+/* Phone. One column of everything: the task list keeps only the names,
+   the drawer and dialogs take the whole width, and the board snaps one
+   column at a time as you swipe. */
+@media (max-width:640px){
+  :root{--grid-w:calc(var(--fs)*12)}
+  header{gap:6px 8px;padding:6px 8px}
+  h1{flex-basis:100%}
+  #q{flex:1 1 auto;min-width:0}
+  .stat{flex-basis:100%;order:10}
+  .ghd,.grow{grid-template-columns:1fr}
+  .ghd > :not(:first-child),.grow > :not(:first-child){display:none}
+  .rrow{grid-template-columns:1fr auto}      /* the limit column takes only what it needs */
+  #drawer{width:100%}
+  #boardwrap{scroll-snap-type:x mandatory}
+  .col{min-width:calc(100vw - 40px);scroll-snap-align:start}
+  dialog form{min-width:0}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
 <header>
-  <h1 id="pname">Thruster qualification</h1>
+  <h1 id="pname" tabindex="0" role="button" title="Rename the project">Thruster qualification</h1>
   <div class="grp">
     <button id="bAdd" title="Add a task after the selected one (Insert)">+ Task</button>
     <button id="bSub" title="Add a sub-task under the selected one" disabled>+ Sub</button>
@@ -365,6 +458,7 @@ dialog h2+.hint{margin-top:-6px}
   </div>
   <button class="ghost" id="bSet" title="Project name, start date and holidays">Settings</button>
   <button class="ghost" id="bApp" title="Theme, text size and font (this device only)">Aa</button>
+  <button class="ghost icon" id="bTheme" type="button"></button>
   <div class="grp" id="vw">
     <button data-v="gantt" aria-pressed="true">Gantt</button>
     <button data-v="board">Board</button>
@@ -374,22 +468,46 @@ dialog h2+.hint{margin-top:-6px}
     <button data-z="week" aria-pressed="true">Week</button>
     <button data-z="month">Month</button>
   </div>
-  <label class="tog"><input type="checkbox" id="tFloat" checked> Float</label>
-  <label class="tog"><input type="checkbox" id="tDeps" checked> Dependencies</label>
-  <label class="tog"><input type="checkbox" id="tCrit" checked> Critical path</label>
-  <label class="tog" title="Points per person per week, pinned under the chart"><input type="checkbox" id="tRes" checked> Workload</label>
+  <details class="menu" id="mShow">
+    <summary class="ghost" title="What the chart draws, and the baseline">Show</summary>
+    <div class="menupop">
+      <label class="tog"><input type="checkbox" id="tFloat" checked> Float</label>
+      <label class="tog"><input type="checkbox" id="tDeps" checked> Dependencies</label>
+      <label class="tog"><input type="checkbox" id="tCrit" checked> Critical path</label>
+      <label class="tog" title="Points per person per week, pinned under the chart"><input type="checkbox" id="tRes" checked> Workload</label>
+      <label class="tog" title="The plan as it was when the baseline was saved, drawn thin under each bar"><input type="checkbox" id="tBase" checked> Baseline</label>
+      <hr>
+      <p class="hint" id="baseInfo"></p>
+      <button type="button" id="bBase">Save baseline now</button>
+      <button type="button" id="bBaseClear">Clear baseline</button>
+    </div>
+  </details>
+  <input id="q" class="filt" type="search" placeholder="Search tasks" aria-label="Search tasks"
+         title="Matches keys, titles, people, fields and attachments. Press / to jump here." autocomplete="off">
+  <select id="who" class="filt" aria-label="Whose tasks"
+          title="Whose tasks to show. This device remembers the choice, so pick yourself for 'my tasks'."></select>
+  <select id="due" class="filt" aria-label="When due" title="Only tasks that are late, or due soon">
+    <option value="">Any date</option>
+    <option value="late">Late</option>
+    <option value="soon">Due within 7 days</option>
+  </select>
   <div class="spacer"></div>
   <div class="grp">
     <button id="bUndo" title="Undo your last change (Ctrl+Z)" disabled>Undo</button>
     <button id="bRedo" title="Redo (Ctrl+Shift+Z)" disabled>Redo</button>
   </div>
   <span class="stat" id="stat"></span>
-  <div class="grp">
-    <button id="save" title="Download the whole project as a .json file">Export</button>
-    <button id="open" title="Load a project .json file, replacing what is on this device">Import</button>
-    <button id="saveapp" title="Download a copy of this app with the project inside it &#8212; one file that carries the work to another machine">Save as app</button>
-    <button id="csv" title="Download the schedule as a spreadsheet &#8212; a report, not a backup">Export CSV</button>
-  </div>
+  <details class="menu right" id="mFile">
+    <summary class="ghost" title="Export, import, and the other ways out">File</summary>
+    <div class="menupop">
+      <button id="save" title="Download the whole project as a .json file">Export project</button>
+      <button id="open" title="Load a project .json file, replacing what is on this device">Import project&#8230;</button>
+      <button id="saveapp" title="Download a copy of this app with the project inside it &#8212; one file that carries the work to another machine">Save as app</button>
+      <hr>
+      <button id="csv" title="Download the schedule as a spreadsheet &#8212; a report, not a backup">Export CSV</button>
+      <button id="ics" title="Due dates as calendar events with a reminder the day before. Import into Google Calendar and your phone does the reminding. Follows the filter.">Export to calendar (.ics)</button>
+    </div>
+  </details>
   <input type="file" id="file" accept="application/json,.json" hidden>
 </header>
 
@@ -398,8 +516,9 @@ dialog h2+.hint{margin-top:-6px}
 
 <p id="empty" hidden>
   This project has no tasks. <b>+ Task</b> adds the first one — or
-  <b>Import</b> a project file.
+  <b>File → Import project</b> loads one.
 </p>
+<p id="nomatch" hidden>Nothing matches the filter.<button type="button" class="ghost" id="bClear">Clear the filter</button></p>
 
 <dialog id="dapp">
   <form method="dialog">
@@ -463,6 +582,16 @@ dialog h2+.hint{margin-top:-6px}
       moves on its own. Leave blank for no limit.</p>
     <table class="cfg" id="sCols"></table>
     <div class="rowend"><button type="button" id="sColAdd">Add column</button></div>
+    <div class="fld"><label for="sBoardFrom">Hide levels</label>
+      <select id="sBoardFrom">
+        <option value="1">none — every level gets cards</option>
+        <option value="2">1 (e.g. projects)</option>
+        <option value="3">1–2 (e.g. projects and features)</option>
+        <option value="4">1–3</option>
+        <option value="5">1–4</option>
+      </select></div>
+    <p class="hint">A task with sub-items is a group, and never a card anyway. This also
+      keeps tasks at those levels off the board while nothing is under them yet.</p>
 
     <h2>Fields</h2>
     <p class="hint">Custom fields appear on every task and as columns in the CSV export.</p>
@@ -486,10 +615,33 @@ dialog h2+.hint{margin-top:-6px}
   </form>
 </dialog>
 
+<dialog id="dlink">
+  <form method="dialog">
+    <h2 id="lkTitle">Link</h2>
+    <div class="fld"><label for="lkKind">Type</label>
+      <select id="lkKind">
+        <option value="FS">finish → start: starts once the first has finished</option>
+        <option value="SS">start → start: starts once the first has started</option>
+        <option value="FF">finish → finish: finishes once the first has finished</option>
+      </select></div>
+    <div class="fld"><label for="lkLag">Delay</label>
+      <input id="lkLag" type="number" step="1" value="0"></div>
+    <p class="hint">In working days. A negative delay lets the two overlap.</p>
+    <p class="hint" id="lkWarn" hidden></p>
+    <div class="rowend">
+      <button type="button" id="lkDel" class="danger">Delete link</button>
+      <span class="spacer"></span>
+      <button value="cancel">Cancel</button>
+      <button type="button" id="lkOk" class="primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
 <div id="wrap">
   <div id="scroll">
     <div id="inner">
       <div id="grid">
+        <div id="gridsizer" title="Drag to resize the task list; double-click to fit the names"></div>
         <div class="ghd"><span>Task</span><span class="num">Start</span><span class="num">Finish</span><span class="num">Float</span></div>
         <div id="rows"></div>
         <div id="resgrid" hidden></div>
@@ -604,45 +756,59 @@ function cpm(tasks, deps, cal){
     throw Object.assign(Error("Dependency cycle: " + keys.join(" → ")), {cycle:true, loop});
   }
 
+  // Actual dates are history, not plan: a task that has started starts then,
+  // whatever its links or hard date say, and one that has finished ends then.
+  // Finished with no recorded start: it took its planned duration, counted
+  // back from the finish. schedule.py does exactly the same.
   const es = new Map(), ef = new Map();
   for (const i of order){
-    let lo = 0;
-    if (by.get(i).not_before) lo = cal.toOffset(by.get(i).not_before);
-    for (const e of pre.get(i)){
-      if (e.kind === "FS") lo = Math.max(lo, ef.get(e.pred) + e.lag);
-      else if (e.kind === "SS") lo = Math.max(lo, es.get(e.pred) + e.lag);
-      else if (e.kind === "FF") lo = Math.max(lo, ef.get(e.pred) + e.lag - dur.get(i));
+    const t = by.get(i);
+    const af = t.actual_finish ? cal.toOffset(t.actual_finish) + 1 : null;    // exclusive
+    let s;
+    if (t.actual_start) s = cal.toOffset(t.actual_start);
+    else if (af !== null) s = Math.max(0, af - dur.get(i));
+    else {
+      let lo = 0;
+      if (t.not_before) lo = cal.toOffset(t.not_before);
+      for (const e of pre.get(i)){
+        if (e.kind === "FS") lo = Math.max(lo, ef.get(e.pred) + e.lag);
+        else if (e.kind === "SS") lo = Math.max(lo, es.get(e.pred) + e.lag);
+        else if (e.kind === "FF") lo = Math.max(lo, ef.get(e.pred) + e.lag - dur.get(i));
+      }
+      s = Math.max(0, lo);
     }
-    es.set(i, Math.max(0, lo)); ef.set(i, es.get(i) + dur.get(i));
+    es.set(i, s); ef.set(i, af !== null ? Math.max(s, af) : s + dur.get(i));
   }
   const horizon = Math.max(0, ...ef.values());
 
   const ls = new Map(), lf = new Map();
+  // a task's span is ef - es: its duration, unless actuals pinned it
   for (let k = order.length-1; k >= 0; k--){
-    const i = order[k]; let hi = horizon;
+    const i = order[k], span = ef.get(i) - es.get(i); let hi = horizon;
     for (const e of suc.get(i)){
       if (e.kind === "FS") hi = Math.min(hi, ls.get(e.succ) - e.lag);
-      else if (e.kind === "SS") hi = Math.min(hi, ls.get(e.succ) - e.lag + dur.get(i));
+      else if (e.kind === "SS") hi = Math.min(hi, ls.get(e.succ) - e.lag + span);
       else if (e.kind === "FF") hi = Math.min(hi, lf.get(e.succ) - e.lag);
     }
-    lf.set(i, hi); ls.set(i, hi - dur.get(i));
+    lf.set(i, hi); ls.set(i, hi - span);
   }
 
   const bars = new Map();
   for (const i of leaves)
-    bars.set(i, {id:i, es:es.get(i), ef:ef.get(i), ls:ls.get(i), lf:lf.get(i), summary:false});
+    bars.set(i, {id:i, es:es.get(i), ef:ef.get(i), ls:ls.get(i), lf:lf.get(i), summary:false,
+                 finished: !!by.get(i).actual_finish});
 
   // rollup, deepest parents first
   const depth = id => { let d = 0, n = by.get(id); while (n.parent_id != null){ d++; n = by.get(n.parent_id); } return d; };
   for (const pid of [...kids.keys()].sort((a,b) => depth(b) - depth(a))){
     const cb = kids.get(pid).map(c => bars.get(c));
-    bars.set(pid, {id:pid, summary:true,
+    bars.set(pid, {id:pid, summary:true, finished: cb.every(b => b.finished),
       es:Math.min(...cb.map(b=>b.es)), ef:Math.max(...cb.map(b=>b.ef)),
       ls:Math.min(...cb.map(b=>b.ls)), lf:Math.max(...cb.map(b=>b.lf))});
   }
   for (const b of bars.values()){
     b.slack    = b.ls - b.es;
-    b.critical = !b.summary && b.slack <= 0;
+    b.critical = !b.summary && !b.finished && b.slack <= 0;     // done work is never critical
     b.start    = cal.toDate(b.es);
     b.finish   = cal.toDate(Math.max(b.es, b.ef - 1));
     b.lateFin  = cal.toDate(Math.max(b.es, b.lf - 1));
@@ -678,6 +844,8 @@ const DEMO = {
   name:"Thruster qualification",
   origin:"2026-08-10", holidays:["2026-11-26"],
   statuses:["Backlog","In Progress","Review","Done"],
+  boardFrom:1,          // the first level of the tree that gets cards; see boardTasks()
+  baseline:null,        // a saved copy of the plan to measure slippage against; see saveBaseline()
   statusCfg:{
     "Backlog":    {wip:null, done:false, staleDays:null},
     "In Progress":{wip:3,    done:false, staleDays:10},
@@ -697,11 +865,11 @@ const DEMO = {
   tasks:[
     {id:"demo-01",key:"ENG-1",title:"Thruster qualification",parent_id:null,status:"In Progress",assignee:null,duration:0,not_before:null,custom:{priority:"P0"}},
     {id:"demo-02",key:"ENG-2",title:"Design",               parent_id:"demo-01",   status:"In Progress",assignee:null,duration:0,not_before:null,custom:{priority:"P1"}},
-    {id:"demo-03",key:"ENG-3",title:"Injector CAD",         parent_id:"demo-02",   status:"Done",       assignee:"R. Vance",duration:4,points:4,not_before:null,custom:{priority:"P1"}},
-    {id:"demo-04",key:"ENG-4",title:"Thermal model",        parent_id:"demo-02",   status_since:"2026-08-18T09:00:00.000Z",status:"In Progress",assignee:"A. Okafor",duration:6,points:8,not_before:null,custom:{priority:"P0",risk:"high",est_cost:1200}},
+    {id:"demo-03",key:"ENG-3",title:"Injector CAD",         parent_id:"demo-02",   status:"Done",       assignee:"R. Vance",duration:4,points:4,pct:100,actual_start:"2026-08-10",actual_finish:"2026-08-13",not_before:null,custom:{priority:"P1"}},
+    {id:"demo-04",key:"ENG-4",title:"Thermal model",        parent_id:"demo-02",   status_since:"2026-08-18T09:00:00.000Z",status:"In Progress",assignee:"A. Okafor",duration:6,points:8,pct:60,actual_start:"2026-08-10",not_before:null,custom:{priority:"P0",risk:"high",est_cost:1200}},
     {id:"demo-05",key:"ENG-5",title:"Build",                parent_id:"demo-01",   status:"Backlog",    assignee:null,duration:0,not_before:null,custom:{priority:"P1"}},
     {id:"demo-06",key:"ENG-6",title:"Machine chamber",      parent_id:"demo-05",   status:"Backlog",    assignee:"J. Reyes",duration:8,points:12,not_before:null,custom:{priority:"P1",risk:"med",est_cost:9400}},
-    {id:"demo-07",key:"ENG-7",title:"Braze assembly",       parent_id:"demo-05",   status_since:"2026-08-29T09:00:00.000Z",status:"Review",    assignee:"J. Reyes",duration:3,points:6,not_before:null,custom:{priority:"P2"}},
+    {id:"demo-07",key:"ENG-7",title:"Braze assembly",       parent_id:"demo-05",   status_since:"2026-08-29T09:00:00.000Z",status:"Review",    assignee:"J. Reyes",duration:3,points:6,pct:80,actual_start:"2026-08-31",not_before:null,custom:{priority:"P2"}},
     {id:"demo-08",key:"ENG-8",title:"Hot fire campaign",    parent_id:"demo-01",   status:"Backlog",    assignee:"A. Okafor",duration:5,points:10,not_before:"2026-09-21",custom:{priority:"P0",risk:"high"}},
     {id:"demo-09",key:"ENG-9",title:"Qual review sign-off", parent_id:"demo-01",   status:"Backlog",    assignee:null,duration:0,not_before:null,custom:{priority:"P0"}},
     {id:"demo-10",key:"ENG-10",title:"Test report",        parent_id:null,status:"Backlog",    assignee:"R. Vance",duration:2,points:3,not_before:null,custom:{priority:"P2"}},
@@ -747,7 +915,11 @@ const CFG = {
     msH:    13,   // milestone diamond -> --ms-h
     minW:    8,   // never draw a bar thinner than this
     minSumW: 6,
+    baseH:   3,   // the thin baseline bar under each task
   },
+
+  // "due soon" means due within this many calendar days
+  due: {soonDays:7},
 
   timeline: {
     headerH:   52,  // month + tick bands -> --tlhd-h
@@ -782,6 +954,8 @@ const CFG = {
     slopMouse:        3,  // px before a press becomes a drag
     slopTouch:        8,  // more, because fingers wobble
     ghostOffset:      8,  // cursor -> dragged card ghost
+    dragEdge:        36,  // px from the list's top/bottom where a row drag scrolls it
+    dragScroll:      10,  // ...by this many px per frame
   },
 
   /* The "today" marker. null means the real current date; set an ISO
@@ -817,9 +991,10 @@ const taskOf = id => S.tasks.find(t => t.id === id);
 
 function recompute(){
   cal = new Cal(S.origin, S.holidays);
-  try { bars = cpm(S.tasks, S.deps, cal); el("warn").hidden = true; }
+  try { bars = cpm(S.tasks, S.deps, cal); el("warn").hidden = !lockMsg; if (lockMsg) el("warn").textContent = lockMsg; }
   catch (e) { el("warn").hidden = false; el("warn").textContent = e.message + " — fix the link before the schedule can be computed."; return false; }
   LOAD = workload();          // reads the schedule; never feeds it
+  ROLL = rollups();
   return true;
 }
 
@@ -851,7 +1026,7 @@ function workload(){
     if (parents.has(t.id) || !t.assignee || !(t.points > 0)) continue;
     if (S.statusCfg[t.status]?.done) continue;
     const b = bars.get(t.id);
-    const days = Math.max(1, t.duration);           // a milestone's points land on its day
+    const days = Math.max(1, b.ef - b.es);          // its span (actual dates move it); a milestone's points land on its day
     const per = t.points / days;
     if (!byPerson.has(t.assignee)) byPerson.set(t.assignee, new Map());
     const weeks = byPerson.get(t.assignee);
@@ -888,13 +1063,79 @@ const overStat = () => !LOAD.over.length ? "" :
   ` · <b class="ovs" title="${esc(LOAD.over.map(o => `${o.name}: over in ${o.weeks} week${o.weeks > 1 ? "s" : ""}`).join("\n"))}">`
   + `${LOAD.over.length}</b> overloaded`;
 
-/* visible rows, depth-first, honouring collapse */
+/* Tree order: a task's `pos` among its siblings (set by dragging a row above
+   or below another), then the order the tasks were created in. */
+function childMap(){
+  const m = new Map(), idx = new Map(S.tasks.map((t, i) => [t, i]));
+  for (const t of S.tasks){
+    const p = t.parent_id ?? null;
+    (m.get(p) ?? m.set(p, []).get(p)).push(t);
+  }
+  for (const list of m.values())
+    list.sort((a, b) => (a.pos ?? Infinity) - (b.pos ?? Infinity) || idx.get(a) - idx.get(b));
+  return m;
+}
+const siblings = parent => childMap().get(parent ?? null) || [];
+const parentSet = () => new Set(S.tasks.map(t => t.parent_id).filter(p => p != null));
+
+/* ------------------------------------------------------------------ *
+ * Filters: search text, whose tasks, and when due. A device preference like
+ * the view -- never journalled, never exported. "Whose" is remembered, so a
+ * tablet set to one person opens on that person's tasks: "my tasks".
+ * ------------------------------------------------------------------ */
+const NOBODY = "\u2205";                    // the "Unassigned" choice
+const filt = {q:"", due:"",
+  who:(() => { try { return localStorage.getItem("pm.who") || ""; } catch { return ""; } })()};
+const filtering = () => !!(filt.q.trim() || filt.who || filt.due);
+
+/* late: its planned finish has passed and it is not done. soon: due within
+   CFG.due.soonDays. Tasks only -- a group is late through what is under it. */
+function dueState(t){
+  const b = bars?.get(t.id);
+  if (!b || b.summary || b.finished || S.statusCfg[t.status]?.done) return "";
+  const today = todayDate();
+  if (b.finish < today) return "late";
+  if (b.finish < addD(today, CFG.due.soonDays)) return "soon";
+  return "";
+}
+
+const textOf = t => [t.key, t.title, t.assignee, t.status, ...Object.values(t.custom || {}),
+                     ...(t.attach || []).map(a => a.label)].join(" ").toLowerCase();
+
+/* Which tasks match (self), and which are shown because something under
+   them matches (show). A group whose own name matches brings its subtree;
+   "whose" and "due" only ever match tasks, never groups. null = no filter. */
+function filterSets(kids = childMap()){
+  if (!filtering()) return null;
+  const q = filt.q.trim().toLowerCase(), self = new Set(), show = new Set();
+  const mark = (t, inherited) => {
+    const txt = !q || inherited || textOf(t).includes(q);
+    const cs = kids.get(t.id) || [];
+    let below = false;
+    for (const c of cs) if (mark(c, !!q && txt)) below = true;
+    const leaf = !cs.length;
+    const me = txt
+      && (!filt.who || (leaf && (filt.who === NOBODY ? !t.assignee : t.assignee === filt.who)))
+      && (!filt.due || (leaf && dueState(t) === filt.due));
+    if (me) self.add(t.id);
+    if (me || below) show.add(t.id);
+    return me || below;
+  };
+  for (const t of kids.get(null) || []) mark(t, false);
+  return {self, show};
+}
+
+/* visible rows, depth-first in tree order, honouring collapse and the
+   filter. One pass over a child map: this used to filter every task for
+   every parent, which is quadratic and showed at a few hundred rows. */
 function visible(){
-  const out = [];
+  const kids = childMap(), f = filterSets(kids), out = [];
   const walk = (parent, depth) => {
-    for (const t of S.tasks.filter(x => x.parent_id === parent)){
-      out.push({t, depth, kids: kidsOf(t.id).length});
-      if (kidsOf(t.id).length && !collapsed.has(t.id)) walk(t.id, depth+1);
+    for (const t of kids.get(parent) || []){
+      if (f && !f.show.has(t.id)) continue;
+      const n = (kids.get(t.id) || []).length;
+      out.push({t, depth, kids:n, ctx: !!f && !f.self.has(t.id)});
+      if (n && !collapsed.has(t.id)) walk(t.id, depth + 1);
     }
   };
   walk(null, 0);
@@ -932,11 +1173,12 @@ const newId = () =>
 const ENTITIES = ["task", "dep", "comment"];
 const rowsOf = e => e === "task" ? S.tasks : e === "dep" ? S.deps : S.comments;
 const FIELDS = {
-  task: ["key","title","parent_id","status","assignee","duration","points","not_before","status_since"],
+  task: ["key","title","parent_id","status","assignee","duration","points","pct","not_before",
+         "actual_start","actual_finish","repeat","pos","status_since"],
   dep:  ["pred","succ","kind","lag"],
   comment: [],                       // a comment is immutable once made
 };
-const JSONF = { task: ["custom"], dep: [], comment: [] };
+const JSONF = { task: ["custom","attach"], dep: [], comment: [] };
 const cE  = c => c.e  || "task";
 const cOp = c => c.op || "upd";
 const rowOfChange = c => rowsOf(cE(c)).find(r => r.id === c.id);
@@ -944,10 +1186,11 @@ const rowOfChange = c => rowsOf(cE(c)).find(r => r.id === c.id);
 // Project-level settings, diffed as a single pseudo-row so that renaming
 // the project, adding a column and editing a custom field are all undoable
 // through exactly the same path as editing a task.
-const PROJF = ["name", "origin"];
-const PROJ_JSON = ["holidays", "statuses", "statusCfg", "fields", "people"];
+const PROJF = ["name", "origin", "boardFrom"];
+const PROJ_JSON = ["holidays", "statuses", "statusCfg", "fields", "people", "baseline"];
 const projSnap = () => {
-  const o = {name:S.name, origin:S.origin};
+  const o = {};
+  for (const f of PROJF) o[f] = S[f];
   for (const f of PROJ_JSON) o[f] = JSON.stringify(S[f]);
   return o;
 };
@@ -1076,16 +1319,69 @@ function step(back){
   render(); drawer();
 }
 
+/* A standing warning that outranks the passing notes: see load(). */
+let lockMsg = "";
 const note = m => { const w = el("warn"); w.hidden = false; w.textContent = m;
-                    clearTimeout(note._t); note._t = setTimeout(() => w.hidden = true, CFG.ui.noteMs); };
+                    clearTimeout(note._t);
+                    note._t = setTimeout(() => { w.hidden = !lockMsg; w.textContent = lockMsg; }, CFG.ui.noteMs); };
 
-/* Moving a task between columns restarts its time-in-status clock. Every
-   path that changes status goes through here -- the drawer's select and
-   the board's drag -- so the clock can never silently not be reset. */
+/* Moving a card IS the progress report, so every status change goes through
+   here -- the drawer's select, the board's drag, Settings -- and does all of
+   it at once:
+   - restarts the time-in-column clock (status_since) the stale flags read;
+   - stamps actual dates. Leaving the first column means it has started, a
+     column marked done means it has finished, and back to the first column
+     means it has not started after all. Only blanks are filled: a date
+     someone typed in is never overwritten;
+   - a done column sets 100%, and a repeating task leaves its next one behind.
+   All of it lands inside the caller's commit(), so one undo takes it back. */
 function setStatus(t, v){
   if (t.status === v) return;
+  const wasDone = !!S.statusCfg[t.status]?.done;
   t.status = v;
   t.status_since = new Date().toISOString();
+  const today = iso(todayDate());
+  if (v === S.statuses[0]){ t.actual_start = null; t.actual_finish = null; return; }
+  t.actual_start = t.actual_start || today;
+  if (S.statusCfg[v]?.done){
+    t.actual_finish = t.actual_finish || today;
+    t.pct = 100;
+    spawnRepeat(t);
+  } else {
+    t.actual_finish = null;
+    if (wasDone && t.pct === 100) t.pct = null;        // reopened: not 100% any more
+  }
+}
+
+/* "1d" "2w" "1m" "1y": every n days, weeks, months or years */
+const parseRepeat = s => { const m = /^(\d+)([dwmy])$/.exec(s || ""); return m ? {n:+m[1], unit:m[2]} : null; };
+const REPEATS = {"1d":"every day", "1w":"every week", "2w":"every 2 weeks", "1m":"every month",
+                 "3m":"every 3 months", "1y":"every year"};
+const repeatName = s => REPEATS[s] || (parseRepeat(s) ? `every ${s}` : "");
+function stepDate(d, {n, unit}){
+  if (unit === "d") return addD(d, n);
+  if (unit === "w") return addD(d, 7 * n);
+  const months = unit === "y" ? 12 * n : n;
+  const y = d.getUTCFullYear(), m = d.getUTCMonth() + months;
+  const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();       // the 31st becomes the 30th, or the 28th
+  return new Date(Date.UTC(y, m, Math.min(d.getUTCDate(), last)));
+}
+/* A repeating task, finished, leaves the next one behind: the same work,
+   back in the first column, one interval on. The rhythm runs from the date
+   it was scheduled for ("every Saturday" stays on Saturdays), rolled on past
+   today if it was finished late, so the next one never lands in the past.
+   The finished one stops repeating -- reopening it must not breed a second. */
+function spawnRepeat(t){
+  const r = parseRepeat(t.repeat); if (!r) return;
+  const today = todayDate();
+  let next = stepDate(t.not_before ? D(t.not_before) : (bars?.get(t.id)?.start ?? today), r);
+  while (next <= today) next = stepDate(next, r);
+  S.tasks.push({id:newId(), key:nextKey(), title:t.title, parent_id:t.parent_id ?? null,
+    status:S.statuses[0], status_since:new Date().toISOString(), assignee:t.assignee ?? null,
+    duration:t.duration, points:t.points ?? null, pct:null, not_before:iso(next),
+    actual_start:null, actual_finish:null, repeat:t.repeat, custom:structuredClone(t.custom || {}),
+    ...(t.attach ? {attach:structuredClone(t.attach)} : {})});
+  t.repeat = null;
 }
 
 /* ------------------------------------------------------------------ *
@@ -1103,8 +1399,11 @@ function nextKey(){
 
 function addTask(parent_id){
   const t = {id:newId(), key:nextKey(), title:"New task", parent_id: parent_id ?? null,
-             status:S.statuses[0], assignee:null, duration:1, points:null, not_before:null, custom:{}};
-  commit(`Add ${t.key}`, () => S.tasks.push(t));
+             status:S.statuses[0], assignee:null, duration:1, points:null, pct:null, not_before:null,
+             actual_start:null, actual_finish:null, repeat:null, custom:{}};
+  // right below the selected task when it is a sibling, not at the end of the list
+  const after = sel && (taskOf(sel)?.parent_id ?? null) === t.parent_id ? sel : null;
+  commit(`Add ${t.key}`, () => { S.tasks.push(t); if (after) placeAt(t, t.parent_id, after, "after"); });
   if (parent_id) collapsed.delete(parent_id);        // reveal what we just made
   sel = t.id;
   render(); drawer();
@@ -1163,13 +1462,47 @@ function addDep(pred, succ){
   render(); drawer();
 }
 
-function removeDep(id){
+function removeDep(id, ask = true){
   const d = S.deps.find(x => x.id === id); if (!d) return;
   const pk = taskOf(d.pred)?.key ?? "?", sk = taskOf(d.succ)?.key ?? "?";
-  if (!confirm(`Remove the ${d.kind} link ${pk} → ${sk}?`)) return;
+  if (ask && !confirm(`Remove the ${d.kind} link ${pk} → ${sk}?`)) return;
   commit(`Unlink ${pk} → ${sk}`, () => { S.deps = S.deps.filter(x => x.id !== id); });
   render(); drawer();
 }
+
+const LINK_NAMES = {FS:"finish → start", SS:"start → start", FF:"finish → finish"};
+const linkName = d => (LINK_NAMES[d.kind] || d.kind) + (d.lag ? ` ${d.lag > 0 ? "+" : "−"}${Math.abs(d.lag)}d` : "");
+
+/* ------------------------------------------------------------------ *
+ * Editing a link: its type and its delay. Opened by clicking an arrow, or
+ * from the Links list in a task's drawer -- the reliable way on a tablet,
+ * where an 11px arrow is a poor target for a finger.
+ * ------------------------------------------------------------------ */
+let linkEditing = null;
+function openLink(id){
+  const d = S.deps.find(x => x.id === id); if (!d) return;
+  linkEditing = id;
+  const name = tid => { const t = taskOf(tid); return t ? `${t.key} ${t.title}` : "?"; };
+  el("lkTitle").textContent = `${name(d.pred)}  →  ${name(d.succ)}`;
+  el("lkKind").value = d.kind || "FS";
+  el("lkLag").value = d.lag || 0;
+  el("lkWarn").hidden = true;
+  el("dlink").showModal();
+}
+el("lkOk").onclick = () => {
+  const d = S.deps.find(x => x.id === linkEditing); if (!d) return el("dlink").close();
+  const kind = el("lkKind").value, lag = Math.round(+el("lkLag").value || 0);
+  if (kind === d.kind && lag === (d.lag || 0)) return el("dlink").close();
+  // a type or a delay cannot close a loop, but ask the scheduler anyway: it
+  // is the one thing that knows, and a stranded schedule is the cost of not
+  try { cpm(S.tasks, S.deps.map(x => x === d ? {...x, kind, lag} : x), new Cal(S.origin, S.holidays)); }
+  catch (e) { el("lkWarn").hidden = false; el("lkWarn").textContent = e.message; return; }
+  const pk = taskOf(d.pred).key, sk = taskOf(d.succ).key;
+  commit(`Link ${pk} → ${sk}: ${linkName({kind, lag})}`, () => { d.kind = kind; d.lag = lag; });
+  el("dlink").close();
+  render(); drawer();
+};
+el("lkDel").onclick = () => { const id = linkEditing; el("dlink").close(); removeDep(id, false); };
 
 /* topmost bar under the pointer, ignoring the one being dragged from */
 function hitBar(cx, cy, notId){
@@ -1238,7 +1571,7 @@ function syncUndoButtons(){
 /* ------------------------------------------------------------------ *
  * Render
  * ------------------------------------------------------------------ */
-let T0, T1, DW, W;
+let T0, T1, DW, W, lastRows = null;
 // Row height lives in CSS (--row-h) so a media query can grow it for touch.
 // The grid rows and the absolutely-positioned bars must agree, so JS reads
 // it back rather than hardcoding 30 in eight places as it used to.
@@ -1250,10 +1583,20 @@ let RH = 30, COARSE = false;
    grid rows were 46px tall, sliding the whole timeline out of register.
    #rhprobe is an empty element of exactly that height; the layout engine
    resolves it for us. */
+/* Measured once, and again only when it can have changed: text size, a
+   resize, a mouse swapped for a finger. Reading layout at the top of every
+   render() forced a synchronous layout of the previous frame's ~10k nodes
+   each time -- about half of every drag frame on a big plan. */
+let rhStale = true;
 const readRH = () => {
+  if (!rhStale) return;
   RH = el("rhprobe").getBoundingClientRect().height || 30;
   COARSE = matchMedia("(pointer:coarse)").matches;
+  rhStale = false;
 };
+const staleRH = () => { rhStale = true; };
+addEventListener("resize", staleRH);
+matchMedia("(pointer:coarse)").addEventListener("change", staleRH);
 // vertical centring of a shape of height h in the row. This replaced a
 // fudge that assumed a 30px row and added half the difference; centring
 // from the real heights is the same answer at 30 and correct elsewhere.
@@ -1302,6 +1645,22 @@ function applyAppearance(){
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = dark ? "#131619" : "#1e2328";
   try { localStorage.setItem("pm.appear", JSON.stringify(appear)); } catch { /* blocked */ }
+  paintThemeBtn(dark);
+}
+
+/* One tap between light and dark, in the toolbar: the theme used to live
+   only behind "Aa", where it went unfound. It picks Light or Dark outright;
+   "follow the device" (System) is still in the Appearance dialog. */
+function paintThemeBtn(dark){
+  const b = el("bTheme"); if (!b) return;
+  b.innerHTML = dark
+    ? '<svg width="1.15em" height="1.15em" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3.1" fill="currentColor"/>'
+      + '<path d="M8 1v1.7M8 13.3V15M1 8h1.7M13.3 8H15M3.1 3.1l1.2 1.2M11.7 11.7l1.2 1.2M3.1 12.9l1.2-1.2M11.7 4.3l1.2-1.2" '
+      + 'stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
+    : '<svg width="1.15em" height="1.15em" viewBox="0 0 16 16" aria-hidden="true">'
+      + '<path d="M13.6 10.3A6 6 0 0 1 5.7 2.4a6 6 0 1 0 7.9 7.9Z" fill="currentColor"/></svg>';
+  b.title = (dark ? "Light mode" : "Dark mode") + " (this device only)";
+  b.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
 }
 applyAppearance();          // before first paint: no flash of the wrong theme
 
@@ -1318,6 +1677,7 @@ let view = (() => { try { return localStorage.getItem("pm.view") || "gantt"; }
 /* Everything already calls render(); it now dispatches to whichever
    projection is on screen, so no call site needs to know about the board. */
 function render(){
+  syncWho(); paintBaseInfo();
   const board = view === "board";
   el("wrap").hidden = board;
   el("boardwrap").hidden = !board;
@@ -1330,15 +1690,22 @@ function renderBoardView(){
   document.title = S.name || "Schedule";
   if (!S.tasks.length){
     el("board").innerHTML = ""; el("weekstrip").hidden = true; el("empty").hidden = false;
+    el("nomatch").hidden = true;
     el("stat").textContent = "empty project"; syncUndoButtons(); return;
   }
   el("empty").hidden = true;
   if (!recompute()) return;      // bars feed the "critical" chip on a card
   renderWeekStrip();
-  renderBoard();
-  const leaves = S.tasks.filter(t => !kidsOf(t.id).length).length;
-  const st = staleTasks().length;
-  el("stat").innerHTML = `${leaves} cards` + (st ? ` · <b>${st}</b> overdue in column` : "") + overStat();
+  const matched = renderBoard();
+  el("nomatch").hidden = !filtering() || matched > 0;
+  const cards = boardTasks(), shown = cards.length;
+  const off = S.tasks.length - parentSet().size - shown;
+  const levels = S.boardFrom > 2 ? `levels 1–${S.boardFrom - 1}` : "level 1";
+  const st = staleTasks().length, late = cards.filter(t => dueState(t) === "late").length;
+  el("stat").innerHTML = `${shown} cards`
+    + (off ? ` · <span title="Tasks at ${levels} are left off the board (Settings → Columns)">${off} hidden</span>` : "")
+    + (late ? ` · <b title="Past their planned finish and not done">${late}</b> late` : "")
+    + (st ? ` · <b title="In their column longer than its limit (Settings → Columns)">${st}</b> stale` : "") + overStat();
   syncUndoButtons();
 }
 
@@ -1354,6 +1721,7 @@ function renderGantt(){
     for (const id of ["rows","bars","bg","tlhd"]) el(id).innerHTML = "";
     el("arrows").innerHTML = "";
     el("resgrid").hidden = el("resfield").hidden = true;
+    el("nomatch").hidden = true;
     el("today").style.display = "none";
     el("stat").textContent = "empty project";
     el("empty").hidden = false;
@@ -1364,6 +1732,8 @@ function renderGantt(){
 
   if (!recompute()) return;
   const rows = visible();
+  lastRows = rows;
+  el("nomatch").hidden = rows.length > 0;
   const all = [...bars.values()];
   T0 = addD(new Date(Math.min(...all.map(b => b.start.getTime()))), -CFG.timeline.padBefore);
   T1 = addD(new Date(Math.max(...all.map(b => b.lateFin.getTime()))), CFG.timeline.padAfter);
@@ -1380,10 +1750,7 @@ function renderGantt(){
   drawArrows(rows);
   drawLoad();
 
-  const crit = all.filter(b => b.critical);
-  const end  = new Date(Math.max(...all.map(b => b.finish.getTime())));
-  el("stat").innerHTML = `finish ${iso(end)} · <b>${crit.length}</b> critical of ${all.filter(b=>!b.summary).length}`
-                       + (el("tRes").checked ? overStat() : "");
+  statGantt(all);
   syncUndoButtons();
 
   const today = todayDate();
@@ -1392,6 +1759,66 @@ function renderGantt(){
   el("today").style.left = tx + "px";
   el("today").style.height = rows.length*RH + CFG.timeline.headerH + "px";
   el("today").style.top = -CFG.timeline.headerH + "px";
+}
+
+/* The Gantt's status line: finish (and its slip against the baseline), the
+   critical count, the late count, and who is overloaded. */
+function statGantt(all){
+  const end  = new Date(Math.max(...all.map(b => +b.finish)));
+  const slip = baseSlip(end);
+  const late = S.tasks.filter(t => dueState(t) === "late").length;
+  el("stat").innerHTML = `finish ${iso(end)}`
+    + (slip ? ` <b class="${slip > 0 ? "" : "ahead"}" title="Against the baseline saved ${esc(fmtWhen(new Date(S.baseline.saved)))}">`
+            + `${slip > 0 ? "+" : "−"}${Math.abs(slip)}d</b>` : "")
+    + ` · <b>${all.filter(b => b.critical).length}</b> critical of ${all.filter(b => !b.summary).length}`
+    + (late ? ` · <b title="Past their planned finish and not done">${late}</b> late` : "")
+    + (el("tRes").checked ? overStat() : "");
+}
+
+/* Working days between now and the baseline: positive is later than planned.
+   Offsets, not calendar days, so a weekend in between is not slip (inv. 3). */
+const slipDays = (now, then) => cal.toOffset(iso(now)) - cal.toOffset(then);
+function baseSlip(end){
+  if (!S.baseline || !el("tBase").checked) return 0;
+  const ends = Object.values(S.baseline.bars).map(b => b[1]).sort();
+  return ends.length ? slipDays(end, ends[ends.length - 1]) : 0;
+}
+
+/* One redraw per animation frame while dragging, however fast the pointer
+   events arrive -- and a cheap one, see renderDrag(). */
+let dragRaf = 0;
+const frame = fn => { if (!dragRaf) dragRaf = requestAnimationFrame(() => { dragRaf = 0; fn(); }); };
+
+/* A drag frame. Dragging a bar changes dates, not the shape of the tree, so
+   the rows from the last full render still stand: recompute, refresh the
+   grid's date cells in place, and redraw only the bar rows that changed,
+   the arrows and the band. Measured on a 639-task plan, most of a frame used
+   to go on rebuilding every bar, and on falling back to a full render --
+   grid and all -- whenever the dragged chain moved the chart's end. */
+function renderDrag(){
+  if (!lastRows || !recompute()) return;
+  const all = [...bars.values()];
+  const t0 = addD(new Date(Math.min(...all.map(b => +b.start))), -CFG.timeline.padBefore);
+  const t1 = addD(new Date(Math.max(...all.map(b => +b.lateFin))), CFG.timeline.padAfter);
+  if (+t0 !== +T0 || +t1 !== +T1){
+    // the chart's span moved: re-lay the timeline itself, and keep the rows
+    T0 = t0; T1 = t1; W = Math.max(CFG.timeline.minW, x(T1));
+    el("tl").style.width = W + "px";
+    drawHeader(); drawBg(lastRows.length);
+    const tx = x(todayDate());
+    el("today").style.display = (tx >= 0 && tx <= W) ? "" : "none";
+    el("today").style.left = tx + "px";
+  }
+  for (const r of el("rows").children){
+    const b = bars.get(r.dataset.id); if (!b) continue;
+    const [, s, f, fl] = r.children;
+    const vs = iso(b.start), vf = iso(b.finish), vfl = b.summary ? "" : String(b.slack);
+    if (s.textContent !== vs) s.textContent = vs;
+    if (f.textContent !== vf) f.textContent = vf;
+    if (fl.textContent !== vfl){ fl.textContent = vfl; fl.className = "num" + (!b.summary && b.slack <= 0 ? " zero" : ""); }
+  }
+  drawBars(lastRows, true); drawArrows(lastRows, true); drawLoad();
+  statGantt(all);
 }
 
 function drawHeader(){
@@ -1425,10 +1852,10 @@ function drawHeader(){
 
 function drawGrid(rows){
   const c = el("rows"); c.innerHTML = "";
-  for (const {t, depth, kids} of rows){
+  for (const {t, depth, kids, ctx} of rows){
     const b = bars.get(t.id);
     const r = document.createElement("div");
-    r.className = "grow"; r.dataset.id = t.id;
+    r.className = ctx ? "grow ctx" : "grow"; r.dataset.id = t.id;
     r.dataset.sum = kids ? 1 : 0;
     if (sel === t.id) r.dataset.sel = 1;
 
@@ -1443,14 +1870,15 @@ function drawGrid(rows){
       n.appendChild(cv);
     } else n.insertAdjacentHTML("beforeend",'<span style="width:14px;flex:none"></span>');
     n.insertAdjacentHTML("beforeend",
-      `<span class="key">${esc(t.key)}</span><span class="ttl">${esc(t.title)}</span>`);
+      `<span class="key" title="Drag onto another task to move it under that one">${esc(t.key)}</span><span class="ttl" title="${esc(t.title)}">${esc(t.title)}</span>`);
 
     const f = document.createElement("span");
     f.className = "num" + (!b.summary && b.slack <= 0 ? " zero" : "");
     f.textContent = b.summary ? "" : b.slack;
 
     r.append(n, cell(iso(b.start)), cell(iso(b.finish)), f);
-    r.onclick = () => { sel = t.id; render(); drawer(); };
+    r.onclick = () => { if (performance.now() < noClickUntil) return; sel = t.id; render(); drawer(); };
+    rowGrab(n, t, rows);
     c.appendChild(r);
   }
 }
@@ -1460,6 +1888,155 @@ const cell = txt => { const s = document.createElement("span"); s.className = "n
    Coerces first — custom fields hold numbers as well as strings. */
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m =>
   ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+/* Only http(s) becomes a link. An attachment arriving in an imported file
+   is not trusted input, and esc() alone does not stop a javascript: URL. */
+const safeUrl = s => { try { const u = new URL(String(s).trim()); return /^https?:$/.test(u.protocol) ? u.href : null; }
+                       catch { return null; } };
+
+/* ------------------------------------------------------------------ *
+ * Re-parenting: drop a row onto another and it goes under that one.
+ *
+ * Drag a task's name with a mouse. On touch, drag its key (the ENG-12
+ * part): the rest of the row must stay free to scroll the list, so only the
+ * key has touch-action:none. Nothing is written while the pointer moves
+ * (invariant 7) -- the drop commits one parent_id change.
+ * ------------------------------------------------------------------ */
+let noClickUntil = 0;           // a drop must not also count as a click on the row
+
+/* is `id` somewhere inside `anc`'s subtree? */
+function isUnder(id, anc){
+  for (let n = taskOf(id); n && n.parent_id != null; n = taskOf(n.parent_id))
+    if (n.parent_id === anc) return true;
+  return false;
+}
+
+/* Put t among parent's children, before or after `ref` -- or last, with no
+   ref -- by renumbering that parent's children 10, 20, 30... Only `pos` and
+   t's own parent change, all inside the caller's commit(). */
+function placeAt(t, parent, ref, where){
+  t.parent_id = parent;
+  const sibs = siblings(parent).filter(x => x !== t);
+  let i = ref ? sibs.findIndex(x => x.id === ref) : -1;
+  i = i < 0 ? sibs.length : where === "after" ? i + 1 : i;
+  sibs.splice(i, 0, t);
+  sibs.forEach((x, k) => { if (x.pos !== (k + 1) * 10) x.pos = (k + 1) * 10; });
+}
+
+/* Move a task: "into" a parent (null = the top level), where it goes last,
+   or "before"/"after" another task, as its sibling. */
+function reparent(id, parent, ref = null, where = "into"){
+  const t = taskOf(id), from = t.parent_id ?? null;
+  if (ref === id || (where === "into" && from === parent)) return;
+  if (parent === id || (parent != null && isUnder(parent, id)))
+    return note(`${t.key} can't go inside itself.`);
+  // A move changes which leaves a link onto a group reaches (invariant 2),
+  // and that can close a loop -- so ask the scheduler first, as addDep does.
+  if (parent !== from)
+    try { cpm(S.tasks.map(x => x.id === id ? {...x, parent_id:parent} : x), S.deps, new Cal(S.origin, S.holidays)); }
+    catch (e) { return note(`Can't move ${t.key} there: ${e.message}`); }
+
+  const p = parent != null ? taskOf(parent) : null, was = from != null ? taskOf(from) : null;
+  const becomesGroup = p && parent !== from && !kidsOf(parent).length;
+  const label = where === "into" ? (p ? `Move ${t.key} under ${p.key}` : `Move ${t.key} to the top level`)
+                                 : `Move ${t.key} ${where === "before" ? "above" : "below"} ${taskOf(ref).key}`;
+  commit(label, () => placeAt(t, parent, where === "into" ? null : ref, where));
+  if (parent != null) collapsed.delete(parent);        // show where it went
+  sel = id; render(); drawer();
+
+  const said = [];
+  if (becomesGroup) said.push(`${p.key} is a group now: its dates come from what is under it, `
+    + `and its own duration${p.points > 0 ? " and points" : ""} no longer count.`);
+  if (was && !kidsOf(from).length) said.push(`${was.key} has nothing under it any more, so it is a task of its own again.`);
+  if (said.length) note(said.join(" ") + " Ctrl+Z puts it back.");
+}
+
+function rowGrab(node, t, rows){
+  node.addEventListener("pointerdown", ev => {
+    if (!ev.isPrimary || ev.button > 0 || ev.target.closest(".chev")) return;
+    if (ev.pointerType !== "mouse" && !ev.target.closest(".key")) return;    // a swipe scrolls
+    const pid = ev.pointerId, sx = ev.clientX, sy = ev.clientY;
+    const SLOP = ev.pointerType === "mouse" ? CFG.ui.slopMouse : CFG.ui.slopTouch;
+    const head = el("grid").querySelector(".ghd");
+    let moved = false, ghost = null, target = null, lit = null, cx = sx, cy = sy, raf = 0;
+
+    // what a drop here would do: {parent} (null = top level), {bad}, or nothing
+    const aim = () => {
+      const sc = el("scroll").getBoundingClientRect();
+      if (cx < sc.left || cx > sc.right || cy < sc.top || cy > sc.bottom) return null;
+      if (document.elementFromPoint(cx, cy)?.closest("#drawer")) return null;
+      const hd = head.getBoundingClientRect();
+      if (cy >= hd.top && cy < hd.bottom) return {parent:null, row:-1};
+      const band = el("resgrid");
+      if (!band.hidden && cy >= band.getBoundingClientRect().top) return null;
+      const top = el("rows").getBoundingClientRect().top, at = (cy - top) / RH, i = Math.floor(at);
+      if (i < 0 || i >= rows.length) return null;
+      const p = rows[i].t;
+      // the top and bottom quarter of a row mean above or below it, as its
+      // sibling; the middle means under it
+      const where = at - i < 0.25 ? "before" : at - i > 0.75 ? "after" : "into";
+      if (p.id === t.id && where !== "into") return null;
+      const parent = where === "into" ? p.id : (p.parent_id ?? null);
+      if (parent === t.id || (parent != null && isUnder(parent, t.id))) return {bad:true, parent, row:i, where};
+      return {parent, ref: where === "into" ? null : p.id, row:i, where};
+    };
+    const paint = () => {
+      target = aim();
+      lit?.classList.remove("droptarget", "dropbad", "dropbefore", "dropafter");
+      lit = !target ? null : target.row < 0 ? head : el("rows").children[target.row];
+      lit?.classList.add(target.bad ? "dropbad" : target.where === "before" ? "dropbefore"
+                       : target.where === "after" ? "dropafter" : "droptarget");
+      const ref = target?.ref && taskOf(target.ref);
+      ghost.textContent = !target ? t.key
+        : target.bad ? `${t.key} can't go inside itself`
+        : ref ? `${t.key} → ${target.where === "before" ? "above" : "below"} ${ref.key}`
+        : target.parent === (t.parent_id ?? null) ? `${t.key} is already here`
+        : target.parent == null ? `${t.key} → top level`
+        : `${t.key} → under ${taskOf(target.parent).key}`;
+    };
+    // near the top or bottom of the list, scroll it, so a far-away parent
+    // can be reached on a long plan
+    const edgeScroll = () => {
+      const sc = el("scroll"), r = sc.getBoundingClientRect(), band = el("resgrid");
+      const top = r.top + CFG.timeline.headerH;
+      const bottom = band.hidden ? r.top + sc.clientHeight : band.getBoundingClientRect().top;
+      const dy = cy >= top && cy < top + CFG.ui.dragEdge ? -CFG.ui.dragScroll
+               : cy > bottom - CFG.ui.dragEdge && cy <= bottom ? CFG.ui.dragScroll : 0;
+      if (dy){ sc.scrollTop += dy; paint(); }
+      raf = requestAnimationFrame(edgeScroll);
+    };
+
+    const move = e => {
+      if (e.pointerId !== pid) return;
+      if (!moved && Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) < SLOP) return;
+      if (!moved){
+        moved = true;
+        ghost = document.createElement("div"); ghost.className = "rowghost";
+        document.body.appendChild(ghost);
+        raf = requestAnimationFrame(edgeScroll);
+      }
+      cx = e.clientX; cy = e.clientY;
+      ghost.style.left = cx + CFG.ui.ghostOffset + "px";
+      ghost.style.top  = cy + CFG.ui.ghostOffset + "px";
+      paint();
+    };
+    const up = e => {
+      if (e.pointerId !== pid) return;
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", up);
+      document.removeEventListener("pointercancel", up);
+      cancelAnimationFrame(raf);
+      if (!moved) return;
+      ghost.remove();
+      lit?.classList.remove("droptarget", "dropbad", "dropbefore", "dropafter");
+      noClickUntil = performance.now() + 300;
+      if (e.type === "pointercancel" || !target) return;
+      reparent(t.id, target.parent, target.ref, target.where);   // a refused target still says why
+    };
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
+    document.addEventListener("pointercancel", up);
+  });
+}
 
 function drawBg(n){
   const g = el("bg"); g.innerHTML = "";
@@ -1475,22 +2052,44 @@ function drawBg(n){
   for (; d < T1; d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth()+1, 1))){
     const s = document.createElement("div"); s.className = "vline"; s.style.left = x(d)+"px"; g.appendChild(s);
   }
-  for (let i = 1; i <= n; i++){
-    const s = document.createElement("div"); s.className = "hline"; s.style.top = (i*RH)+"px"; g.appendChild(s);
-  }
+  // Row rules as one repeating gradient, not a div per row: at 600 rows that
+  // was 600 nodes rebuilt on every frame of a drag.
+  g.style.backgroundImage = `linear-gradient(to bottom, transparent ${RH - 1}px, var(--rule-soft) ${RH - 1}px)`;
+  g.style.backgroundSize = `100% ${RH}px`;
 }
 
-function drawBars(rows){
-  const c = el("bars"); c.innerHTML = "";
+let barEls = new Map();          // task id -> {sig, els}: what drawBars last drew for that row
+function drawBars(rows, delta = false){
+  const root = el("bars");
+  if (!delta){ root.innerHTML = ""; barEls = new Map(); }
   const showF = el("tFloat").checked, showC = el("tCrit").checked, showR = el("tRes").checked;
-  rows.forEach(({t, kids}, i) => {
+  rows.forEach(({t, kids, ctx}, i) => {
     const b = bars.get(t.id), top = i*RH;
+    // In a drag frame (delta) only rows whose drawing would differ are rebuilt:
+    // the moved bar and whatever it pushes, not all of a 600-row plan, whose
+    // 3000 bar nodes cost ~30ms a frame to redo. The signature is everything
+    // the row's drawing reads; forget one and that row goes stale mid-drag.
+    const ov0 = LOAD.overTask.get(t.id);
+    const sig = [i, RH, +T0, DW, zoom, COARSE, showF, showC, showR, el("tBase").checked, sel === t.id, ctx,
+      +b.start, +b.finish, +b.lateFin, b.slack, b.critical, b.finished, ROLL.get(t.id),
+      t.key, t.title, t.status, t.duration, t.pct, t.repeat, t.points, t.assignee, t.not_before,
+      t.actual_start, t.actual_finish, dueState(t), ov0 ? ov0.map(o => o.wk + ":" + o.pts).join() : "",
+      S.baseline?.bars?.[t.id]?.join()].join("|");
+    const old = barEls.get(t.id);
+    if (delta && old && old.sig === sig) return;
+    if (old) for (const n of old.els) n.remove();
+    const els = [];
+    const c = {appendChild: n => { root.appendChild(n); els.push(n); }};
+    barEls.set(t.id, {sig, els});
     const x0 = x(b.start), x1 = x(addD(b.finish, 1));
+    baseBar(c, t, top);
 
     if (b.summary){
-      const s = document.createElement("div"); s.className = "sum";
+      const s = document.createElement("div"); s.className = ctx ? "sum ctx" : "sum";
       s.dataset.id = t.id;
       s.style.cssText = `left:${x0}px;width:${Math.max(CFG.bar.minSumW,x1-x0)}px;top:${top+midY(CFG.bar.sumH)}px`;
+      const rp = rollPct(t.id);
+      s.title = `${t.key} ${t.title}\n${iso(b.start)} → ${iso(b.finish)}` + (rp != null ? ` · ${rp}% done` : "");
       linkGrab(s, t);                 // a link onto a summary expands to its leaves
       c.appendChild(s); return;
     }
@@ -1522,18 +2121,26 @@ function drawBars(rows){
     el2.dataset.crit = (showC && b.critical) ? 1 : 0;
     if (sel === t.id) el2.dataset.sel = 1;
     el2.style.cssText = `left:${x0}px;width:${Math.max(CFG.bar.minW,x1-x0)}px;top:${top+midY(CFG.bar.h)}px`;
-    const ov = showR && LOAD.overTask.get(t.id);
+    // % done is the darker front of the bar
+    const pct = t.pct > 0 ? Math.min(100, t.pct) : 0;
+    if (pct){ const pg = document.createElement("i"); pg.className = "prog"; pg.style.width = pct + "%"; el2.appendChild(pg); }
+    const ov = showR && LOAD.overTask.get(t.id), late = dueState(t) === "late";
     if (ov) el2.dataset.over = 1;
     el2.title = `${t.key} ${t.title}\n${iso(b.start)} → ${iso(b.finish)} · ${t.duration}d · float ${b.slack}`
               + (t.points != null ? ` · ${fmtPts(t.points)} pts` : "")
-              + (t.not_before ? `\nconstrained: not before ${t.not_before}` : "")
+              + (pct ? ` · ${pct}% done` : "")
+              + (t.actual_start ? `\nstarted ${t.actual_start}` + (t.actual_finish ? `, finished ${t.actual_finish}` : "") : "")
+              + (late ? `\nlate: planned to finish ${iso(b.finish)}` : "")
+              + (t.repeat ? `\nrepeats ${repeatName(t.repeat)}` : "")
+              + (t.not_before && !t.actual_start ? `\nconstrained: not before ${t.not_before}` : "")
               + (ov ? "\n" + overTip(t, ov) : "");
     if (DW >= CFG.timeline.denseDW || zoom === "day"){
       const l = document.createElement("span"); l.className = "lbl";
       l.style.left = labelAt + "px";
       const txt = [t.assignee || t.key, t.points != null ? `${fmtPts(t.points)} pts` : ""]
                   .filter(Boolean).join(" · ");
-      l.innerHTML = (ov ? '<b class="ovm">!</b>' : "") + esc(txt);
+      l.innerHTML = (ov ? '<b class="ovm">!</b>' : "") + (late ? '<b class="late">late</b> · ' : "")
+                  + esc(txt) + (t.repeat ? ' <span class="rep">↻</span>' : "");
       el2.appendChild(l);
     }
     const h = document.createElement("div"); h.className = "hnd r"; el2.appendChild(h);
@@ -1542,12 +2149,43 @@ function drawBars(rows){
   });
 }
 
+/* The baseline: a thin grey bar where this task sat in the plan when the
+   baseline was saved. Summaries get one too, from the same snapshot. */
+function baseBar(c, t, top){
+  const bl = S.baseline && el("tBase").checked && S.baseline.bars[t.id];
+  if (!bl) return;
+  const x0 = x(D(bl[0])), x1 = x(addD(D(bl[1]), 1));
+  const d = document.createElement("div"); d.className = "base";
+  d.style.cssText = `left:${x0}px;width:${Math.max(4, x1 - x0)}px;top:${top + RH - CFG.bar.baseH - 2}px`;
+  c.appendChild(d);
+}
+
+/* Every group's % done -- its tasks' %, weighted by duration -- in one
+   bottom-up pass per schedule. null = nothing under it has any progress
+   recorded, which is not the same as 0%. Asking each group separately
+   scanned the whole plan per group, and a 639-task drag took 1.2s a frame. */
+let ROLL = new Map();
+function rollups(){
+  const kids = childMap(), out = new Map();
+  const walk = t => {
+    const cs = kids.get(t.id);
+    if (!cs){ const w = Math.max(1, t.duration || 0); return {w, done: w * (t.pct || 0), any: t.pct != null}; }
+    let w = 0, done = 0, any = false;
+    for (const c of cs){ const r = walk(c); w += r.w; done += r.done; any = any || r.any; }
+    out.set(t.id, any && w ? Math.round(done / w) : null);
+    return {w, done, any};
+  };
+  for (const t of kids.get(null) || []) walk(t);
+  return out;
+}
+const rollPct = id => ROLL.get(id) ?? null;
+
 /* The workload band under the chart: one row per person, one cell per
    week. It sits in the same scroller as the bars, split across both
    columns, so its weeks line up with the timeline and its names with the
    grid. Rows use RH, measured, like everything else here (invariant 11). */
 function drawLoad(){
-  const g = el("resgrid"), f = el("resfield"), ppl = LOAD.people;
+  const g = el("resgrid"), f = el("resfield"), ppl = LOAD.people.filter(p => !filt.who || p.name === filt.who);
   g.hidden = f.hidden = !(el("tRes").checked && ppl.length);
   if (g.hidden) return;
   const overNames = new Set(LOAD.over.map(o => o.name));
@@ -1588,13 +2226,25 @@ function drawLoad(){
  * same undo. Only LEAVES appear: a summary has no status of its own, its
  * state is just whatever its children are doing (invariant 2).
  * ------------------------------------------------------------------ */
+/* What gets a card: leaves only (a group has no status of its own), and
+   only from level S.boardFrom down -- so the top of the tree, a project or a
+   feature with nothing under it yet, can stay off the board. Level 1 is a
+   top-level task. */
+function boardTasks(){
+  const from = S.boardFrom || 1, parents = parentSet();
+  const by = new Map(S.tasks.map(t => [t.id, t]));
+  const level = t => { let d = 1; for (let n = t; n && n.parent_id != null; n = by.get(n.parent_id)) d++; return d; };
+  return S.tasks.filter(t => !parents.has(t.id) && (from <= 1 || level(t) >= from));
+}
+
 /* This week's load per person, above the columns: the same numbers as the
    workload band on the Gantt, for the week that contains today. */
 function renderWeekStrip(){
   const s = el("weekstrip"), wk = weekOf(todayDate());
-  s.hidden = !LOAD.people.length;
+  const ppl = LOAD.people.filter(p => !filt.who || p.name === filt.who);
+  s.hidden = !ppl.length;
   if (s.hidden) return;
-  s.innerHTML = `<span class="wlbl">This week</span>` + LOAD.people.map(p => {
+  s.innerHTML = `<span class="wlbl">This week</span>` + ppl.map(p => {
     const w = p.weeks.get(wk), pts = w ? w.pts : 0;
     const over = p.cap != null && pts > p.cap + OVER_EPS;
     const tip = w ? [...w.items].map(([t, n]) => `${t.key} ${t.title}: ${fmtPts(n)}`).join("\n")
@@ -1607,7 +2257,10 @@ function renderWeekStrip(){
 function renderBoard(){
   const wrap = el("board");
   wrap.innerHTML = "";
-  const leaves = S.tasks.filter(t => !kidsOf(t.id).length);
+  const leaves = boardTasks(), f = filterSets();
+  // columns share the width; below their minimum the board scrolls sideways
+  wrap.style.minWidth = `calc(${S.statuses.length} * var(--fs) * 16 + ${S.statuses.length - 1} * 10px + 24px)`;
+  let matched = 0;
 
   for (const name of S.statuses){
     const cfg = S.statusCfg[name] || {};
@@ -1621,21 +2274,30 @@ function renderBoard(){
                    || a.key.localeCompare(b.key));
 
     const over = cfg.wip != null && mine.length > cfg.wip;
+    const cards = f ? mine.filter(t => f.self.has(t.id)) : mine;
+    matched += cards.length;
+    // with a filter on, "2 of 5" -- the WIP limit still counts the whole column
+    const count = f ? `${cards.length} of ${mine.length}${cfg.wip != null ? ` · limit ${cfg.wip}` : ""}`
+                    : `${mine.length}${cfg.wip != null ? ` / ${cfg.wip}` : ""}`;
     col.innerHTML =
       `<div class="colhd${over ? " over" : ""}">
          <span class="cname">${esc(name)}</span>
-         <span class="ccount">${mine.length}${cfg.wip != null ? ` / ${cfg.wip}` : ""}</span>
+         <span class="ccount">${count}</span>
        </div>`;
     if (over) col.querySelector(".colhd").title =
       `Over the WIP limit of ${cfg.wip}. Finish something before starting more.`;
 
     const body = document.createElement("div");
     body.className = "colbody";
-    for (const t of mine) body.appendChild(card(t));
+    for (const t of cards) body.appendChild(card(t));
     col.appendChild(body);
     wrap.appendChild(col);
   }
+  return matched;
 }
+
+const shortDay = d => d.toLocaleDateString([], {weekday:"short", timeZone:"UTC"});
+const CLIP = '<svg width="10" height="10" viewBox="0 0 16 16" aria-hidden="true"><path d="M11 4.5 5.8 9.7a1.6 1.6 0 0 0 2.3 2.3l5.5-5.5a3 3 0 0 0-4.2-4.2L3.7 7.9a4.4 4.4 0 0 0 6.2 6.2L14 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
 
 function card(t){
   const c = document.createElement("div");
@@ -1648,17 +2310,22 @@ function card(t){
     .slice(0, CFG.show.cardChips)
     .map(f => `<span class="chip">${esc(t.custom[f.name])}</span>`).join("");
 
-  const ov = LOAD.overTask.get(t.id);
+  const ov = LOAD.overTask.get(t.id), due = dueState(t);
+  const pct = t.pct > 0 && t.pct < 100 ? t.pct : 0, nAtt = (t.attach || []).length;
   c.innerHTML =
     `<div class="ckey">${esc(t.key)}${b && b.critical ? '<span class="cc" title="on the critical path">critical</span>' : ""}${
-       ov ? `<span class="co" title="${esc(overTip(t, ov))}">overloaded</span>` : ""}</div>
-     <div class="ctitle">${esc(t.title)}</div>
+       ov ? `<span class="co" title="${esc(overTip(t, ov))}">overloaded</span>` : ""}${
+       due === "late" ? `<span class="clate" title="Planned to finish ${iso(b.finish)}">late</span>`
+       : due === "soon" ? `<span class="csoon" title="Planned to finish ${iso(b.finish)}">due ${esc(shortDay(b.finish))}</span>` : ""}</div>
+     <div class="ctitle">${esc(t.title)}${t.repeat ? ` <span class="crep" title="Repeats ${esc(repeatName(t.repeat))}">↻</span>` : ""}</div>
      <div class="cmeta">
        ${t.points != null ? `<span class="chip">${fmtPts(t.points)} pts</span>` : ""}
        ${chips}
+       ${nAtt ? `<span class="chip" title="${nAtt} attachment${nAtt > 1 ? "s" : ""}">${CLIP} ${nAtt}</span>` : ""}
        ${t.assignee ? `<span class="cwho">${esc(t.assignee)}</span>` : ""}
        ${stale !== null ? `<span class="cstale" title="In ${esc(t.status)} for ${stale} days, past the ${S.statusCfg[t.status].staleDays}-day limit for this column">${stale}d</span>` : ""}
-     </div>`;
+     </div>
+     ${pct ? `<div class="cprog" title="${pct}% done"><i style="width:${pct}%"></i></div>` : ""}`;
   c.onclick = () => { sel = t.id; render(); drawer(); };
   cardGrab(c, t);
   return c;
@@ -1709,20 +2376,32 @@ function cardGrab(node, t){
   });
 }
 
-function drawArrows(rows){
+let arrowEls = new Map();        // drawn arrow key -> {html, els}, for drag frames
+function drawArrows(rows, delta = false){
   const svg = el("arrows");
   svg.setAttribute("width", W); svg.setAttribute("height", rows.length*RH);
-  svg.innerHTML = `<defs><marker id="a" markerWidth="7" markerHeight="7" refX="6" refY="3.5"
+  // A full draw is built as one string and set once (a path at a time
+  // through insertAdjacentHTML re-parsed the SVG per link). A drag frame
+  // (delta) redoes only the arrows whose markup changed.
+  const defs = `<defs><marker id="a" markerWidth="7" markerHeight="7" refX="6" refY="3.5"
     orient="auto"><path d="M0 0.5 6 3.5 0 6.5z" fill="var(--arrow)"/></marker>
     <marker id="ac" markerWidth="7" markerHeight="7" refX="6" refY="3.5"
     orient="auto"><path d="M0 0.5 6 3.5 0 6.5z" fill="var(--crit)"/></marker></defs>`;
-  if (!el("tDeps").checked) return;
+  if (!el("tDeps").checked){ svg.innerHTML = defs; arrowEls = new Map(); return; }
 
   const rowOf = new Map(rows.map((r,i) => [r.t.id, i]));
-  // an edge onto a collapsed subtree draws to the visible ancestor instead
-  const vis = id => { let n = taskOf(id); while (n && !rowOf.has(n.id)) n = n.parent_id != null ? taskOf(n.parent_id) : null; return n?.id ?? null; };
+  // An edge onto a collapsed subtree draws to the visible ancestor instead.
+  // Not while filtering: a group shown only as context for a match would
+  // then look linked to things it is not.
+  const f = filtering(), by = new Map(S.tasks.map(t => [t.id, t]));
+  const taskOf = id => by.get(id);                 // a map, not a scan: this runs per link per frame
+  const vis = id => {
+    if (f) return rowOf.has(id) ? id : null;
+    let n = taskOf(id); while (n && !rowOf.has(n.id)) n = n.parent_id != null ? taskOf(n.parent_id) : null;
+    return n?.id ?? null;
+  };
 
-  const seen = new Set();
+  const seen = new Set(), drawn = [];
   for (const d of S.deps){
     const p = vis(d.pred), s = vis(d.succ);
     if (p == null || s == null || p === s) continue;
@@ -1745,15 +2424,34 @@ function drawArrows(rows){
     // collapsed subtree reroutes it onto an ancestor, one line can stand for
     // several links and clicking it would remove an arbitrary one.
     const exact = (p === d.pred && s === d.succ);
-    if (exact)
-      svg.insertAdjacentHTML("beforeend",
-        `<path class="dephit" data-dep="${esc(d.id)}" d="${path}" fill="none"
-          stroke="transparent" stroke-width="${CFG.arrow.hitW}"><title>${esc(taskOf(d.pred)?.key ?? "?")} → ${esc(taskOf(d.succ)?.key ?? "?")} (${esc(d.kind)}${d.lag ? (d.lag>0?"+":"")+d.lag : ""}) — click to remove</title></path>`);
-    svg.insertAdjacentHTML("beforeend",
-      `<path d="${path}" fill="none" stroke="${crit ? "var(--crit)" : "var(--arrow)"}"
+    const html = (exact
+      ? `<path class="dephit" data-dep="${esc(d.id)}" d="${path}" fill="none"
+          stroke="transparent" stroke-width="${CFG.arrow.hitW}"><title>${esc(taskOf(d.pred)?.key ?? "?")} → ${esc(taskOf(d.succ)?.key ?? "?")} (${esc(linkName(d))}) — click to edit</title></path>`
+      : "")
+      + `<path d="${path}" fill="none" stroke="${crit ? "var(--crit)" : "var(--arrow)"}"
         stroke-width="${crit ? CFG.arrow.wCrit : CFG.arrow.wNormal}" marker-end="url(#${crit ? "ac" : "a"})"
-        style="pointer-events:none"/>`);
+        style="pointer-events:none"/>`;
+    drawn.push({key: sig, html, n: exact ? 2 : 1});
   }
+  if (!delta){
+    svg.innerHTML = defs + drawn.map(a => a.html).join("");
+    arrowEls = new Map();
+    const kids = [...svg.children]; let k = 1;           // child 0 is <defs>
+    for (const a of drawn){ arrowEls.set(a.key, {html: a.html, els: kids.slice(k, k + a.n)}); k += a.n; }
+    return;
+  }
+  const keep = new Set();
+  for (const a of drawn){
+    keep.add(a.key);
+    const old = arrowEls.get(a.key);
+    if (old && old.html === a.html) continue;
+    if (old) for (const n of old.els) n.remove();
+    svg.insertAdjacentHTML("beforeend", a.html);
+    const els = [];
+    for (let e = svg.lastElementChild, j = 0; j < a.n; j++, e = e.previousElementSibling) els.unshift(e);
+    arrowEls.set(a.key, {html: a.html, els});
+  }
+  for (const [k, v] of arrowEls) if (!keep.has(k)){ for (const n of v.els) n.remove(); arrowEls.delete(k); }
 }
 
 /* ------------------------------------------------------------------ *
@@ -1774,8 +2472,13 @@ function grab(node, t, mode){
     // fingers are imprecise: a larger slop before a tap becomes a drag,
     // otherwise tapping a bar to select it nudges the schedule
     const SLOP = ev.pointerType === "mouse" ? CFG.ui.slopMouse : CFG.ui.slopTouch;
-    const x0 = ev.clientX, dur0 = t.duration, nb0 = t.not_before;
-    const start0 = bars.get(t.id).start;
+    const x0 = ev.clientX, start0 = bars.get(t.id).start;
+    // A task that has started is pinned by its actual dates (see cpm), so
+    // dragging it corrects those; anything else moves its not-before date or
+    // stretches its duration, as before.
+    const F = ["not_before", "duration", "actual_start", "actual_finish"];
+    const was = Object.fromEntries(F.map(f => [f, t[f]]));
+    const shift = (s, dd) => s ? iso(addD(D(s), dd)) : s;
     let moved = false;
 
     // The drag mutates live for feedback but writes NOTHING to the log.
@@ -1787,24 +2490,26 @@ function grab(node, t, mode){
       if (!moved && Math.abs(e.clientX - x0) < SLOP) return;
       moved = true;
       if (mode === "move"){
-        if (dd !== 0) t.not_before = iso(addD(start0, dd));
-      } else {
-        t.duration = Math.max(0, dur0 + dd);
-      }
-      render();
+        if (was.actual_start){ t.actual_start = shift(was.actual_start, dd); t.actual_finish = shift(was.actual_finish, dd); }
+        else if (dd !== 0) t.not_before = iso(addD(start0, dd));
+      } else if (was.actual_finish) t.actual_finish = shift(was.actual_finish, dd);
+      else t.duration = Math.max(0, was.duration + dd);
+      frame(renderDrag);
     };
     const up = e => {
       if (e && e.pointerId !== pid) return;
       document.removeEventListener("pointermove", move);
       document.removeEventListener("pointerup", up);
       document.removeEventListener("pointercancel", up);
+      cancelAnimationFrame(dragRaf); dragRaf = 0;
       if (!moved) return;
-      const final = {not_before: t.not_before, duration: t.duration};
-      if (final.not_before === nb0 && final.duration === dur0) return;
-      t.not_before = nb0; t.duration = dur0;              // rewind
-      commit(mode === "move" ? `Move ${t.key} to ${final.not_before}`
-                             : `Resize ${t.key} to ${final.duration}d`,
-             () => { t.not_before = final.not_before; t.duration = final.duration; });
+      const final = Object.fromEntries(F.map(f => [f, t[f]]));
+      if (F.every(f => final[f] === was[f])) return render();
+      Object.assign(t, was);                              // rewind
+      commit(mode === "size" ? (was.actual_finish ? `Finish ${t.key} on ${final.actual_finish}`
+                                                  : `Resize ${t.key} to ${final.duration}d`)
+                             : `Move ${t.key} to ${final.actual_start ?? final.not_before}`,
+             () => Object.assign(t, final));
       render(); drawer();
       push(t);
     };
@@ -1850,22 +2555,54 @@ function drawer(){
   const mine = c => c.id === sel
     || (cE(c) === "comment" && c.row?.task_id === sel)
     || (cE(c) === "dep" && (c.row?.pred === sel || c.row?.succ === sel));
-  const hist = [...LOG].reverse().filter(h => h.changes.some(mine));
   // only ever rendered into HTML, so it escapes: these are old/new values
   // of user-entered fields (titles, assignees, custom fields)
   const fmt = v => v === null || v === undefined || v === ""
     ? "—" : esc(typeof v === "object" ? JSON.stringify(v) : v);
   const keyAt = id => esc(taskOf(id)?.key ?? "?");
+  // Bookkeeping says nothing to a person: `pos` moves whenever a sibling is
+  // re-ordered, `status_since` with every status change.
+  const QUIET = new Set(["pos", "status_since"]);
+  const LABEL = {actual_start:"started", actual_finish:"finished", pct:"% done", not_before:"not before"};
   // A create or delete has no field, from or to -- it used to print as
   // ": — → —". Say what happened instead.
   const describe = c => {
     const op = cOp(c), e = cE(c);
-    if (op === "upd") return `${esc(c.field)}: ${fmt(c.from)} → ${fmt(c.to)}`;
+    if (op === "upd" && QUIET.has(c.field)) return "";
+    // a parent is a task id -- 32 hex characters to a person; show its key
+    const where = id => id == null ? "top level" : keyAt(id);
+    if (op === "upd" && c.field === "parent_id") return `parent: ${where(c.from)} → ${where(c.to)}`;
+    if (op === "upd" && c.field === "repeat") return `repeats: ${esc(repeatName(c.from) || "never")} → ${esc(repeatName(c.to) || "never")}`;
+    // JSON fields read as what changed inside them, not as two blobs of JSON
+    if (op === "upd" && c.field === "attach"){
+      const had = new Set((c.from || []).map(a => a.url)), has = new Set((c.to || []).map(a => a.url));
+      return [...(c.to || []).filter(a => !had.has(a.url)).map(a => `attached “${esc(a.label)}”`),
+              ...(c.from || []).filter(a => !has.has(a.url)).map(a => `removed “${esc(a.label)}”`)].join("<br>")
+             || "attachments changed";
+    }
+    if (op === "upd" && c.field === "custom"){
+      const a = c.from || {}, z = c.to || {}, label = k => S.fields.find(f => f.name === k)?.label || k;
+      return [...new Set([...Object.keys(a), ...Object.keys(z)])]
+        .filter(k => JSON.stringify(a[k]) !== JSON.stringify(z[k]))
+        .map(k => `${esc(label(k))}: ${fmt(a[k])} → ${fmt(z[k])}`).join("<br>");
+    }
+    if (op === "upd") return `${esc(LABEL[c.field] || c.field)}: ${fmt(c.from)} → ${fmt(c.to)}`;
     const verb = op === "add" ? "added" : "removed";
     if (e === "task") return op === "add" ? "created" : "deleted";
     if (e === "comment") return `comment ${verb}: “${esc(c.row.body.length > 60 ? c.row.body.slice(0, 57) + "…" : c.row.body)}”`;
     return `link ${keyAt(c.row.pred)} → ${keyAt(c.row.succ)} ${verb}`;
   };
+  const hist = [...LOG].reverse().filter(h => h.changes.some(c => mine(c) && describe(c)));
+
+  const bl = S.baseline?.bars?.[sel], fslip = bl ? slipDays(b.finish, bl[1]) : 0;
+  const rp = isSum ? rollPct(sel) : null;
+  const preds = S.deps.filter(x => x.succ === sel), succs = S.deps.filter(x => x.pred === sel);
+  const att = t.attach || [];
+  const repeatOpts = ["", ...Object.keys(REPEATS), ...(t.repeat && !REPEATS[t.repeat] ? [t.repeat] : [])]
+    .map(v => `<option value="${esc(v)}" ${v === (t.repeat || "") ? "selected" : ""}>${v ? esc(repeatName(v)) : "never"}</option>`).join("");
+  const linkRow = (x, rel, other) => `<div class="lk"><span class="lkrel">${rel}</span>
+      <b>${keyAt(other)}</b><span class="lkt">${esc(taskOf(other)?.title ?? "")}</span>
+      <span class="lkk">${esc(linkName(x))}</span><button type="button" data-link="${esc(x.id)}">Edit</button></div>`;
 
   d.innerHTML = `
     <div class="dhd"><div class="key">${esc(t.key)}</div><h2>${esc(t.title)}</h2></div>
@@ -1889,6 +2626,33 @@ function drawer(){
       ${ov ? `<div class="fld"><label>Workload</label><span style="color:var(--over);font-weight:var(--fwb)">${esc(overTip(t, ov))}</span></div>` : ""}
     </div>
     <div class="sect">
+      <h3>Progress</h3>
+      ${isSum
+        ? `<div class="fld"><label>% done</label><span>${rp == null ? "—" : rp + "%"} <span style="color:var(--muted)">from its tasks</span></span></div>`
+        : `<div class="fld"><label>% done</label><input id="fPc" type="number" min="0" max="100" step="10" placeholder="0" value="${t.pct ?? ""}"></div>
+           <div class="fld"><label>Started</label><input id="fAS" type="date" value="${t.actual_start ?? ""}"></div>
+           <div class="fld"><label>Finished</label><input id="fAF" type="date" value="${t.actual_finish ?? ""}"></div>
+           <div class="fld"><label>Repeats</label><select id="fRp">${repeatOpts}</select></div>`}
+      ${bl ? `<div class="fld"><label>Baseline</label><span>${bl[0]} → ${bl[1]}${fslip
+               ? ` · <b style="color:${fslip > 0 ? "var(--crit)" : "var(--bar-done)"}">finish ${fslip > 0 ? "+" : "−"}${Math.abs(fslip)} d</b>`
+               : " · on plan"}</span></div>` : ""}
+      ${!isSum && !t.actual_start ? `<p class="hint" style="margin:6px 0 0">Moving the card out of the first column fills in Started; a Done column fills in Finished.</p>` : ""}
+    </div>
+    <div class="sect">
+      <h3>Links</h3>
+      ${preds.length || succs.length
+        ? [...preds.map(x => linkRow(x, "waits for", x.pred)), ...succs.map(x => linkRow(x, "then", x.succ))].join("")
+        : `<p style="margin:0;color:var(--muted)">None. Drag the dot at the end of a bar onto another bar to add one.</p>`}
+    </div>
+    <div class="sect">
+      <h3>Attachments${att.length ? ` (${att.length})` : ""}</h3>
+      ${att.map((a, i) => `<div class="att">${CLIP}<a href="${esc(safeUrl(a.url) || "#")}" target="_blank" rel="noopener noreferrer"
+          title="${esc(a.url)}">${esc(a.label || a.url)}</a><button type="button" data-rmatt="${i}" title="Remove this attachment">✕</button></div>`).join("")}
+      <div class="attadd"><input id="atUrl" type="url" placeholder="Paste a link: Google Drive, a vendor page…">
+        <input id="atLbl" placeholder="Name it (optional)"><button type="button" id="atAdd">Attach</button></div>
+      <p class="hint" style="margin:6px 0 0">A link, not the file: the file stays where it lives, and the link travels with the project.</p>
+    </div>
+    <div class="sect">
       <h3>Fields</h3>
       ${S.fields.map(f=>`<div class="fld"><label>${esc(f.label)}</label>${
         f.kind==="select"
@@ -1902,7 +2666,7 @@ function drawer(){
         <div class="hist" data-kind="${esc(h.kind)}">
           <span class="when">${h.at.toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span>
           <span class="what"><b>${esc(h.actor)}</b> ${esc(h.label)}
-            <div class="delta">${h.changes.filter(mine).map(describe).join("<br>")}</div>
+            <div class="delta">${h.changes.filter(mine).map(describe).filter(Boolean).join("<br>")}</div>
           </span>
         </div>`).join("")
         : `<p style="margin:0;color:var(--muted)">No changes recorded yet.</p>`}
@@ -1923,6 +2687,28 @@ function drawer(){
   bind("fDu", "Duration", v => { t.duration = Math.max(0, +v||0); push(t); });
   bind("fPt", "Points",   v => { const n = parseFloat(v); t.points = Number.isFinite(n) ? Math.max(0, n) : null; });
   bind("fNb", "Date",     v => { t.not_before = v || null; push(t); });
+  bind("fPc", "% done",   v => { const n = parseFloat(v); t.pct = Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : null; });
+  bind("fAS", "Started",  v => { t.actual_start = v || null; });
+  bind("fAF", "Finished", v => {
+    t.actual_finish = v || null;
+    // finished means done: take the card to a done column as well, through
+    // setStatus, so a repeating task still leaves its next one behind
+    if (v && !S.statusCfg[t.status]?.done){ const dn = S.statuses.find(s => S.statusCfg[s]?.done); if (dn) setStatus(t, dn); }
+  });
+  bind("fRp", "Repeat",   v => { t.repeat = v || null; });
+  d.querySelectorAll("[data-link]").forEach(n => n.onclick = () => openLink(n.dataset.link));
+  d.querySelectorAll("[data-rmatt]").forEach(n => n.onclick = () => {
+    const i = +n.dataset.rmatt;
+    commit(`Remove attachment from ${t.key}`, () => { t.attach = att.filter((_, k) => k !== i); });
+    render(); drawer();
+  });
+  el("atAdd").onclick = () => {
+    const url = safeUrl(el("atUrl").value || "");
+    if (!url) return note("That is not a web link. Paste one that starts with https://");
+    const label = el("atLbl").value.trim() || url.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60);
+    commit(`Attach to ${t.key}`, () => { t.attach = [...att, {label, url}]; });   // replaced, not mutated
+    render(); drawer();
+  };
   d.querySelectorAll("[data-cf]").forEach(n => n.onchange = e => {
     const k = n.dataset.cf, v = e.target.value;
     const f = S.fields.find(x => x.name === k);
@@ -1961,15 +2747,19 @@ function csv(){
   const keyOf = id => taskOf(id).key;
   const cols = ["key","title","parent_key","status","assignee","duration_days","points","not_before",
                 "early_start","early_finish","late_finish","total_float","critical","depends_on",
+                "pct_done","actual_start","actual_finish","repeats",
+                "baseline_start","baseline_finish","finish_slip_days","attachments",
                 ...S.fields.map(f => f.name)];
   const rows = S.tasks.map(t => {
-    const b = bars.get(t.id);
+    const b = bars.get(t.id), bl = S.baseline?.bars?.[t.id];
     const dep = S.deps.filter(d => d.succ === t.id)
                       .map(d => keyOf(d.pred) + (d.kind !== "FS" || d.lag ? `:${d.kind}${d.lag>=0?"+":""}${d.lag}` : ""))
                       .join(" ");
     return [t.key, t.title, t.parent_id?keyOf(t.parent_id):"", t.status, t.assignee, t.duration,
             t.points, t.not_before, iso(b.start), iso(b.finish), iso(b.lateFin),
             b.summary?"":b.slack, b.critical?"yes":"", dep,
+            b.summary ? (rollPct(t.id) ?? "") : (t.pct ?? ""), t.actual_start, t.actual_finish, repeatName(t.repeat),
+            bl?.[0], bl?.[1], bl ? slipDays(b.finish, bl[1]) : "", (t.attach || []).map(a => a.url).join(" "),
             ...S.fields.map(f => t.custom[f.name])];
   });
   dl("schedule.csv", [cols, ...rows].map(r => r.map(q).join(",")).join("\n"));
@@ -2101,9 +2891,8 @@ function setView(v){
   view = v;
   try { localStorage.setItem("pm.view", v); } catch { /* storage blocked */ }
   [...el("vw").children].forEach(c => c.setAttribute("aria-pressed", c.dataset.v === v));
-  // the zoom and overlay toggles only mean anything on the timeline
-  for (const id of ["zoom","tFloat","tDeps","tCrit","tRes"])
-    el(id).closest(".grp,.tog").style.display = v === "board" ? "none" : "";
+  // zoom and the Show menu only mean anything on the timeline
+  for (const id of ["zoom","mShow"]) el(id).style.display = v === "board" ? "none" : "";
   render(); drawer();
 }
 el("vw").onclick = e => {
@@ -2117,7 +2906,7 @@ el("zoom").onclick = e => {
   [...el("zoom").children].forEach(c => c.setAttribute("aria-pressed", c === b));
   render();
 };
-["tFloat","tDeps","tCrit","tRes"].forEach(id => el(id).onchange = render);
+["tFloat","tDeps","tCrit","tRes","tBase"].forEach(id => el(id).onchange = render);
 el("csv").onclick = csv;
 // wrapped, not passed by reference: onclick would hand the click event in
 // as `prefix` and the file would be named after a PointerEvent
@@ -2139,7 +2928,146 @@ el("bDel").onclick = () => sel && deleteTask(sel);
 
 el("arrows").addEventListener("click", e => {
   const p = e.target.closest("[data-dep]");
-  if (p) removeDep(p.dataset.dep);
+  if (p) openLink(p.dataset.dep);
+});
+
+/* ---- filters ---- */
+function syncWho(){
+  const s = el("who"), names = allPeople();
+  // a remembered person with no tasks left still shows as the choice
+  if (filt.who && filt.who !== NOBODY && !names.includes(filt.who)) names.push(filt.who);
+  const want = names.join("\n");
+  if (s.dataset.opts !== want){
+    s.innerHTML = `<option value="">Everyone</option>` + names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("")
+                + `<option value="${NOBODY}">Unassigned</option>`;
+    s.dataset.opts = want;
+  }
+  s.value = filt.who;
+  el("q").classList.toggle("on", !!filt.q.trim());
+  s.classList.toggle("on", !!filt.who);
+  el("due").classList.toggle("on", !!filt.due);
+}
+let qTimer = 0;
+el("q").addEventListener("input", () => { filt.q = el("q").value; clearTimeout(qTimer); qTimer = setTimeout(render, 120); });
+el("who").onchange = () => { filt.who = el("who").value; try { localStorage.setItem("pm.who", filt.who); } catch { /* blocked */ } render(); };
+el("due").onchange = () => { filt.due = el("due").value; render(); };
+el("bClear").onclick = () => {
+  filt.q = filt.who = filt.due = ""; el("q").value = ""; el("due").value = "";
+  try { localStorage.removeItem("pm.who"); } catch { /* blocked */ }
+  render();
+};
+
+/* ---- toolbar menus: one open at a time, closed by a click elsewhere ---- */
+const menus = () => document.querySelectorAll("details.menu");
+document.addEventListener("click", e => { for (const m of menus()) if (m.open && !m.contains(e.target)) m.open = false; });
+for (const m of menus()){
+  m.addEventListener("toggle", () => { if (m.open) for (const o of menus()) if (o !== m) o.open = false; });
+  m.querySelectorAll(".menupop button").forEach(b => b.addEventListener("click", () => { m.open = false; }));
+}
+
+/* ---- baseline ---- */
+/* A snapshot of every bar's planned dates, to measure slippage against. One
+   journalled change, so Ctrl+Z un-saves it like anything else. */
+function saveBaseline(){
+  if (!S.tasks.length || !bars) return;
+  if (S.baseline && !confirm(`Replace the baseline saved ${fmtWhen(new Date(S.baseline.saved))} with the plan as it is now?`)) return;
+  const snap = {};
+  for (const [id, b] of bars) snap[id] = [iso(b.start), iso(b.finish)];
+  commit("Save baseline", () => { S.baseline = {saved:new Date().toISOString(), bars:snap}; });
+  el("tBase").checked = true;
+  render(); drawer();
+}
+function clearBaseline(){
+  if (!S.baseline) return;
+  commit("Clear baseline", () => { S.baseline = null; });
+  render(); drawer();
+}
+function paintBaseInfo(){
+  el("baseInfo").textContent = S.baseline
+    ? `Saved ${fmtWhen(new Date(S.baseline.saved))}. The grey bars show where each task sat then.`
+    : "No baseline yet. Save one, and later changes to the plan show up as slippage.";
+  el("bBaseClear").disabled = !S.baseline;
+}
+el("bBase").onclick = saveBaseline;
+el("bBaseClear").onclick = clearBaseline;
+
+/* ---- calendar export ---- */
+/* Due dates as all-day calendar events, one per unfinished task, each with a
+   reminder at 9am the day before. There is no server to push a notification
+   from, so this hands the reminding to the phone's own calendar. It follows
+   the filter: pick yourself first to export just your own dates. */
+function icsText(){
+  const f = filterSets(), parents = parentSet();
+  const d8 = d => iso(d).replace(/-/g, "");
+  const txt = s => String(s ?? "").replace(/[\\;,]/g, m => "\\" + m).replace(/\r?\n/g, "\\n");
+  const fold = l => { let out = ""; while (l.length > 73){ out += l.slice(0, 73) + "\r\n "; l = l.slice(73); } return out + l; };
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+  const L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//pmcore//Schedule//EN", "CALSCALE:GREGORIAN",
+             `X-WR-CALNAME:${txt(S.name || "Schedule")}`];
+  for (const t of S.tasks){
+    if (parents.has(t.id) || (f && !f.self.has(t.id))) continue;
+    const b = bars.get(t.id);
+    if (!b || b.finished || S.statusCfg[t.status]?.done) continue;
+    L.push("BEGIN:VEVENT", `UID:${t.id}@schedule`, `DTSTAMP:${stamp}`,
+      `DTSTART;VALUE=DATE:${d8(b.finish)}`, `DTEND;VALUE=DATE:${d8(addD(b.finish, 1))}`,
+      `SUMMARY:${txt(`Due: ${t.key} ${t.title}`)}`,
+      `DESCRIPTION:${txt([t.assignee && `For ${t.assignee}`, `Planned ${iso(b.start)} to ${iso(b.finish)}`,
+                          ...(t.attach || []).map(a => a.url)].filter(Boolean).join("\n"))}`,
+      "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${txt(`${t.key} ${t.title} is due tomorrow`)}`,
+      "TRIGGER:-PT15H", "END:VALARM", "END:VEVENT");
+  }
+  L.push("END:VCALENDAR");
+  return L.map(fold).join("\r\n") + "\r\n";
+}
+el("ics").onclick = () => {
+  const name = (S.name || "schedule").replace(/[^A-Za-z0-9._-]+/g, "-").slice(0, 40);
+  dl(`${name}-due-${stampName(new Date())}.ics`, icsText(), "text/calendar");
+};
+
+/* ---- the task list's width ---- */
+/* A device preference, like the text size, and kept as a multiple of the
+   text size so it scales with it (invariant 11b). Drag the column's right
+   edge, or double-click it to fit the longest name on screen. */
+const GRID_MIN = 16, GRID_MAX = 80;               // in units of the text size
+function applyGridW(k){
+  const r = document.documentElement.style;
+  if (k) r.setProperty("--grid-w", `calc(var(--fs) * ${k})`); else r.removeProperty("--grid-w");
+  try { k ? localStorage.setItem("pm.gridW", String(k)) : localStorage.removeItem("pm.gridW"); } catch { /* blocked */ }
+}
+try { const k = +localStorage.getItem("pm.gridW"); if (k) document.documentElement.style.setProperty("--grid-w", `calc(var(--fs) * ${k})`); }
+catch { /* blocked */ }
+el("gridsizer").addEventListener("pointerdown", ev => {
+  if (!ev.isPrimary || ev.button > 0) return;
+  ev.preventDefault();
+  const pid = ev.pointerId, x0 = ev.clientX, w0 = el("grid").getBoundingClientRect().width, fs = appear.fs;
+  el("gridsizer").classList.add("on");
+  const move = e => {
+    if (e.pointerId !== pid) return;
+    const k = Math.min(GRID_MAX, Math.max(GRID_MIN, (w0 + e.clientX - x0) / fs));
+    document.documentElement.style.setProperty("--grid-w", `calc(var(--fs) * ${k.toFixed(2)})`);
+  };
+  const up = e => {
+    if (e.pointerId !== pid) return;
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", up);
+    document.removeEventListener("pointercancel", up);
+    el("gridsizer").classList.remove("on");
+    applyGridW(+(el("grid").getBoundingClientRect().width / fs).toFixed(2));
+  };
+  document.addEventListener("pointermove", move);
+  document.addEventListener("pointerup", up);
+  document.addEventListener("pointercancel", up);
+});
+el("gridsizer").addEventListener("dblclick", () => {
+  // the widest name on screen, untruncated, plus the date and float columns
+  let need = 0;
+  for (const n of document.querySelectorAll("#rows .name")){
+    const ttl = n.querySelector(".ttl");
+    need = Math.max(need, n.scrollWidth + (ttl ? ttl.scrollWidth - ttl.clientWidth : 0));
+  }
+  const cols = [...el("grid").querySelector(".ghd").children].slice(1)
+    .reduce((a, c) => a + c.getBoundingClientRect().width, 0);
+  applyGridW(+Math.min(GRID_MAX, Math.max(GRID_MIN, (need + cols + 4) / appear.fs)).toFixed(2));
 });
 
 /* Where the keyboard's own undo belongs: anything you type text into.
@@ -2154,7 +3082,14 @@ const typesText = n => n.isContentEditable || n.tagName === "TEXTAREA"
                     || (n.tagName === "INPUT" && !TEXTLESS.has(n.type));
 
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape"){ sel = null; drawer(); render(); return; }
+  if (e.key === "Escape"){
+    // an open menu first, then the search box (which clears itself); only
+    // a bare Escape clears the selection
+    const open = [...menus()].find(m => m.open);
+    if (open){ open.open = false; return; }
+    if (e.target === el("q")) return;
+    sel = null; drawer(); render(); return;
+  }
   const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
   // With a dialog open, what is on screen is a DRAFT of the project; an
   // undo underneath it would leave the draft describing a state that is gone.
@@ -2164,7 +3099,8 @@ document.addEventListener("keydown", e => {
   }
   // typing in a field must not be hijacked by the row shortcuts
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
-  if (typing || el("dset").open) return;
+  if (typing || document.querySelector("dialog[open]")) return;
+  if (e.key === "/"){ e.preventDefault(); el("q").focus(); el("q").select(); return; }
   if (e.key === "Insert"){ e.preventDefault(); addTask(sel ? taskOf(sel)?.parent_id ?? null : null); }
   if (e.key === "Delete" && sel){ e.preventDefault(); deleteTask(sel); }
 });
@@ -2182,16 +3118,22 @@ function paintAppearance(){
 // you are choosing by looking at the result.
 const setAppear = patch => {
   appear = {...appear, ...patch};
-  applyAppearance(); paintAppearance();
+  applyAppearance(); staleRH(); paintAppearance();
   render();          // bar and column geometry is measured from the font
 };
 el("bApp").onclick = () => { paintAppearance(); el("dapp").showModal(); };
+el("bTheme").onclick = () => setAppear({theme: document.documentElement.dataset.theme === "dark" ? "light" : "dark"});
+
+/* Clicking the project's name opens Settings on it, name selected. */
+const openRename = () => { el("bSet").click(); el("sName").focus(); el("sName").select(); };
+el("pname").onclick = openRename;
+el("pname").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openRename(); } });
 el("aTheme").onclick  = e => { const b = e.target.closest("[data-t]"); if (b) setAppear({theme:b.dataset.t}); };
 el("aWeight").onclick = e => { const b = e.target.closest("[data-w]"); if (b) setAppear({weight:b.dataset.w}); };
 el("aFont").onchange  = e => setAppear({font:e.target.value});
 el("aMinus").onclick  = () => setAppear({fs:Math.max(FS_MIN, appear.fs - 1)});
 el("aPlus").onclick   = () => setAppear({fs:Math.min(FS_MAX, appear.fs + 1)});
-el("aReset").onclick  = () => setAppear({...APPEAR_DEFAULT});
+el("aReset").onclick  = () => { applyGridW(null); setAppear({...APPEAR_DEFAULT}); };
 
 /* ---- project settings ---- */
 /* The dialog edits DRAFT copies. Nothing touches S until Save, so Cancel
@@ -2202,6 +3144,7 @@ el("bSet").onclick = () => {
   el("sName").value   = S.name || "";
   el("sOrigin").value = S.origin;
   el("sHol").value    = (S.holidays || []).join("\n");
+  el("sBoardFrom").value = String(S.boardFrom || 1);
   el("sWarn").hidden  = true;
   dCols   = S.statuses.map(n => ({name:n, orig:n, ...S.statusCfg[n]}));
   dFields = S.fields.map(f => ({...f, orig:f.name, options:[...(f.options||[])]}));
@@ -2366,6 +3309,7 @@ el("sOk").onclick = () => {
     S.fields = dFields.map(f => ({name:f.name, label:f.label.trim(), kind:f.kind,
                                  ...(f.options?.length ? {options:f.options} : {})}));
     S.people = people.map(p => ({name:p.name, capacity:p.capacity ?? null}));
+    S.boardFrom = +el("sBoardFrom").value || 1;
     // Removing a field drops the DEFINITION only; the values stay in each
     // task's `custom`, invisible but intact, so re-adding the field brings
     // the data back. Deleting a column of real data because someone tidied
@@ -2423,6 +3367,8 @@ function normalize(st){
   st.comments  = st.comments || [];
   st.fields    = st.fields   || [];
   st.people    = st.people   || [];      // points-per-week limits; see workload()
+  st.boardFrom = st.boardFrom || 1;      // first level of the tree that gets cards
+  st.baseline  = st.baseline  || null;   // never undefined: undo JSON.parses it back
   st.statuses  = st.statuses || ["Backlog", "In Progress", "Done"];
   st.deps      = (st.deps || []).map(d => d.id ? d : {...d, id: newId()});
 
@@ -2454,7 +3400,7 @@ function staleBy(t){
   const d = daysInStatus(t);
   return d >= cfg.staleDays ? d : null;
 }
-const staleTasks = () => S.tasks.filter(t => !kidsOf(t.id).length && staleBy(t) !== null);
+const staleTasks = () => boardTasks().filter(t => staleBy(t) !== null);
 
 function idb(){
   return new Promise((res, rej) => {
@@ -2492,6 +3438,7 @@ async function writeState(){
 // gesture rather than one per frame.
 let saveTimer = null, saveWarned = false;
 function save(){
+  if (lockMsg) return;              // a newer build's project is stored here; see load()
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     writeState().catch(e => {
@@ -2514,6 +3461,16 @@ async function load(){
   // 2. whatever this device saved last
   try {
     const rec = await readState();
+    // Saved by a NEWER build. Loading the sample and saving it -- what this
+    // used to fall through to -- would overwrite that project, and every
+    // file:// copy of the app shares one database, so an old Schedule.html
+    // left in Downloads could wipe the work. Refuse to touch it instead.
+    if (rec && rec.schema > SCHEMA){
+      lockMsg = "This device's project was saved by a newer version of the app, so this copy "
+              + "will not touch it, and nothing you do here is saved. Open the newer version to carry on.";
+      render();
+      return;
+    }
     if (rec && rec.schema === SCHEMA && rec.S){
       S = normalize(rec.S);
       LOG.length = 0; LOG.push(...(rec.LOG || []));
