@@ -33,6 +33,11 @@
   --shadow-md:0 8px 22px rgba(0,0,0,.22);
   --shadow-lg:0 12px 40px rgba(0,0,0,.22);
   --scrim:rgba(20,24,28,.38);
+  --shadow-hover:0 6px 16px rgba(0,0,0,.09);
+  /* shape: how round things are, in one place */
+  --r-sm:6px; --r-md:9px; --r-lg:13px; --r-pill:999px;
+  /* people's initials: the hue comes from the name (--h, set inline) */
+  --av-s:50%; --av-l:86%; --av-fs:45%; --av-fl:28%;
 
   /* typography, all driven from the Appearance dialog */
   --fs:13px;
@@ -41,8 +46,10 @@
   --ff:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 
   /* geometry derives from --fs so the text-size control actually works;
-     the multipliers reproduce the original pixel values at --fs:13px */
-  --row-h:calc(var(--fs)*2.31);
+     the multipliers reproduce the original pixel values at --fs:13px.
+     --dens is the Spacing choice: it scales rows and cards, not text */
+  --dens:1;
+  --row-h:calc(var(--fs)*2.31*var(--dens));
   --grid-w:calc(var(--fs)*33.2);
   --col-date:calc(var(--fs)*7.1);
   --col-float:calc(var(--fs)*3.7);
@@ -64,12 +71,15 @@
   --shadow-md:0 8px 22px rgba(0,0,0,.55);
   --shadow-lg:0 12px 40px rgba(0,0,0,.6);
   --scrim:rgba(0,0,0,.55);
+  --shadow-hover:0 6px 18px rgba(0,0,0,.5);
+  --av-l:30%; --av-fl:86%;
   color-scheme:dark;      /* native scrollbars, date pickers, checkboxes */
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{
   font:var(--fw) var(--fs)/1.45 var(--ff);
+  font-stretch:var(--fst,normal);        /* the Condensed font choice */
   font-variant-numeric:tabular-nums;
   color:var(--ink);background:var(--shell);
   display:flex;flex-direction:column;overflow:hidden;
@@ -79,7 +89,7 @@ button,select,input,textarea{font:inherit;color:inherit}
 
 /* ---- top bar ---- */
 header{
-  display:flex;align-items:center;gap:12px 16px;padding:9px 14px;flex-wrap:wrap;
+  display:flex;align-items:center;gap:12px;padding:9px 14px;flex-wrap:wrap;
   background:var(--paper);border-bottom:1px solid var(--rule);flex:none;
 }
 h1{font-size:calc(var(--fs)*1.08);font-weight:var(--fwb);margin:0;letter-spacing:-.01em}
@@ -89,8 +99,10 @@ h1{font-size:calc(var(--fs)*1.08);font-weight:var(--fwb);margin:0;letter-spacing
 .ghost.icon{display:inline-grid;place-items:center;padding:4px 8px;line-height:1}
 .spacer{flex:1}
 .grp{display:flex;align-items:center;gap:2px;background:var(--panel);
-  border:1px solid var(--rule);border-radius:5px;padding:2px}
-.grp button{border:0;background:none;padding:3px 10px;border-radius:3px;cursor:pointer;color:var(--muted)}
+  border:1px solid var(--rule);border-radius:var(--r-md);padding:3px}
+.grp button{border:0;background:none;padding:3px 10px;border-radius:calc(var(--r-md) - 3px);cursor:pointer;color:var(--muted);
+  transition:background .12s,color .12s}
+.grp button.ico{display:inline-grid;place-items:center;padding:3px 8px}
 .grp button[aria-pressed=true]{background:var(--ink);color:var(--on-accent)}
 .grp button:disabled{opacity:.38;cursor:default}
 .hist{padding:7px 0;border-top:1px solid var(--rule-soft);display:flex;gap:9px}
@@ -102,8 +114,8 @@ h1{font-size:calc(var(--fs)*1.08);font-weight:var(--fwb);margin:0;letter-spacing
 .hist[data-kind=undo] .what,.hist[data-kind=redo] .what{color:var(--muted);font-style:italic}
 .tog{display:flex;align-items:center;gap:6px;color:var(--muted);cursor:pointer;user-select:none}
 .tog input{margin:0;accent-color:var(--ink)}
-.ghost{border:1px solid var(--rule);background:var(--paper);padding:5px 11px;
-  border-radius:5px;cursor:pointer}
+.ghost{border:1px solid var(--rule);background:var(--paper);padding:5px 12px;
+  border-radius:var(--r-md);cursor:pointer;transition:background .12s,border-color .12s}
 .ghost:hover{background:var(--panel)}
 .stat{color:var(--muted)}
 .stat b{color:var(--crit);font-weight:var(--fwb)}
@@ -114,16 +126,16 @@ details.menu > summary::-webkit-details-marker{display:none}
 details.menu > summary::after{content:" \25BE";color:var(--muted)}
 .menupop{position:absolute;top:calc(100% + 4px);left:0;z-index:40;min-width:max-content;
   display:flex;flex-direction:column;gap:7px;padding:10px 12px;background:var(--paper);
-  border:1px solid var(--rule);border-radius:7px;box-shadow:var(--shadow-md)}
+  border:1px solid var(--rule);border-radius:var(--r-lg);box-shadow:var(--shadow-md)}
 details.menu.right .menupop{left:auto;right:0}
-.menupop button{border:1px solid var(--rule);background:var(--paper);padding:5px 11px;
-  border-radius:5px;cursor:pointer;text-align:left}
+.menupop button{border:1px solid var(--rule);background:var(--paper);padding:5px 12px;
+  border-radius:var(--r-sm);cursor:pointer;text-align:left}
 .menupop button:hover{background:var(--panel)}
 .menupop hr{border:0;border-top:1px solid var(--rule-soft);margin:2px 0}
 .menupop .hint{margin:0;max-width:calc(var(--fs)*20)}
 /* filters: a search box, whose tasks, and when they are due */
-.filt{padding:4px 7px;border:1px solid var(--rule);border-radius:5px;background:var(--paper)}
-#q{width:calc(var(--fs)*11)}
+.filt{padding:4px 9px;border:1px solid var(--rule);border-radius:var(--r-md);background:var(--paper)}
+#q{width:calc(var(--fs)*9)}
 #who,#due{max-width:calc(var(--fs)*11)}
 .filt.on{border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
 #nomatch{margin:0;padding:10px 15px;background:var(--panel);color:var(--muted);border-bottom:1px solid var(--rule)}
@@ -131,7 +143,10 @@ details.menu.right .menupop{left:auto;right:0}
 #nomatch button{margin-left:8px}
 
 /* ---- layout ---- */
-#wrap{flex:1;display:flex;min-height:0;position:relative}
+/* the views and the drawer share #main, so the drawer opens beside
+   whichever view is up -- it used to sit in #wrap and hide with the Gantt */
+#main{flex:1;display:flex;min-height:0;min-width:0;position:relative}
+#wrap{flex:1;display:flex;min-height:0;min-width:0;position:relative}
 /* an id selector outranks the UA's [hidden]{display:none}, so switching
    views needs this or both projections render at once */
 #wrap[hidden]{display:none}
@@ -168,7 +183,7 @@ details.menu.right .menupop{left:auto;right:0}
 .grow.droptarget{background:var(--drop);box-shadow:inset 0 0 0 2px var(--focus)}
 .grow.dropbad{background:var(--crit-soft)}
 .ghd.droptarget{background:var(--drop);color:var(--ink)}
-.rowghost{position:fixed;z-index:99;pointer-events:none;padding:3px 9px;border-radius:5px;
+.rowghost{position:fixed;z-index:99;pointer-events:none;padding:4px 12px;border-radius:var(--r-pill);
   background:var(--ink);color:var(--on-accent);box-shadow:var(--shadow-md);white-space:nowrap;
   font-size:calc(var(--fs)*.92)}
 .num{text-align:right;padding-right:8px;color:var(--muted)}
@@ -196,7 +211,7 @@ details.menu.right .menupop{left:auto;right:0}
 
 /* touch-action:none on every draggable: without it Android pans the
    timeline instead of letting pointermove reach the drag handler */
-.bar{position:absolute;height:var(--bar-h);border-radius:3px;background:var(--bar);
+.bar{position:absolute;height:var(--bar-h);border-radius:var(--r-pill);background:var(--bar);
   cursor:grab;display:flex;align-items:center;overflow:visible;touch-action:none}
 .bar:active{cursor:grabbing}
 .bar[data-st="Done"]{background:var(--bar-done)}
@@ -213,7 +228,7 @@ details.menu.right .menupop{left:auto;right:0}
 .sum::before{left:0;border-right:5px solid transparent}
 .sum::after{right:0;border-left:5px solid transparent}
 .ms{position:absolute;width:var(--ms-h);height:var(--ms-h);background:var(--summary);
-  transform:rotate(45deg);border-radius:2px;cursor:grab;touch-action:none}
+  transform:rotate(45deg);border-radius:3px;cursor:grab;touch-action:none}
 .ms[data-crit="1"]{background:var(--crit)}
 
 /* Coarse pointer (tablet): a 6px resize handle and a 16px bar are not
@@ -223,14 +238,14 @@ details.menu.right .menupop{left:auto;right:0}
   /* drive the variable, not .grow's height: the bars are absolutely
      positioned from --row-h too, so changing one without the other
      slides the timeline out of register with the grid */
-  :root{--row-h:calc(var(--fs)*2.92)}
+  :root{--row-h:calc(var(--fs)*2.92*var(--dens))}
   .bar .hnd{width:22px}
   .bar .hnd.r{right:-10px}
   .bar::after{content:"";position:absolute;left:0;right:0;top:-7px;bottom:-7px}
   .ms::after{content:"";position:absolute;left:-8px;right:-8px;top:-8px;bottom:-8px}
   .chev{width:24px;height:24px}
 }
-.float{position:absolute;height:var(--bar-h);border-radius:0 3px 3px 0;pointer-events:none;
+.float{position:absolute;height:var(--bar-h);border-radius:0 var(--r-pill) var(--r-pill) 0;pointer-events:none;
   background:repeating-linear-gradient(-45deg,var(--crit-soft) 0 4px,transparent 4px 8px);
   border:1px solid var(--crit-soft);border-left:0}
 
@@ -255,13 +270,14 @@ details.menu.right .menupop{left:auto;right:0}
   font-size:calc(var(--fs)*.85);border-left:1px solid var(--rule-soft);overflow:hidden}
 .rcell[data-free="1"]{color:var(--muted)}
 .rcell[data-over="1"]{background:var(--over-soft);color:var(--over);font-weight:var(--fwb)}
-.rcell .util{position:absolute;left:3px;bottom:3px;height:3px;border-radius:2px;background:var(--load)}
+.rcell .util{position:absolute;left:3px;bottom:3px;height:3px;border-radius:var(--r-pill);background:var(--load)}
 .rcell[data-over="1"] .util{background:var(--over)}
 .rtoday{position:absolute;top:0;width:1px;background:var(--today);pointer-events:none}
 
 /* ---- progress, baseline, late, repeating ---- */
-.bar .prog{position:absolute;left:0;top:0;bottom:0;background:var(--prog);border-radius:3px 0 0 3px;pointer-events:none}
-.base{position:absolute;height:3px;border-radius:2px;background:var(--base);pointer-events:none}
+.bar .prog{position:absolute;left:0;top:0;bottom:0;background:var(--prog);border-radius:var(--r-pill) 0 0 var(--r-pill);pointer-events:none}
+.bar .prog.full{border-radius:var(--r-pill)}
+.base{position:absolute;height:3px;border-radius:var(--r-pill);background:var(--base);pointer-events:none}
 .lbl .late{color:var(--crit);font-weight:var(--fwb)}
 .lbl .rep,.crep{color:var(--muted)}
 /* shown only because something under it matches the filter */
@@ -275,57 +291,168 @@ details.menu.right .menupop{left:auto;right:0}
 @media (pointer:coarse){ #gridsizer{width:18px;right:-9px} }
 
 /* ---- board ---- */
-#boardwrap{flex:1;display:flex;flex-direction:column;min-height:0;overflow:auto;background:var(--shell)}
+#boardwrap{flex:1;display:flex;flex-direction:column;min-height:0;min-width:0;overflow:auto;background:var(--shell)}
 #boardwrap[hidden]{display:none}
 /* Columns share the width instead of sitting at a fixed 250px, which used
    half a 1920px screen. Below their minimum the board scrolls sideways:
    renderBoard() sets #board's min-width from the column count. */
 #board{display:flex;gap:10px;padding:12px;align-items:flex-start;flex:1 0 auto}
 .col{flex:1 1 0;min-width:calc(var(--fs)*16);max-width:calc(var(--fs)*36);background:var(--panel);
-  border:1px solid var(--rule);border-radius:7px;display:flex;flex-direction:column;max-height:100%}
+  border:1px solid var(--rule);border-radius:var(--r-lg);display:flex;flex-direction:column;max-height:100%}
 .colhd{display:flex;align-items:center;gap:8px;padding:8px 10px;
   border-bottom:1px solid var(--rule);font-weight:var(--fwb)}
 .colhd .ccount{margin-left:auto;color:var(--muted);font-weight:400}
-.colhd.over{color:var(--warn-ink);background:var(--crit-soft);border-radius:6px 6px 0 0}
+.colhd.over{color:var(--warn-ink);background:var(--crit-soft);border-radius:calc(var(--r-lg) - 1px) calc(var(--r-lg) - 1px) 0 0}
 .colhd.over .ccount{color:var(--warn-ink);font-weight:var(--fwb)}
-.colbody{padding:8px;display:flex;flex-direction:column;gap:7px;overflow:auto;min-height:52px}
+.colbody{padding:8px;display:flex;flex-direction:column;gap:calc(7px*var(--dens));overflow:auto;min-height:52px}
 .col.dropinto{outline:2px solid var(--focus);outline-offset:-1px}
 .col.dropinto .colbody{background:var(--drop)}
 
-.card{background:var(--paper);border:1px solid var(--rule);border-radius:6px;
-  padding:8px 9px;cursor:grab;touch-action:none;box-shadow:var(--shadow-sm)}
-.card:hover{border-color:var(--muted)}
+.card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--r-md);
+  padding:calc(8px*var(--dens)) 10px;cursor:grab;touch-action:none;box-shadow:var(--shadow-sm);
+  transition:box-shadow .15s,border-color .15s}
+.card:hover{border-color:var(--muted);box-shadow:var(--shadow-hover)}
 .card[data-sel="1"]{outline:2px solid var(--focus);outline-offset:-1px}
 .card.dragging{opacity:.35}
 .card.ghost{position:fixed;z-index:99;width:calc(var(--fs)*17.8);pointer-events:none;
   box-shadow:var(--shadow-md);opacity:.95;cursor:grabbing}
 .ckey{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:calc(var(--fs)*.92)}
-.cc{background:var(--crit-soft);color:var(--warn-ink);border-radius:3px;padding:0 5px;font-size:calc(var(--fs)*.85)}
+.cc{background:var(--crit-soft);color:var(--warn-ink);border-radius:var(--r-pill);padding:0 7px;font-size:calc(var(--fs)*.85)}
 .ctitle{margin:2px 0 6px;line-height:1.3}
 .cmeta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.chip{background:var(--panel);border:1px solid var(--rule-soft);border-radius:3px;
-  padding:0 5px;font-size:calc(var(--fs)*.85);color:var(--muted)}
+.chip{background:var(--panel);border:1px solid var(--rule-soft);border-radius:var(--r-pill);
+  padding:0 7px;font-size:calc(var(--fs)*.85);color:var(--muted)}
 .cwho{margin-left:auto;color:var(--muted);font-size:calc(var(--fs)*.92)}
-.cstale{background:var(--crit);color:#fff;border-radius:3px;padding:0 5px;
+.cstale{background:var(--crit);color:#fff;border-radius:var(--r-pill);padding:0 7px;
   font-size:calc(var(--fs)*.85);font-weight:var(--fwb)}
-@media (pointer:coarse){ .col{min-width:calc(var(--fs)*18)} .card{padding:11px} }
-.clate{background:var(--crit-soft);color:var(--warn-ink);border-radius:3px;padding:0 5px;
+@media (pointer:coarse){ .col{min-width:calc(var(--fs)*18)} .card{padding:calc(11px*var(--dens)) 11px} }
+.clate{background:var(--crit-soft);color:var(--warn-ink);border-radius:var(--r-pill);padding:0 7px;
   font-size:calc(var(--fs)*.85);font-weight:var(--fwb)}
-.csoon{background:var(--panel);border:1px solid var(--rule);border-radius:3px;padding:0 5px;
+.csoon{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r-pill);padding:0 7px;
   font-size:calc(var(--fs)*.85)}
-.cprog{height:3px;background:var(--rule-soft);border-radius:2px;margin-top:7px;overflow:hidden}
+.cprog{height:4px;background:var(--rule-soft);border-radius:var(--r-pill);margin-top:8px;overflow:hidden}
 .cprog i{display:block;height:100%;background:var(--bar)}
-.co{background:var(--over-soft);color:var(--over);border-radius:3px;padding:0 5px;font-size:calc(var(--fs)*.85)}
-/* this week's load per person, above the columns */
-#weekstrip{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 12px 0;flex:none}
+/* quick add, at the foot of each column */
+.qadd{padding:0 8px 8px}
+.qadd .qbtn{width:100%;text-align:left;border:0;background:none;color:var(--muted);
+  padding:6px 6px;border-radius:var(--r-md);cursor:pointer}
+.qadd .qbtn:hover{background:var(--drop);color:var(--ink)}
+.qadd .qrow{display:flex;gap:6px;align-items:stretch}
+.qadd .qin{flex:1;min-width:0;padding:6px 9px;border:1px solid var(--focus);border-radius:var(--r-md);background:var(--paper)}
+.qadd .qok{border:0;background:var(--ink);color:var(--on-accent);border-radius:var(--r-md);padding:0 12px;cursor:pointer}
+.qadd .qx{border:0;background:none;color:var(--muted);cursor:pointer;padding:0 4px}
+@media (pointer:coarse){ .qadd .qin{padding:9px 10px} .qadd .qbtn{padding:10px 6px} }
+.co{background:var(--over-soft);color:var(--over);border-radius:var(--r-pill);padding:0 7px;font-size:calc(var(--fs)*.85)}
+/* above the columns: which sprint, and this week's load per person */
+#boardbar{display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap;padding:12px 12px 0;flex:none}
+#boardbar[hidden]{display:none}
+.bspr{display:flex;align-items:center;gap:6px;color:var(--muted)}
+.bspr[hidden]{display:none}
+#weekstrip{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #weekstrip[hidden]{display:none}
 #weekstrip .wlbl{color:var(--muted);font-size:calc(var(--fs)*.92)}
-.pchip{background:var(--paper);border:1px solid var(--rule);border-radius:calc(var(--fs)*1.2);
-  padding:2px 10px;white-space:nowrap}
+.pchip{display:inline-flex;align-items:center;gap:5px;background:var(--paper);border:1px solid var(--rule);
+  border-radius:var(--r-pill);padding:2px 11px 2px 3px;white-space:nowrap}
 .pchip b{font-weight:var(--fwb)}
 .pchip.over{background:var(--over-soft);border-color:var(--over);color:var(--over)}
 .stat b.ovs{color:var(--over)}
 .stat b.ahead{color:var(--bar-done)}
+
+/* ---- sprints ---- */
+#sprintwrap{flex:1;min-width:0;min-height:0;overflow:auto;background:var(--shell)}
+#sprintwrap[hidden]{display:none}
+#sprints{display:flex;flex-direction:column;gap:12px;padding:12px;max-width:calc(var(--fs)*92)}
+.sptop{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}
+.spr{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r-lg)}
+.spr.dropinto{outline:2px solid var(--focus);outline-offset:-1px}
+.spr.dropinto .spbody{background:var(--drop)}
+.sphd{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:8px 10px;border-bottom:1px solid var(--rule)}
+.sphd .spname{font-weight:var(--fwb)}
+.sphd button.spname{border:0;background:none;padding:2px 5px;margin:-2px -5px;border-radius:var(--r-sm);cursor:pointer}
+.sphd button.spname:hover{background:var(--paper)}
+.spdates,.spsum{color:var(--muted)}
+.spstate{background:var(--ink);color:var(--on-accent);border-radius:var(--r-pill);padding:0 8px;
+  font-size:calc(var(--fs)*.85);font-weight:var(--fwb)}
+.sphd .ghost{padding:3px 10px}
+.spbody{display:flex;flex-direction:column;gap:calc(4px*var(--dens));padding:8px;min-height:calc(var(--row-h) + 16px)}
+.spempty{margin:0;padding:6px 4px;color:var(--muted)}
+.sphint{margin:0;padding:0 10px 8px}
+.srow{display:grid;align-items:center;gap:10px;min-height:var(--row-h);padding:0 10px;
+  grid-template-columns:calc(var(--fs)*4.6) minmax(0,1fr) calc(var(--fs)*7.2) calc(var(--fs)*7) calc(var(--fs)*4) calc(var(--fs)*7.4);
+  background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--r-md);cursor:pointer;
+  user-select:none;-webkit-user-select:none;transition:border-color .12s,box-shadow .15s}
+.srow:hover{border-color:var(--muted)}
+.srow[data-sel="1"]{outline:2px solid var(--focus);outline-offset:-1px}
+.srow.dragging{opacity:.35}
+/* the key is the drag handle on touch, as on the Gantt: a swipe elsewhere scrolls */
+.srow .skey{color:var(--muted);cursor:grab;touch-action:none;white-space:nowrap}
+@media (pointer:coarse){ .srow .skey{padding:10px 6px;margin:-10px -6px} }
+.srow .stitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow .sgrp{color:var(--muted)}
+.srow .sst{justify-self:start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow .swho,.srow .spts,.srow .sdue{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow .spts,.srow .sdue{text-align:right}
+.srow .sdue.late{color:var(--crit);font-weight:var(--fwb)}
+.srow[data-done="1"] .stitle{color:var(--muted);text-decoration:line-through}
+.safter{background:var(--crit-soft);color:var(--warn-ink);border-radius:var(--r-pill);padding:0 7px;font-size:calc(var(--fs)*.85)}
+.spdone > summary{cursor:pointer;color:var(--muted);padding:2px 0}
+.spold{display:flex;flex-wrap:wrap;gap:4px 10px;padding:5px 0 0 14px;color:var(--muted)}
+.spold b{color:var(--ink);font-weight:var(--fwb)}
+/* drawer: the Parent list with its Move out button, and Repeats */
+.pwrap{display:flex;gap:6px;min-width:0}
+.pwrap select{flex:1;min-width:0}
+.pwrap button{border:1px solid var(--rule);background:var(--paper);padding:2px 10px;border-radius:var(--r-sm);cursor:pointer;white-space:nowrap}
+.rep{display:flex;align-items:center;gap:6px;min-width:0}
+.fld .rep input{width:calc(var(--fs)*4.4);flex:none}
+.rep select{flex:1;min-width:0}
+.rep .every{color:var(--muted)}
+/* people as initials in circles; a stack of them when a task is shared */
+.av{display:inline-grid;place-items:center;flex:none;width:calc(var(--fs)*1.55);height:calc(var(--fs)*1.55);
+  border-radius:50%;font-size:calc(var(--fs)*.68);font-weight:var(--fwb);letter-spacing:.02em;line-height:1;
+  background:hsl(var(--h,210) var(--av-s) var(--av-l));color:hsl(var(--h,210) var(--av-fs) var(--av-fl))}
+.av0{background:var(--panel);color:var(--muted);border:1px dashed var(--rule)}
+.avs{display:inline-flex;align-items:center}
+.avs .av + .av{margin-left:calc(var(--fs)*-.45);box-shadow:0 0 0 2px var(--paper)}
+.cwho{display:inline-flex;align-items:center;gap:5px}
+.srow .swho{display:flex;align-items:center;gap:6px;min-width:0}
+.srow .swho > span:last-child{overflow:hidden;text-overflow:ellipsis}
+/* drawer: People, a row each, with their share when there are several */
+.pplist{display:flex;flex-direction:column;gap:5px;min-width:0}
+/* People takes the drawer's whole width: beside the label column, a share box
+   and a ✕ left room for three letters of a name */
+.fld.ppl{grid-template-columns:1fr;gap:5px}
+.pprow{display:flex;align-items:center;gap:6px;min-width:0}
+.fld .pprow .ppname{flex:1;min-width:0;width:auto}
+.fld .pprow .ppsh{width:calc(var(--fs)*4.2);flex:none}
+.pprow .pct{color:var(--muted);margin-left:-3px}
+.pprm{border:0;background:none;color:var(--muted);cursor:pointer;padding:0 5px;border-radius:var(--r-sm)}
+.pprm:hover{background:var(--panel);color:var(--ink)}
+.ppadd{align-self:flex-start;border:0;background:none;color:var(--focus);cursor:pointer;padding:2px 0}
+/* moving a card up or down its column: a line where it will land */
+.card.dropbefore{position:relative}
+.card.dropbefore::before,.colbody.dropend::after{content:"";display:block;height:3px;border-radius:var(--r-pill);background:var(--focus)}
+.card.dropbefore::before{position:absolute;left:4px;right:4px;top:-6px}
+/* velocity: the last few sprints as rounded bars, the average dashed */
+.spvelc{color:var(--muted)}
+.spvelc.over{color:var(--warn-ink);background:var(--crit-soft);border-radius:var(--r-pill);padding:0 8px}
+.velbody{padding:12px 14px 8px;overflow-x:auto}
+.velchart rect{fill:var(--bar)}
+.velchart text{fill:var(--muted);font-size:11px;text-anchor:middle}
+.velchart .vv{fill:var(--ink);font-weight:var(--fwb)}
+.velchart .vavg{stroke:var(--today);stroke-width:1.5;stroke-dasharray:4 4}
+/* messages: a pop-up at the foot of the screen; the red bar is for trouble */
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:60;
+  display:flex;align-items:center;gap:10px;max-width:min(640px,calc(100vw - 32px));
+  padding:9px 10px 9px 16px;border-radius:var(--r-lg);background:var(--ink);color:var(--on-accent);
+  box-shadow:var(--shadow-lg);animation:toastin .18s ease-out}
+#toast[hidden]{display:none}
+#toast.warn{background:var(--paper);color:var(--warn-ink);border:1px solid var(--crit-soft);border-left:4px solid var(--crit)}
+#tmsg{flex:1;line-height:1.35}
+#tundo{border:0;border-radius:var(--r-md);padding:4px 12px;cursor:pointer;font-weight:var(--fwb);
+  background:var(--on-accent);color:var(--ink)}
+#tx{border:0;background:none;color:inherit;opacity:.7;cursor:pointer;padding:2px 6px;border-radius:var(--r-sm)}
+#tx:hover{opacity:1}
+@keyframes toastin{from{opacity:0;transform:translate(-50%,8px)}}
 
 /* ---- detail drawer ---- */
 #drawer{width:var(--drawer-w);flex:none;background:var(--paper);border-left:1px solid var(--rule);
@@ -338,27 +465,27 @@ details.menu.right .menupop{left:auto;right:0}
 .sect h3{margin:0 0 9px;font-size:calc(var(--fs)*.92);font-weight:var(--fwb);color:var(--muted)}
 .fld{display:grid;grid-template-columns:calc(var(--fs)*6.8) 1fr;gap:6px 8px;align-items:center;margin-bottom:7px}
 .fld label{color:var(--muted);font-size:calc(var(--fs)*.92)}
-.fld input,.fld select{width:100%;padding:4px 6px;border:1px solid var(--rule);
-  border-radius:4px;background:var(--paper)}
+.fld input,.fld select{width:100%;padding:5px 8px;border:1px solid var(--rule);
+  border-radius:var(--r-sm);background:var(--paper)}
 .lk{display:flex;align-items:center;flex-wrap:wrap;gap:3px 6px;padding:5px 0;border-top:1px solid var(--rule-soft)}
 .lk:first-of-type{border-top:0}
 .lk .lkt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lk .lkrel,.lk .lkk{color:var(--muted);font-size:calc(var(--fs)*.92);white-space:nowrap}
-.lk button,.attadd button{border:1px solid var(--rule);background:var(--paper);padding:1px 9px;border-radius:4px;cursor:pointer}
+.lk button,.attadd button{border:1px solid var(--rule);background:var(--paper);padding:2px 10px;border-radius:var(--r-sm);cursor:pointer}
 .att{display:flex;align-items:center;gap:6px;padding:3px 0;color:var(--muted)}
 .att a{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--focus)}
 .att button{border:0;background:none;color:var(--muted);cursor:pointer;padding:0 4px}
 .attadd{display:grid;gap:5px;margin-top:6px}
-.attadd input{padding:4px 6px;border:1px solid var(--rule);border-radius:4px;background:var(--paper)}
+.attadd input{padding:5px 8px;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--paper)}
 .attadd button{justify-self:end}
 .cmt{padding:8px 0;border-top:1px solid var(--rule-soft)}
 .cmt:first-of-type{border-top:0}
 .cmt .who{color:var(--muted);font-size:calc(var(--fs)*.92);margin-bottom:2px}
 .cmt p{margin:0;white-space:pre-wrap}
-#cbox{width:100%;min-height:56px;padding:6px;border:1px solid var(--rule);
-  border-radius:4px;resize:vertical;background:var(--paper)}
+#cbox{width:100%;min-height:56px;padding:8px;border:1px solid var(--rule);
+  border-radius:var(--r-md);resize:vertical;background:var(--paper)}
 .rowend{display:flex;justify-content:flex-end;gap:6px;margin-top:7px}
-.primary{background:var(--ink);color:var(--on-accent);border:0;padding:5px 12px;border-radius:5px;cursor:pointer}
+.primary{background:var(--ink);color:var(--on-accent);border:0;padding:5px 14px;border-radius:var(--r-md);cursor:pointer}
 .warn{margin:0;padding:8px 15px;background:var(--crit-soft);color:var(--warn-ink)}
 .warn[hidden]{display:none}
 #empty{margin:0;padding:10px 15px;background:var(--panel);color:var(--muted);
@@ -384,15 +511,15 @@ details.menu.right .menupop{left:auto;right:0}
 .dephit{pointer-events:stroke;cursor:pointer}
 
 /* ---- settings dialog ---- */
-dialog{border:1px solid var(--rule);border-radius:8px;padding:0;
+dialog{border:1px solid var(--rule);border-radius:calc(var(--r-lg) + 3px);padding:0;
   box-shadow:var(--shadow-lg);color:var(--ink);max-width:92vw}
 dialog::backdrop{background:var(--scrim)}
 dialog form{padding:15px 17px;min-width:330px}
 dialog h2{margin:0 0 12px;font-size:calc(var(--fs)*1.08);font-weight:var(--fwb)}
-dialog textarea{width:100%;padding:4px 6px;border:1px solid var(--rule);
-  border-radius:4px;background:var(--paper);resize:vertical;font:inherit}
+dialog textarea{width:100%;padding:5px 8px;border:1px solid var(--rule);
+  border-radius:var(--r-sm);background:var(--paper);resize:vertical;font:inherit}
 dialog button{border:1px solid var(--rule);background:var(--paper);
-  padding:5px 12px;border-radius:5px;cursor:pointer}
+  padding:5px 14px;border-radius:var(--r-md);cursor:pointer}
 dialog .primary{background:var(--ink);color:var(--on-accent);border-color:var(--ink)}
 dialog .danger{color:var(--warn-ink);border-color:var(--crit-soft)}
 .hint{margin:2px 0 10px;color:var(--muted);font-size:calc(var(--fs)*.92)}
@@ -403,18 +530,19 @@ table.cfg{border-collapse:collapse;width:100%;margin-bottom:6px}
 table.cfg th{text-align:left;font-weight:var(--fwb);color:var(--muted);font-size:calc(var(--fs)*.92);padding:2px 4px}
 table.cfg td{padding:2px 4px}
 table.cfg td.mid{text-align:center;white-space:nowrap}
-table.cfg input,table.cfg select{width:100%;padding:3px 5px;border:1px solid var(--rule);
-  border-radius:4px;background:var(--paper);font:inherit}
+table.cfg input,table.cfg select{width:100%;padding:3px 6px;border:1px solid var(--rule);
+  border-radius:var(--r-sm);background:var(--paper);font:inherit}
 table.cfg input.sm{width:62px}
 table.cfg input[type=checkbox]{width:auto}
 table.cfg button{padding:2px 7px;font-size:calc(var(--fs)*.92)}
 .seg{display:flex;align-items:center;gap:2px;background:var(--panel);
-  border:1px solid var(--rule);border-radius:5px;padding:2px;width:max-content}
-.seg button{border:0;background:none;padding:3px 11px;border-radius:3px;
+  border:1px solid var(--rule);border-radius:var(--r-md);padding:3px;width:max-content}
+.seg button{border:0;background:none;padding:3px 11px;border-radius:calc(var(--r-md) - 3px);
   cursor:pointer;color:var(--muted)}
 .seg button[aria-pressed=true]{background:var(--ink);color:var(--on-accent)}
 .seg .segval{min-width:34px;text-align:center;font-variant-numeric:tabular-nums}
 #dapp .fld{grid-template-columns:calc(var(--fs)*6.3) 1fr}
+#dapp form{max-width:calc(var(--fs)*36)}      /* else the hint's one long line sets the width */
 dialog h2+.hint{margin-top:-6px}
 /* Tablet width. A 432px task grid plus a 316px drawer leaves almost no
    timeline on a ~1100px screen, and the timeline is the point. So: drop
@@ -444,9 +572,11 @@ dialog h2+.hint{margin-top:-6px}
   #drawer{width:100%}
   #boardwrap{scroll-snap-type:x mandatory}
   .col{min-width:calc(100vw - 40px);scroll-snap-align:start}
+  .srow{grid-template-columns:auto minmax(0,1fr) auto}
+  .srow .swho,.srow .spts,.srow .sdue{display:none}
   dialog form{min-width:0}
 }
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
 <header>
@@ -457,11 +587,12 @@ dialog h2+.hint{margin-top:-6px}
     <button id="bDel" title="Delete the selected task (Delete)" disabled>Delete</button>
   </div>
   <button class="ghost" id="bSet" title="Project name, start date and holidays">Settings</button>
-  <button class="ghost" id="bApp" title="Theme, text size and font (this device only)">Aa</button>
+  <button class="ghost" id="bApp" title="Display: size, spacing, font and theme (this device only)">Aa</button>
   <button class="ghost icon" id="bTheme" type="button"></button>
   <div class="grp" id="vw">
     <button data-v="gantt" aria-pressed="true">Gantt</button>
     <button data-v="board">Board</button>
+    <button data-v="sprints" title="Plan sprints: drag tasks between a sprint and the backlog">Sprints</button>
   </div>
   <div class="grp" id="zoom">
     <button data-z="day">Day</button>
@@ -489,12 +620,16 @@ dialog h2+.hint{margin-top:-6px}
   <select id="due" class="filt" aria-label="When due" title="Only tasks that are late, or due soon">
     <option value="">Any date</option>
     <option value="late">Late</option>
-    <option value="soon">Due within 7 days</option>
+    <option value="soon">Due in 7 days</option>
   </select>
   <div class="spacer"></div>
   <div class="grp">
-    <button id="bUndo" title="Undo your last change (Ctrl+Z)" disabled>Undo</button>
-    <button id="bRedo" title="Redo (Ctrl+Shift+Z)" disabled>Redo</button>
+    <button id="bUndo" class="ico" title="Undo your last change (Ctrl+Z)" aria-label="Undo" disabled><svg width="16" height="16"
+      viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 3 2 6.5 5.5 10M2.5 6.5h7a3.8 3.8 0 0 1 0 7.5H7" fill="none"
+      stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button id="bRedo" class="ico" title="Redo (Ctrl+Shift+Z)" aria-label="Redo" disabled><svg width="16" height="16"
+      viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 3 14 6.5 10.5 10M13.5 6.5h-7a3.8 3.8 0 0 0 0 7.5H9" fill="none"
+      stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   </div>
   <span class="stat" id="stat"></span>
   <details class="menu right" id="mFile">
@@ -506,6 +641,9 @@ dialog h2+.hint{margin-top:-6px}
       <hr>
       <button id="csv" title="Download the schedule as a spreadsheet &#8212; a report, not a backup">Export CSV</button>
       <button id="ics" title="Due dates as calendar events with a reminder the day before. Import into Google Calendar and your phone does the reminding. Follows the filter.">Export to calendar (.ics)</button>
+      <hr>
+      <label class="tog" title="Once a week, if anything has changed, a backup of the project goes to Downloads"><input type="checkbox" id="bkOn" checked> Weekly backup file</label>
+      <p class="hint" id="bkInfo"></p>
     </div>
   </details>
   <input type="file" id="file" accept="application/json,.json" hidden>
@@ -513,6 +651,8 @@ dialog h2+.hint{margin-top:-6px}
 
 <div id="rhprobe" aria-hidden="true"></div>
 <p class="warn" id="warn" hidden></p>
+<div id="toast" role="status" aria-live="polite" hidden><span id="tmsg"></span><button type="button"
+  id="tundo" hidden>Undo</button><button type="button" id="tx" aria-label="Dismiss">✕</button></div>
 
 <p id="empty" hidden>
   This project has no tasks. <b>+ Task</b> adds the first one — or
@@ -524,7 +664,8 @@ dialog h2+.hint{margin-top:-6px}
   <form method="dialog">
     <h2>Appearance</h2>
     <p class="hint">Applies to this browser on this device only. It is not part of
-      the project and does not travel with an export.</p>
+      the project and does not travel with an export. <b>Auto</b> size picks a
+      bigger size on a touch screen, so the PC and the tablet each start right.</p>
 
     <div class="fld"><label>Theme</label>
       <div class="seg" id="aTheme">
@@ -533,11 +674,27 @@ dialog h2+.hint{margin-top:-6px}
         <button type="button" data-t="system">System</button>
       </div></div>
 
-    <div class="fld"><label>Text size</label>
+    <div class="fld"><label>Size</label>
+      <div class="seg" id="aSizeP">
+        <button type="button" data-s="auto" title="Standard with a mouse, a size up on a touch screen">Auto</button>
+        <button type="button" data-s="12">S</button>
+        <button type="button" data-s="13">M</button>
+        <button type="button" data-s="15">L</button>
+        <button type="button" data-s="17">XL</button>
+      </div></div>
+
+    <div class="fld"><label>Fine-tune</label>
       <div class="seg">
-        <button type="button" id="aMinus">−</button>
+        <button type="button" id="aMinus" aria-label="Smaller">−</button>
         <span class="segval" id="aSize">13</span>
-        <button type="button" id="aPlus">+</button>
+        <button type="button" id="aPlus" aria-label="Larger">+</button>
+      </div></div>
+
+    <div class="fld"><label>Spacing</label>
+      <div class="seg" id="aDens">
+        <button type="button" data-d="compact" title="Shorter rows and cards: more on the screen">Compact</button>
+        <button type="button" data-d="normal">Standard</button>
+        <button type="button" data-d="roomy" title="Taller rows and cards: easier to hit with a finger">Roomy</button>
       </div></div>
 
     <div class="fld"><label>Weight</label>
@@ -551,9 +708,16 @@ dialog h2+.hint{margin-top:-6px}
       <select id="aFont">
         <option value="system">System</option>
         <option value="verdana">Verdana — wide, very legible</option>
+        <option value="condensed">Condensed — fits more in a row</option>
         <option value="serif">Serif</option>
         <option value="mono">Monospace</option>
       </select></div>
+
+    <div class="fld"><label>Dates</label>
+      <div class="seg" id="aDates">
+        <button type="button" data-f="friendly">Sep 28</button>
+        <button type="button" data-f="iso" title="ISO: sorts correctly, and no one misreads the month">2026-09-28</button>
+      </div></div>
 
     <div class="rowend">
       <button type="button" id="aReset">Reset</button>
@@ -637,6 +801,42 @@ dialog h2+.hint{margin-top:-6px}
   </form>
 </dialog>
 
+<dialog id="dsprEdit">
+  <form method="dialog">
+    <h2>Sprint</h2>
+    <div class="fld"><label for="seName">Name</label>
+      <input id="seName" maxlength="60"></div>
+    <div class="fld"><label for="seStart">Starts</label>
+      <input id="seStart" type="date"></div>
+    <div class="fld"><label for="seEnd">Ends</label>
+      <input id="seEnd" type="date"></div>
+    <p class="hint">The dates are the timebox. They move no task: the schedule still comes
+      from durations and links, and a task planned to finish after the sprint ends is flagged.</p>
+    <p class="hint" id="seWarn" hidden></p>
+    <div class="rowend">
+      <button type="button" id="seDel" class="danger">Delete sprint</button>
+      <span class="spacer"></span>
+      <button value="cancel">Cancel</button>
+      <button type="button" id="seOk" class="primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dsprDone">
+  <form method="dialog">
+    <h2 id="sdTitle">Complete sprint</h2>
+    <p class="hint" id="sdInfo"></p>
+    <div class="fld"><label for="sdTo">Move them to</label>
+      <select id="sdTo"></select></div>
+    <div class="rowend">
+      <span class="spacer"></span>
+      <button value="cancel">Cancel</button>
+      <button type="button" id="sdOk" class="primary">Complete sprint</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="main">
 <div id="wrap">
   <div id="scroll">
     <div id="inner">
@@ -658,12 +858,23 @@ dialog h2+.hint{margin-top:-6px}
       </div>
     </div>
   </div>
-  <aside id="drawer" hidden></aside>
 </div>
 
 <div id="boardwrap" hidden>
-  <div id="weekstrip" hidden></div>
+  <div id="boardbar">
+    <label class="bspr" id="bSprWrap" hidden>Sprint
+      <select id="bSpr" class="filt" title="Which sprint's tasks the board shows. This device remembers the choice."></select></label>
+    <div id="weekstrip" hidden></div>
+  </div>
   <div id="board"></div>
+</div>
+
+<div id="sprintwrap" hidden>
+  <div id="sprints"></div>
+</div>
+
+<!-- beside whichever view is up: inside #wrap it went when the Gantt did -->
+<aside id="drawer" hidden></aside>
 </div>
 
 <script>
@@ -846,6 +1057,7 @@ const DEMO = {
   statuses:["Backlog","In Progress","Review","Done"],
   boardFrom:1,          // the first level of the tree that gets cards; see boardTasks()
   baseline:null,        // a saved copy of the plan to measure slippage against; see saveBaseline()
+  sprints:[],           // timeboxes of tasks, planned in the Sprints view; see makeSprint()
   statusCfg:{
     "Backlog":    {wip:null, done:false, staleDays:null},
     "In Progress":{wip:3,    done:false, staleDays:10},
@@ -921,6 +1133,10 @@ const CFG = {
   // "due soon" means due within this many calendar days
   due: {soonDays:7},
 
+  // a new sprint's length, in calendar days: two weeks
+  sprint: {days:14, velocityOf:3},    // velocity averages the last 3 completed sprints
+  backup: {days:7},                   // a backup file this often, if anything changed
+
   timeline: {
     headerH:   52,  // month + tick bands -> --tlhd-h
     monthH:    26,  //                    -> --mo-h
@@ -936,6 +1152,8 @@ const CFG = {
     lane:     15,   // vertical offset when routing backwards
     headGap:   3,   // stop short of the bar so the arrowhead sits clear
     backGap:   6,   // extra clearance on a backwards route
+    curve:    48,   // the furthest a link's S-bend reaches out from a bar
+    round:    12,   // how wide a backward link's turns are
     hitW:     11,   // invisible click target for deleting a link
     wCrit:   1.6,
     wNormal: 1.1,
@@ -949,7 +1167,8 @@ const CFG = {
   load: {numW:30, intW:16},
 
   ui: {
-    noteMs:        5000,  // how long the warning bar stays up
+    noteMs:        5000,  // how long a message pop-up stays up
+    undoMs:        8000,  // ...and one with an Undo button, which needs time to reach
     saveDebounceMs: 300,  // collapse a drag's many renders into one write
     slopMouse:        3,  // px before a press becomes a drag
     slopTouch:        8,  // more, because fingers wobble
@@ -991,8 +1210,8 @@ const taskOf = id => S.tasks.find(t => t.id === id);
 
 function recompute(){
   cal = new Cal(S.origin, S.holidays);
-  try { bars = cpm(S.tasks, S.deps, cal); el("warn").hidden = !lockMsg; if (lockMsg) el("warn").textContent = lockMsg; }
-  catch (e) { el("warn").hidden = false; el("warn").textContent = e.message + " — fix the link before the schedule can be computed."; return false; }
+  try { bars = cpm(S.tasks, S.deps, cal); bar(lockMsg || storeMsg); }
+  catch (e) { bar(e.message + " — fix the link before the schedule can be computed."); return false; }
   LOAD = workload();          // reads the schedule; never feeds it
   ROLL = rollups();
   return true;
@@ -1017,6 +1236,48 @@ const weekOf = d => iso(addD(d, -((d.getUTCDay() + 6) % 7)));     // its Monday
 const fmtPts = n => String(Math.round(n * 10) / 10);
 const OVER_EPS = 1e-9;      // 10 points spread over 3 days must not sum to 10.000001
 
+/* People on a task. `assignee` is the lead -- all an older build, the CSV
+   and the Python model know about. `assignees` lists everyone with a share
+   (a percentage of the task's points), lead first, and exists only when
+   there is more than one. The list counts only while its lead IS the
+   assignee: a build that knows nothing of shares can still change
+   `assignee`, and the stale list is then ignored instead of contradicting it. */
+const peopleOf = t => {
+  const a = t.assignees;
+  if (Array.isArray(a) && a.length > 1 && a[0]?.name === t.assignee) return a;
+  return t.assignee ? [{name:t.assignee, pct:100}] : [];
+};
+/* Each person's fraction of the task. Percentages that add up to 90 are read
+   as parts of the whole, not as 10% of the task belonging to nobody. */
+const sharesOf = t => {
+  const ps = peopleOf(t), sum = ps.reduce((a, p) => a + Math.max(0, +p.pct || 0), 0);
+  return ps.map(p => ({name:p.name, pct:p.pct, f: sum > 0 ? Math.max(0, +p.pct || 0) / sum : 1 / ps.length}));
+};
+/* The one writer of both fields, so they cannot drift apart. */
+function setPeople(t, list){
+  const seen = new Set();
+  list = list.map(p => ({name:String(p.name ?? "").trim(), pct:Math.max(0, Math.round(+p.pct || 0))}))
+             .filter(p => p.name && !seen.has(p.name) && seen.add(p.name));
+  t.assignee = list[0]?.name ?? null;
+  const many = list.length > 1 ? list : null;
+  if (many || t.assignees != null) t.assignees = many;      // never create the field just to say "none"
+}
+const whoText = t => peopleOf(t).map(p => p.name).join(", ");
+// "A. Okafor", "A. Okafor & J. Reyes", "A. Okafor +2": for tight spots
+const whoShort = t => { const ps = peopleOf(t);
+  return ps.length < 2 ? (ps[0]?.name ?? "") : ps.length === 2 ? `${ps[0].name} & ${ps[1].name}` : `${ps[0].name} +${ps.length - 1}`; };
+const shareText = t => peopleOf(t).length > 1 ? sharesOf(t).map(p => `${p.name} ${Math.round(p.f * 100)}%`).join(" · ") : whoText(t);
+
+/* A person as initials in a circle. The hue comes from the name, so the same
+   person is the same colour everywhere; the colours themselves are tokens
+   (--av-*), so the dark theme restyles them like everything else. */
+const initials = n => { const w = String(n).replace(/[^\p{L}\p{N} ]+/gu, " ").trim().split(/\s+/).filter(Boolean);
+  return (w.length > 1 ? w[0][0] + w[w.length - 1][0] : (w[0] || "?").slice(0, 2)).toUpperCase(); };
+const hueOf = n => { let h = 7; for (const c of String(n)) h = (h * 31 + c.codePointAt(0)) % 360; return h; };
+const avatar = (n, tip = n) => `<span class="av" style="--h:${hueOf(n)}" title="${esc(tip)}">${esc(initials(n))}</span>`;
+const avatars = t => { const ps = sharesOf(t);
+  return ps.length ? `<span class="avs">${ps.map(p => avatar(p.name, ps.length > 1 ? `${p.name} · ${Math.round(p.f * 100)}%` : p.name)).join("")}</span>` : ""; };
+
 function workload(){
   const parents = new Set(S.tasks.map(t => t.parent_id).filter(p => p != null));
   const cap = new Map(S.people.map(p => [p.name, p.capacity ?? null]));
@@ -1027,14 +1288,18 @@ function workload(){
     if (S.statusCfg[t.status]?.done) continue;
     const b = bars.get(t.id);
     const days = Math.max(1, b.ef - b.es);          // its span (actual dates move it); a milestone's points land on its day
-    const per = t.points / days;
-    if (!byPerson.has(t.assignee)) byPerson.set(t.assignee, new Map());
-    const weeks = byPerson.get(t.assignee);
-    for (let o = b.es; o < b.es + days; o++){
-      const wk = weekOf(cal.toDate(o));
-      const w = weeks.get(wk) ?? weeks.set(wk, {pts:0, items:new Map()}).get(wk);
-      w.pts += per;
-      w.items.set(t, (w.items.get(t) || 0) + per);
+    // shared between people, each carries their fraction of the points
+    for (const {name, f} of sharesOf(t)){
+      if (!(f > 0)) continue;
+      const per = t.points * f / days;
+      if (!byPerson.has(name)) byPerson.set(name, new Map());
+      const weeks = byPerson.get(name);
+      for (let o = b.es; o < b.es + days; o++){
+        const wk = weekOf(cal.toDate(o));
+        const w = weeks.get(wk) ?? weeks.set(wk, {pts:0, items:new Map()}).get(wk);
+        w.pts += per;
+        w.items.set(t, (w.items.get(t) || 0) + per);
+      }
     }
   }
 
@@ -1047,7 +1312,7 @@ function workload(){
       if (w.pts <= c + OVER_EPS) continue;
       n++;
       for (const t of w.items.keys())
-        (overTask.get(t.id) ?? overTask.set(t.id, []).get(t.id)).push({wk, pts:w.pts, cap:c});
+        (overTask.get(t.id) ?? overTask.set(t.id, []).get(t.id)).push({name, wk, pts:w.pts, cap:c});
     }
     if (n) over.push({name, weeks:n});
   }
@@ -1055,8 +1320,13 @@ function workload(){
           overTask, over};
 }
 
-const overTip = (t, ov) => `${t.assignee} is over capacity: `
-  + ov.map(o => `${fmtPts(o.pts)} of ${fmtPts(o.cap)} pts in the week of ${o.wk}`).join(", ");
+// one line per person over, when a task is shared
+const overTip = (t, ov) => {
+  const by = new Map();
+  for (const o of ov) (by.get(o.name) ?? by.set(o.name, []).get(o.name)).push(o);
+  return [...by].map(([name, os]) => `${name} is over capacity: `
+    + os.map(o => `${fmtPts(o.pts)} of ${fmtPts(o.cap)} pts in the week of ${fmtDate(o.wk)}`).join(", ")).join("\n");
+};
 // A count, like "2 critical", with the names on hover: spelling the names
 // out pushed the toolbar onto a second row at 1920px.
 const overStat = () => !LOAD.over.length ? "" :
@@ -1099,7 +1369,36 @@ function dueState(t){
   return "";
 }
 
-const textOf = t => [t.key, t.title, t.assignee, t.status, ...Object.values(t.custom || {}),
+/* Sprints: which one a task is in, and what counts as the backlog. The view
+   that plans them is further down, after the board. */
+const isDone = t => !!S.statusCfg[t.status]?.done;
+const sprintOf = t => t.sprint == null ? null : S.sprints.find(s => s.id === t.sprint) || null;
+const sprintName = id => id == null ? "the backlog" : S.sprints.find(s => s.id === id)?.name ?? "a deleted sprint";
+const activeSprint = () => S.sprints.find(s => s.state === "active") || null;
+// the active one first, then the planned ones by start date
+const openSprints = () => S.sprints.filter(s => s.state !== "closed")
+  .sort((a, b) => (b.state === "active") - (a.state === "active") || a.start.localeCompare(b.start));
+const notInSprint = t => (sprintOf(t)?.state ?? "closed") === "closed";
+// the backlog: unfinished, and not in a sprint that is still open
+const inBacklog = t => !isDone(t) && notInSprint(t);
+/* Dates as a person reads them: "Sep 28", with the year only when it is not
+   this one -- or ISO, if Appearance says so. Display only: the data, the CSV
+   and the calendar file stay ISO. */
+// One formatter each, made once: toLocaleDateString with options builds a new
+// one per call, and a drag frame on a 639-task plan formats ~1300 dates --
+// it took the frame from 6 ms to 58.
+const DTF = {};
+const dateFmt = withYear => DTF[withYear] ??= new Intl.DateTimeFormat([],
+  {month:"short", day:"numeric", ...(withYear ? {year:"numeric"} : {}), timeZone:"UTC"});
+const fmtDate = d => {
+  if (d == null || d === "") return "";
+  if (typeof d === "string") d = D(d);
+  if (appear.dates === "iso") return iso(d);
+  return dateFmt(d.getUTCFullYear() !== todayDate().getUTCFullYear()).format(d);
+};
+const fmtDay = fmtDate;
+
+const textOf = t => [t.key, t.title, whoText(t), t.status, sprintOf(t)?.name, ...Object.values(t.custom || {}),
                      ...(t.attach || []).map(a => a.label)].join(" ").toLowerCase();
 
 /* Which tasks match (self), and which are shown because something under
@@ -1115,7 +1414,7 @@ function filterSets(kids = childMap()){
     for (const c of cs) if (mark(c, !!q && txt)) below = true;
     const leaf = !cs.length;
     const me = txt
-      && (!filt.who || (leaf && (filt.who === NOBODY ? !t.assignee : t.assignee === filt.who)))
+      && (!filt.who || (leaf && (filt.who === NOBODY ? !t.assignee : peopleOf(t).some(p => p.name === filt.who))))
       && (!filt.due || (leaf && dueState(t) === filt.due));
     if (me) self.add(t.id);
     if (me || below) show.add(t.id);
@@ -1174,11 +1473,11 @@ const ENTITIES = ["task", "dep", "comment"];
 const rowsOf = e => e === "task" ? S.tasks : e === "dep" ? S.deps : S.comments;
 const FIELDS = {
   task: ["key","title","parent_id","status","assignee","duration","points","pct","not_before",
-         "actual_start","actual_finish","repeat","pos","status_since"],
+         "actual_start","actual_finish","repeat","sprint","pos","cpos","status_since"],
   dep:  ["pred","succ","kind","lag"],
   comment: [],                       // a comment is immutable once made
 };
-const JSONF = { task: ["custom","attach"], dep: [], comment: [] };
+const JSONF = { task: ["custom","attach","done_dates","assignees"], dep: [], comment: [] };
 const cE  = c => c.e  || "task";
 const cOp = c => c.op || "upd";
 const rowOfChange = c => rowsOf(cE(c)).find(r => r.id === c.id);
@@ -1187,7 +1486,7 @@ const rowOfChange = c => rowsOf(cE(c)).find(r => r.id === c.id);
 // the project, adding a column and editing a custom field are all undoable
 // through exactly the same path as editing a task.
 const PROJF = ["name", "origin", "boardFrom"];
-const PROJ_JSON = ["holidays", "statuses", "statusCfg", "fields", "people", "baseline"];
+const PROJ_JSON = ["holidays", "statuses", "statusCfg", "fields", "people", "baseline", "sprints"];
 const projSnap = () => {
   const o = {};
   for (const f of PROJF) o[f] = S[f];
@@ -1282,16 +1581,16 @@ function step(back){
       if (e === "project") now = projGet(c.field);       // holidays already a JSON string
       else {
         const r = rowOfChange(c);
-        if (!r) return note(`Can't ${verb} — that ${e} no longer exists. Nothing was changed.`);
+        if (!r) return note(`Can't ${verb} — that ${e} no longer exists. Nothing was changed.`, {warn:true});
         now = isJson ? JSON.stringify(r[c.field]) : r[c.field];
       }
       const exp = isJson ? JSON.stringify(want(c)) : want(c);
       if (now !== exp)
-        return note(`Can't ${verb} — ${c.field} has changed since. Nothing was ${back?"reverted":"reapplied"}.`);
+        return note(`Can't ${verb} — ${c.field} has changed since. Nothing was ${back?"reverted":"reapplied"}.`, {warn:true});
     } else if ((op === "add") === back){    // undo a create / redo a delete: must exist
-      if (!rowOfChange(c)) return note(`Can't ${verb} — that ${e} is already gone.`);
+      if (!rowOfChange(c)) return note(`Can't ${verb} — that ${e} is already gone.`, {warn:true});
     } else {                                 // undo a delete / redo a create: must not
-      if (rowOfChange(c)) return note(`Can't ${verb} — that ${e} already exists.`);
+      if (rowOfChange(c)) return note(`Can't ${verb} — that ${e} already exists.`, {warn:true});
     }
   }
 
@@ -1319,11 +1618,35 @@ function step(back){
   render(); drawer();
 }
 
-/* A standing warning that outranks the passing notes: see load(). */
-let lockMsg = "";
-const note = m => { const w = el("warn"); w.hidden = false; w.textContent = m;
-                    clearTimeout(note._t);
-                    note._t = setTimeout(() => { w.hidden = !lockMsg; w.textContent = lockMsg; }, CFG.ui.noteMs); };
+/* Two kinds of message. News -- what just happened, or why something was
+   refused -- is a toast: a small pop-up at the foot of the screen that goes
+   by itself, with an Undo button when it follows a change. The red bar
+   (#warn) is only for trouble that stays true until it is fixed: a loop in
+   the links, storage blocked (storeMsg), a newer build's project (lockMsg).
+   Every message used to go in the red bar, so "done" read like an error. */
+let lockMsg = "", storeMsg = "";
+const bar = m => { const w = el("warn"); w.hidden = !m; w.textContent = m || ""; };
+function note(m, {undo = false, warn = false} = {}){
+  const box = el("toast");
+  el("tmsg").textContent = m;
+  box.classList.toggle("warn", warn);
+  // Undo takes back the change this is about, and only that one
+  const {stack, cur} = stackOf(ME), id = undo && cur ? stack[cur - 1].id : null;
+  el("tundo").hidden = !id;
+  el("tundo").onclick = () => {
+    const now = stackOf(ME);
+    if (now.cur && now.stack[now.cur - 1].id === id) step(true);
+    else return note("Not undone: something else has changed since. Ctrl+Z steps back a change at a time.", {warn:true});
+    if (el("tmsg").textContent === m) hideToast();          // unless undo had news of its own
+  };
+  box.hidden = false;
+  clearTimeout(note._t); note._t = setTimeout(hideToast, undo ? CFG.ui.undoMs : CFG.ui.noteMs);
+}
+function hideToast(){ clearTimeout(note._t); el("toast").hidden = true; }
+el("tx").onclick = hideToast;
+// hovering holds it, so a slow reader can still reach Undo
+el("toast").onpointerenter = () => clearTimeout(note._t);
+el("toast").onpointerleave = () => { if (!el("toast").hidden) note._t = setTimeout(hideToast, CFG.ui.noteMs / 2); };
 
 /* Moving a card IS the progress report, so every status change goes through
    here -- the drawer's select, the board's drag, Settings -- and does all of
@@ -1333,12 +1656,14 @@ const note = m => { const w = el("warn"); w.hidden = false; w.textContent = m;
      column marked done means it has finished, and back to the first column
      means it has not started after all. Only blanks are filled: a date
      someone typed in is never overwritten;
-   - a done column sets 100%, and a repeating task leaves its next one behind.
+   - a done column sets 100%, and a repeating task comes straight back to the
+     first column for its next time (recur()).
    All of it lands inside the caller's commit(), so one undo takes it back. */
 function setStatus(t, v){
   if (t.status === v) return;
   const wasDone = !!S.statusCfg[t.status]?.done;
   t.status = v;
+  if (t.cpos != null) t.cpos = null;       // its place was in the old column
   t.status_since = new Date().toISOString();
   const today = iso(todayDate());
   if (v === S.statuses[0]){ t.actual_start = null; t.actual_finish = null; return; }
@@ -1346,18 +1671,22 @@ function setStatus(t, v){
   if (S.statusCfg[v]?.done){
     t.actual_finish = t.actual_finish || today;
     t.pct = 100;
-    spawnRepeat(t);
+    const next = recur(t);
+    // said once the caller has re-rendered: render() clears the warning line
+    if (next){ const m = `${t.key} is done. It repeats ${repeatName(t.repeat)}, so it is back in ${t.status} `
+                       + `for ${fmtDay(next)}.`;
+               queueMicrotask(() => note(m, {undo:true})); }
   } else {
     t.actual_finish = null;
     if (wasDone && t.pct === 100) t.pct = null;        // reopened: not 100% any more
   }
 }
 
-/* "1d" "2w" "1m" "1y": every n days, weeks, months or years */
-const parseRepeat = s => { const m = /^(\d+)([dwmy])$/.exec(s || ""); return m ? {n:+m[1], unit:m[2]} : null; };
-const REPEATS = {"1d":"every day", "1w":"every week", "2w":"every 2 weeks", "1m":"every month",
-                 "3m":"every 3 months", "1y":"every year"};
-const repeatName = s => REPEATS[s] || (parseRepeat(s) ? `every ${s}` : "");
+/* "1d" "2w" "3m" "1y": every n days, weeks, months or years, for any n */
+const parseRepeat = s => { const m = /^(\d+)([dwmy])$/.exec(s || ""); return m && +m[1] > 0 ? {n:+m[1], unit:m[2]} : null; };
+const UNITS = {d:"day", w:"week", m:"month", y:"year"};
+const repeatName = s => { const r = parseRepeat(s);
+  return !r ? "" : r.n === 1 ? `every ${UNITS[r.unit]}` : `every ${r.n} ${UNITS[r.unit]}s`; };
 function stepDate(d, {n, unit}){
   if (unit === "d") return addD(d, n);
   if (unit === "w") return addD(d, 7 * n);
@@ -1366,22 +1695,25 @@ function stepDate(d, {n, unit}){
   const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();       // the 31st becomes the 30th, or the 28th
   return new Date(Date.UTC(y, m, Math.min(d.getUTCDate(), last)));
 }
-/* A repeating task, finished, leaves the next one behind: the same work,
-   back in the first column, one interval on. The rhythm runs from the date
-   it was scheduled for ("every Saturday" stays on Saturdays), rolled on past
-   today if it was finished late, so the next one never lands in the past.
-   The finished one stops repeating -- reopening it must not breed a second. */
-function spawnRepeat(t){
-  const r = parseRepeat(t.repeat); if (!r) return;
+/* A repeating task, finished, comes straight back: the SAME task -- its key,
+   history, comments, links and sprint -- in the first column, one interval
+   on. (It used to leave a copy behind under a new key, so a weekly chore
+   became a new number every week.) The rhythm runs from the date it was
+   scheduled for ("every Saturday" stays on Saturdays), rolled on past today
+   if it was finished late, so it never comes back in the past.
+   The finish goes into done_dates. The journal records a commit's before
+   and after, and after is back in the first column: without this, nothing
+   would say it was ever done. Returns the date it is next due from. */
+function recur(t){
+  const r = parseRepeat(t.repeat); if (!r) return null;
   const today = todayDate();
   let next = stepDate(t.not_before ? D(t.not_before) : (bars?.get(t.id)?.start ?? today), r);
   while (next <= today) next = stepDate(next, r);
-  S.tasks.push({id:newId(), key:nextKey(), title:t.title, parent_id:t.parent_id ?? null,
-    status:S.statuses[0], status_since:new Date().toISOString(), assignee:t.assignee ?? null,
-    duration:t.duration, points:t.points ?? null, pct:null, not_before:iso(next),
-    actual_start:null, actual_finish:null, repeat:t.repeat, custom:structuredClone(t.custom || {}),
-    ...(t.attach ? {attach:structuredClone(t.attach)} : {})});
-  t.repeat = null;
+  t.done_dates = [...(t.done_dates || []), t.actual_finish || iso(today)];
+  t.status = S.statuses[0];
+  t.actual_start = null; t.actual_finish = null; t.pct = null;
+  t.not_before = iso(next);
+  return t.not_before;
 }
 
 /* ------------------------------------------------------------------ *
@@ -1414,14 +1746,13 @@ function addTask(parent_id){
 function deleteTask(id){
   const t = taskOf(id); if (!t) return;
   if (kidsOf(id).length)
-    return note(`${t.key} has sub-tasks. Delete or re-parent those first.`);
+    return note(`${t.key} has sub-tasks. Delete or re-parent those first.`, {warn:true});
   const deps = S.deps.filter(d => d.pred === id || d.succ === id).length;
   const cmts = S.comments.filter(c => c.task_id === id).length;
   const extra = [deps && `${deps} link${deps>1?"s":""}`, cmts && `${cmts} comment${cmts>1?"s":""}`]
                 .filter(Boolean).join(" and ");
-  if (!confirm(`Delete ${t.key} "${t.title}"?`
-             + (extra ? `\n\nIts ${extra} will go too.` : "")
-             + `\n\nCtrl+Z undoes this.`)) return;
+  // No "are you sure?": the pop-up's Undo (and Ctrl+Z) is the safety net,
+  // and it says what went with the task
   commit(`Delete ${t.key}`, () => {
     S.deps     = S.deps.filter(d => d.pred !== id && d.succ !== id);
     S.comments = S.comments.filter(c => c.task_id !== id);
@@ -1429,6 +1760,7 @@ function deleteTask(id){
   });
   sel = null;
   render(); drawer();
+  note(`Deleted ${t.key} “${t.title}”${extra ? `, with its ${extra}` : ""}.`, {undo:true});
 }
 
 /* ------------------------------------------------------------------ *
@@ -1437,7 +1769,7 @@ function deleteTask(id){
 function addDep(pred, succ){
   if (pred === succ) return;
   if (S.deps.some(d => d.pred === pred && d.succ === succ))
-    return note("Those two are already linked.");
+    return note("Those two are already linked.", {warn:true});
   const pk = taskOf(pred).key, sk = taskOf(succ).key;
 
   // Ask the scheduler before committing. A cycle is the failure mode here,
@@ -1452,9 +1784,9 @@ function addDep(pred, succ){
     if (i >= 0 && e.loop.includes(pred)){
       const path = [...e.loop.slice(i), ...e.loop.slice(0, i)].map(id => taskOf(id).key);
       return note(`Can't link ${pk} → ${sk}: ${sk} already leads to ${pk} `
-                + `(${path.join(" → ")}), so this link would close a loop.`);
+                + `(${path.join(" → ")}), so this link would close a loop.`, {warn:true});
     }
-    return note(`Can't link ${pk} → ${sk}: ${e.message}`);
+    return note(`Can't link ${pk} → ${sk}: ${e.message}`, {warn:true});
   }
 
   const d = {id:newId(), pred, succ, kind:"FS", lag:0};
@@ -1617,19 +1949,35 @@ const x = d => ((d - T0)/DAY) * DW;
 const FONTS = {
   system:  'ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif',
   verdana: 'Verdana,"DejaVu Sans",Geneva,Tahoma,sans-serif',
+  // narrower, so more of a title fits a Gantt row or a card: Roboto
+  // Condensed on Android, Bahnschrift's condensed cut on Windows 10 and up
+  condensed: '"Roboto Condensed","sans-serif-condensed","Bahnschrift SemiCondensed",Bahnschrift,"Arial Narrow",sans-serif',
   serif:   'ui-serif,Georgia,"Times New Roman",Times,serif',
   mono:    'ui-monospace,"Cascadia Mono",Consolas,"DejaVu Sans Mono",monospace',
 };
 // [body weight, emphasis weight] -- both move, or "bold" just flattens the
 // contrast between headings and body text instead of strengthening it
 const WEIGHTS = {normal:[400,600], medium:[500,680], bold:[600,780]};
-const APPEAR_DEFAULT = {theme:"system", fs:13, weight:"normal", font:"system"};
+const STRETCH = {condensed:"semi-condensed"};      // the condensed cut, where a family has one
+// Spacing: how tall rows and cards are for a given text size (--dens)
+const DENSITY = {compact:0.86, normal:1, roomy:1.18};
+const APPEAR_DEFAULT = {theme:"system", fs:"auto", weight:"normal", font:"system", density:"normal", dates:"friendly", v:2};
 const FS_MIN = 11, FS_MAX = 20;
+/* The "auto" size: 13px with a mouse, a size up on a touch screen, where a
+   finger needs the bigger rows. One project then reads right on the desktop
+   and on the tablet with nothing set on either. */
+const autoFs = () => matchMedia("(pointer:coarse)").matches ? 15 : 13;
 
 let appear = (() => {
-  try { return {...APPEAR_DEFAULT, ...JSON.parse(localStorage.getItem("pm.appear") || "{}")}; }
-  catch { return {...APPEAR_DEFAULT}; }
+  try {
+    const a = JSON.parse(localStorage.getItem("pm.appear") || "{}");
+    // Before "auto" existed the default 13 was written back on every run, so
+    // a 13 saved back then is the old default, not a size anyone picked.
+    if (a.fs === 13 && !a.v) a.fs = "auto";
+    return {...APPEAR_DEFAULT, ...a, v:APPEAR_DEFAULT.v};
+  } catch { return {...APPEAR_DEFAULT}; }
 })();
+const fsNow = () => appear.fs === "auto" ? autoFs() : appear.fs;
 
 const prefersDark = () => matchMedia("(prefers-color-scheme: dark)").matches;
 
@@ -1637,11 +1985,13 @@ function applyAppearance(){
   const dark = appear.theme === "dark" || (appear.theme === "system" && prefersDark());
   const r = document.documentElement;
   r.dataset.theme = dark ? "dark" : "light";
-  r.style.setProperty("--fs", appear.fs + "px");
+  r.style.setProperty("--fs", fsNow() + "px");
+  r.style.setProperty("--dens", DENSITY[appear.density] || 1);
   const [w, wb] = WEIGHTS[appear.weight] || WEIGHTS.normal;
   r.style.setProperty("--fw", w);
   r.style.setProperty("--fwb", wb);
   r.style.setProperty("--ff", FONTS[appear.font] || FONTS.system);
+  r.style.setProperty("--fst", STRETCH[appear.font] || "normal");
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = dark ? "#131619" : "#1e2328";
   try { localStorage.setItem("pm.appear", JSON.stringify(appear)); } catch { /* blocked */ }
@@ -1667,21 +2017,25 @@ applyAppearance();          // before first paint: no flash of the wrong theme
 // follow the OS while set to System
 matchMedia("(prefers-color-scheme: dark)")
   .addEventListener("change", () => { if (appear.theme === "system") applyAppearance(); });
+// an "auto" size follows the pointer: a tablet given a mouse, or back again
+matchMedia("(pointer:coarse)")
+  .addEventListener("change", () => { if (appear.fs === "auto"){ applyAppearance(); staleRH(); render(); } });
 
 /* Which projection you last had open is a per-device UI preference, not
    part of the project, so it lives in localStorage and never touches the
    journal or the exported file. Wrapped because storage can be blocked. */
-let view = (() => { try { return localStorage.getItem("pm.view") || "gantt"; }
+const VIEWS = ["gantt", "board", "sprints"];
+let view = (() => { try { const v = localStorage.getItem("pm.view"); return VIEWS.includes(v) ? v : "gantt"; }
                     catch { return "gantt"; } })();
 
 /* Everything already calls render(); it now dispatches to whichever
    projection is on screen, so no call site needs to know about the board. */
 function render(){
   syncWho(); paintBaseInfo();
-  const board = view === "board";
-  el("wrap").hidden = board;
-  el("boardwrap").hidden = !board;
-  return board ? renderBoardView() : renderGantt();
+  el("wrap").hidden = view !== "gantt";
+  el("boardwrap").hidden = view !== "board";
+  el("sprintwrap").hidden = view !== "sprints";
+  return view === "board" ? renderBoardView() : view === "sprints" ? renderSprintView() : renderGantt();
 }
 
 function renderBoardView(){
@@ -1690,19 +2044,20 @@ function renderBoardView(){
   document.title = S.name || "Schedule";
   if (!S.tasks.length){
     el("board").innerHTML = ""; el("weekstrip").hidden = true; el("empty").hidden = false;
-    el("nomatch").hidden = true;
+    el("nomatch").hidden = true; paintBoardBar();
     el("stat").textContent = "empty project"; syncUndoButtons(); return;
   }
   el("empty").hidden = true;
   if (!recompute()) return;      // bars feed the "critical" chip on a card
-  renderWeekStrip();
+  renderWeekStrip(); paintBoardBar();
   const matched = renderBoard();
   el("nomatch").hidden = !filtering() || matched > 0;
-  const cards = boardTasks(), shown = cards.length;
-  const off = S.tasks.length - parentSet().size - shown;
+  const pick = boardSprint(), cards = boardCards(pick), shown = cards.length;
+  const off = S.tasks.length - parentSet().size - boardTasks().length;
   const levels = S.boardFrom > 2 ? `levels 1–${S.boardFrom - 1}` : "level 1";
-  const st = staleTasks().length, late = cards.filter(t => dueState(t) === "late").length;
+  const st = cards.filter(t => staleBy(t) !== null).length, late = cards.filter(t => dueState(t) === "late").length;
   el("stat").innerHTML = `${shown} cards`
+    + (pick ? ` in ${pick === "none" ? "no sprint" : esc(pick.name)}` : "")
     + (off ? ` · <span title="Tasks at ${levels} are left off the board (Settings → Columns)">${off} hidden</span>` : "")
     + (late ? ` · <b title="Past their planned finish and not done">${late}</b> late` : "")
     + (st ? ` · <b title="In their column longer than its limit (Settings → Columns)">${st}</b> stale` : "") + overStat();
@@ -1767,7 +2122,7 @@ function statGantt(all){
   const end  = new Date(Math.max(...all.map(b => +b.finish)));
   const slip = baseSlip(end);
   const late = S.tasks.filter(t => dueState(t) === "late").length;
-  el("stat").innerHTML = `finish ${iso(end)}`
+  el("stat").innerHTML = `finish ${fmtDate(end)}`
     + (slip ? ` <b class="${slip > 0 ? "" : "ahead"}" title="Against the baseline saved ${esc(fmtWhen(new Date(S.baseline.saved)))}">`
             + `${slip > 0 ? "+" : "−"}${Math.abs(slip)}d</b>` : "")
     + ` · <b>${all.filter(b => b.critical).length}</b> critical of ${all.filter(b => !b.summary).length}`
@@ -1812,7 +2167,7 @@ function renderDrag(){
   for (const r of el("rows").children){
     const b = bars.get(r.dataset.id); if (!b) continue;
     const [, s, f, fl] = r.children;
-    const vs = iso(b.start), vf = iso(b.finish), vfl = b.summary ? "" : String(b.slack);
+    const vs = fmtDate(b.start), vf = fmtDate(b.finish), vfl = b.summary ? "" : String(b.slack);
     if (s.textContent !== vs) s.textContent = vs;
     if (f.textContent !== vf) f.textContent = vf;
     if (fl.textContent !== vfl){ fl.textContent = vfl; fl.className = "num" + (!b.summary && b.slack <= 0 ? " zero" : ""); }
@@ -1876,7 +2231,7 @@ function drawGrid(rows){
     f.className = "num" + (!b.summary && b.slack <= 0 ? " zero" : "");
     f.textContent = b.summary ? "" : b.slack;
 
-    r.append(n, cell(iso(b.start)), cell(iso(b.finish)), f);
+    r.append(n, cell(fmtDate(b.start)), cell(fmtDate(b.finish)), f);
     r.onclick = () => { if (performance.now() < noClickUntil) return; sel = t.id; render(); drawer(); };
     rowGrab(n, t, rows);
     c.appendChild(r);
@@ -1928,17 +2283,18 @@ function reparent(id, parent, ref = null, where = "into"){
   const t = taskOf(id), from = t.parent_id ?? null;
   if (ref === id || (where === "into" && from === parent)) return;
   if (parent === id || (parent != null && isUnder(parent, id)))
-    return note(`${t.key} can't go inside itself.`);
+    return note(`${t.key} can't go inside itself.`, {warn:true});
   // A move changes which leaves a link onto a group reaches (invariant 2),
   // and that can close a loop -- so ask the scheduler first, as addDep does.
   if (parent !== from)
     try { cpm(S.tasks.map(x => x.id === id ? {...x, parent_id:parent} : x), S.deps, new Cal(S.origin, S.holidays)); }
-    catch (e) { return note(`Can't move ${t.key} there: ${e.message}`); }
+    catch (e) { return note(`Can't move ${t.key} there: ${e.message}`, {warn:true}); }
 
   const p = parent != null ? taskOf(parent) : null, was = from != null ? taskOf(from) : null;
   const becomesGroup = p && parent !== from && !kidsOf(parent).length;
   const label = where === "into" ? (p ? `Move ${t.key} under ${p.key}` : `Move ${t.key} to the top level`)
-                                 : `Move ${t.key} ${where === "before" ? "above" : "below"} ${taskOf(ref).key}`;
+              : ref === from && was ? `Move ${t.key} out of ${was.key}`
+              : `Move ${t.key} ${where === "before" ? "above" : "below"} ${taskOf(ref).key}`;
   commit(label, () => placeAt(t, parent, where === "into" ? null : ref, where));
   if (parent != null) collapsed.delete(parent);        // show where it went
   sel = id; render(); drawer();
@@ -1947,7 +2303,25 @@ function reparent(id, parent, ref = null, where = "into"){
   if (becomesGroup) said.push(`${p.key} is a group now: its dates come from what is under it, `
     + `and its own duration${p.points > 0 ? " and points" : ""} no longer count.`);
   if (was && !kidsOf(from).length) said.push(`${was.key} has nothing under it any more, so it is a task of its own again.`);
-  if (said.length) note(said.join(" ") + " Ctrl+Z puts it back.");
+  if (said.length) note(said.join(" "), {undo:true});
+}
+
+/* Out one level: from under its parent to just below that parent. The way
+   back out used to be only a drag onto the list's header, which went
+   unfound -- this is the drawer's Move out button, and Alt+Shift+←. */
+function outdent(id){
+  const t = taskOf(id), p = t?.parent_id != null ? taskOf(t.parent_id) : null;
+  if (!t) return;
+  if (!p) return note(`${t.key} is already at the top level.`, {warn:true});
+  reparent(id, p.parent_id ?? null, p.id, "after");
+}
+/* In one level: under the sibling above it, as that one's last child
+   (Alt+Shift+→, as in MS Project). */
+function indent(id){
+  const t = taskOf(id); if (!t) return;
+  const sibs = siblings(t.parent_id ?? null), i = sibs.findIndex(x => x.id === id);
+  if (i <= 0) return note(`Nothing above ${t.key} at its level for it to go under.`, {warn:true});
+  reparent(id, sibs[i - 1].id);
 }
 
 function rowGrab(node, t, rows){
@@ -2072,7 +2446,7 @@ function drawBars(rows, delta = false){
     const ov0 = LOAD.overTask.get(t.id);
     const sig = [i, RH, +T0, DW, zoom, COARSE, showF, showC, showR, el("tBase").checked, sel === t.id, ctx,
       +b.start, +b.finish, +b.lateFin, b.slack, b.critical, b.finished, ROLL.get(t.id),
-      t.key, t.title, t.status, t.duration, t.pct, t.repeat, t.points, t.assignee, t.not_before,
+      t.key, t.title, t.status, t.duration, t.pct, t.repeat, t.points, shareText(t), t.not_before, appear.dates,
       t.actual_start, t.actual_finish, dueState(t), ov0 ? ov0.map(o => o.wk + ":" + o.pts).join() : "",
       S.baseline?.bars?.[t.id]?.join()].join("|");
     const old = barEls.get(t.id);
@@ -2089,7 +2463,7 @@ function drawBars(rows, delta = false){
       s.dataset.id = t.id;
       s.style.cssText = `left:${x0}px;width:${Math.max(CFG.bar.minSumW,x1-x0)}px;top:${top+midY(CFG.bar.sumH)}px`;
       const rp = rollPct(t.id);
-      s.title = `${t.key} ${t.title}\n${iso(b.start)} → ${iso(b.finish)}` + (rp != null ? ` · ${rp}% done` : "");
+      s.title = `${t.key} ${t.title}\n${fmtDate(b.start)} → ${fmtDate(b.finish)}` + (rp != null ? ` · ${rp}% done` : "");
       linkGrab(s, t);                 // a link onto a summary expands to its leaves
       c.appendChild(s); return;
     }
@@ -2100,7 +2474,7 @@ function drawBars(rows, delta = false){
       m.style.cssText = `left:${x0-CFG.bar.msH/2}px;top:${top+midY(CFG.bar.msH)}px`;
       const mov = showR && LOAD.overTask.get(t.id);
       if (mov) m.dataset.over = 1;
-      m.title = `${t.key} milestone · ${iso(b.start)}` + (mov ? "\n" + overTip(t, mov) : "");
+      m.title = `${t.key} milestone · ${fmtDate(b.start)}` + (mov ? "\n" + overTip(t, mov) : "");
       grab(m, t, "move"); linkGrab(m, t); c.appendChild(m); return;
     }
 
@@ -2123,21 +2497,21 @@ function drawBars(rows, delta = false){
     el2.style.cssText = `left:${x0}px;width:${Math.max(CFG.bar.minW,x1-x0)}px;top:${top+midY(CFG.bar.h)}px`;
     // % done is the darker front of the bar
     const pct = t.pct > 0 ? Math.min(100, t.pct) : 0;
-    if (pct){ const pg = document.createElement("i"); pg.className = "prog"; pg.style.width = pct + "%"; el2.appendChild(pg); }
+    if (pct){ const pg = document.createElement("i"); pg.className = pct >= 100 ? "prog full" : "prog"; pg.style.width = pct + "%"; el2.appendChild(pg); }
     const ov = showR && LOAD.overTask.get(t.id), late = dueState(t) === "late";
     if (ov) el2.dataset.over = 1;
-    el2.title = `${t.key} ${t.title}\n${iso(b.start)} → ${iso(b.finish)} · ${t.duration}d · float ${b.slack}`
+    el2.title = `${t.key} ${t.title}\n${fmtDate(b.start)} → ${fmtDate(b.finish)} · ${t.duration}d · float ${b.slack}`
               + (t.points != null ? ` · ${fmtPts(t.points)} pts` : "")
               + (pct ? ` · ${pct}% done` : "")
-              + (t.actual_start ? `\nstarted ${t.actual_start}` + (t.actual_finish ? `, finished ${t.actual_finish}` : "") : "")
-              + (late ? `\nlate: planned to finish ${iso(b.finish)}` : "")
+              + (t.actual_start ? `\nstarted ${fmtDate(t.actual_start)}` + (t.actual_finish ? `, finished ${fmtDate(t.actual_finish)}` : "") : "")
+              + (late ? `\nlate: planned to finish ${fmtDate(b.finish)}` : "")
               + (t.repeat ? `\nrepeats ${repeatName(t.repeat)}` : "")
-              + (t.not_before && !t.actual_start ? `\nconstrained: not before ${t.not_before}` : "")
+              + (t.not_before && !t.actual_start ? `\nconstrained: not before ${fmtDate(t.not_before)}` : "")
               + (ov ? "\n" + overTip(t, ov) : "");
     if (DW >= CFG.timeline.denseDW || zoom === "day"){
       const l = document.createElement("span"); l.className = "lbl";
       l.style.left = labelAt + "px";
-      const txt = [t.assignee || t.key, t.points != null ? `${fmtPts(t.points)} pts` : ""]
+      const txt = [whoShort(t) || t.key, t.points != null ? `${fmtPts(t.points)} pts` : ""]
                   .filter(Boolean).join(" · ");
       l.innerHTML = (ov ? '<b class="ovm">!</b>' : "") + (late ? '<b class="late">late</b> · ' : "")
                   + esc(txt) + (t.repeat ? ' <span class="rep">↻</span>' : "");
@@ -2237,6 +2611,37 @@ function boardTasks(){
   return S.tasks.filter(t => !parents.has(t.id) && (from <= 1 || level(t) >= from));
 }
 
+/* Which sprint the board shows, from the Sprint list above the columns:
+   "" everything, "active" whichever sprint is running -- so the board moves
+   on to the next one with no re-picking -- a sprint's id, or "none" for what
+   is in no sprint. A device preference, like the view. */
+let boardPick = (() => { try { return localStorage.getItem("pm.bspr") || ""; } catch { return ""; } })();
+/* the pick resolved: null for everything, "none", or an open sprint */
+function boardSprint(){
+  if (boardPick === "none") return "none";
+  return (boardPick === "active" ? activeSprint()
+        : S.sprints.find(s => s.id === boardPick && s.state !== "closed")) || null;
+}
+function boardCards(pick = boardSprint()){
+  const all = boardTasks();
+  return !pick ? all : pick === "none" ? all.filter(notInSprint) : all.filter(t => t.sprint === pick.id);
+}
+function paintBoardBar(){
+  const open = openSprints(), act = activeSprint(), pick = boardSprint(), s = el("bSpr");
+  const opts = [["", "All tasks"], ...(act ? [["active", `Active: ${act.name}`]] : []),
+                ...open.filter(x => x !== act).map(x => [x.id, x.name]), ["none", "Not in a sprint"]];
+  s.innerHTML = opts.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join("");
+  s.value = !pick ? "" : pick === "none" ? "none" : pick === act ? "active" : pick.id;
+  s.classList.toggle("on", !!pick);
+  el("bSprWrap").hidden = !open.length && !pick;
+  el("boardbar").hidden = el("bSprWrap").hidden && el("weekstrip").hidden;
+}
+el("bSpr").onchange = () => {
+  boardPick = el("bSpr").value;
+  try { localStorage.setItem("pm.bspr", boardPick); } catch { /* blocked */ }
+  quickSlot = null; render();
+};
+
 /* This week's load per person, above the columns: the same numbers as the
    workload band on the Gantt, for the week that contains today. */
 function renderWeekStrip(){
@@ -2249,7 +2654,7 @@ function renderWeekStrip(){
     const over = p.cap != null && pts > p.cap + OVER_EPS;
     const tip = w ? [...w.items].map(([t, n]) => `${t.key} ${t.title}: ${fmtPts(n)}`).join("\n")
                   : "Nothing with points this week";
-    return `<span class="pchip${over ? " over" : ""}" title="${esc(tip)}"><b>${esc(p.name)}</b> `
+    return `<span class="pchip${over ? " over" : ""}" title="${esc(tip)}">${avatar(p.name, tip)}<b>${esc(p.name)}</b> `
          + `${fmtPts(pts)}${p.cap != null ? ` / ${fmtPts(p.cap)}` : ""} pts</span>`;
   }).join("");
 }
@@ -2257,7 +2662,7 @@ function renderWeekStrip(){
 function renderBoard(){
   const wrap = el("board");
   wrap.innerHTML = "";
-  const leaves = boardTasks(), f = filterSets();
+  const pick = boardSprint(), leaves = boardCards(pick), f = filterSets();
   // columns share the width; below their minimum the board scrolls sideways
   wrap.style.minWidth = `calc(${S.statuses.length} * var(--fs) * 16 + ${S.statuses.length - 1} * 10px + 24px)`;
   let matched = 0;
@@ -2267,11 +2672,7 @@ function renderBoard(){
     const col = document.createElement("div");
     col.className = "col"; col.dataset.status = name;
 
-    const mine = leaves.filter(t => t.status === name)
-      // stale first: the whole point of flagging is that they surface
-      .sort((a, b) => (staleBy(b) ?? -1) - (staleBy(a) ?? -1)
-                   || String(a.rank ?? "").localeCompare(String(b.rank ?? ""))
-                   || a.key.localeCompare(b.key));
+    const mine = leaves.filter(t => t.status === name).sort(cardCmp);
 
     const over = cfg.wip != null && mine.length > cfg.wip;
     const cards = f ? mine.filter(t => f.self.has(t.id)) : mine;
@@ -2291,9 +2692,83 @@ function renderBoard(){
     body.className = "colbody";
     for (const t of cards) body.appendChild(card(t));
     col.appendChild(body);
+    col.appendChild(quickBox("col:" + name, {status:name, peers:mine,
+                                             sprint: pick && pick !== "none" ? pick.id : null}));
     wrap.appendChild(col);
   }
+  // Focus the quick-add box in the same turn as the click or Enter that opened
+  // it: focusing it a frame later lost the first letter typed straight after.
+  if (quickFocus){ quickFocus = false; wrap.querySelector(".qin")?.focus(); }
   return matched;
+}
+
+/* ------------------------------------------------------------------ *
+ * Quick add: type a title at the foot of a board column or a sprint, press
+ * Enter, and the task is there -- nothing else asked. The box stays open
+ * for the next one. So that it needs nothing more:
+ *   - it joins the group of the selected card, else of the last task it
+ *     lands beside, else of any card -- a level the board shows (S.boardFrom);
+ *   - it is scheduled from today, not from the project's start, so it is
+ *     not born late;
+ *   - a "whose" filter makes it that person's, and a sprint picked above
+ *     the board puts it in that sprint, so it stays in view;
+ *   - its column goes through setStatus(), so a later column stamps it
+ *     started, and a done one finished (invariant 10c).
+ * ------------------------------------------------------------------ */
+// which box is open ("col:<status>" or "spr:<sprint id>"), what is typed in
+// it, and whether the next render focuses it
+let quickSlot = null, quickText = "", quickFocus = false;
+
+function quickParent(peers){
+  const cards = boardTasks();
+  const anchor = (sel && cards.find(t => t.id === sel)) || peers[peers.length - 1] || cards[cards.length - 1];
+  return anchor ? (anchor.parent_id ?? null) : null;
+}
+
+/* opts: {status, sprint, peers, where} -- the column it lands in, its
+   sprint, the tasks it lands beside, and a name for the journal entry */
+function quickAdd(title, opts){
+  const status = opts.status || S.statuses[0];
+  const who = filt.who && filt.who !== NOBODY ? filt.who : null;
+  const t = {id:newId(), key:nextKey(), title, parent_id:quickParent(opts.peers || []), status:S.statuses[0],
+             status_since:new Date().toISOString(), assignee:who, duration:1, points:null, pct:null,
+             not_before:iso(todayDate()), actual_start:null, actual_finish:null, repeat:null,
+             sprint:opts.sprint ?? null, custom:{}};
+  commit(`Add ${t.key} to ${opts.where || status}`, () => { S.tasks.push(t); setStatus(t, status); });
+  render();
+  const f = filterSets();
+  if (f && !f.self.has(t.id)) note(`Added ${t.key}; the filter hides it.`, {undo:true});
+  else if (!boardTasks().some(x => x.id === t.id)) note(`Added ${t.key}; Settings → Hide levels keeps it out of view here.`, {undo:true});
+}
+
+function quickBox(slot, opts){
+  const box = document.createElement("div"); box.className = "qadd";
+  const close = () => { quickSlot = null; quickText = ""; render(); };
+  if (quickSlot !== slot){
+    box.innerHTML = `<button type="button" class="qbtn">+ Add task</button>`;
+    box.firstChild.onclick = () => { quickSlot = slot; quickText = ""; quickFocus = true; render(); };
+    return box;
+  }
+  const p = quickParent(opts.peers || []), pt = p != null ? taskOf(p) : null;
+  box.innerHTML = `<div class="qrow"><input class="qin" enterkeyhint="done" maxlength="200" autocomplete="off"
+      placeholder="${esc(pt ? `New task in ${pt.title}` : "New task")} — Enter adds it">
+    <button type="button" class="qok">Add</button><button type="button" class="qx" title="Close (Esc)">✕</button></div>`;
+  const inp = box.querySelector(".qin");
+  inp.value = quickText;
+  const go = () => { const v = inp.value.trim(); if (!v) return inp.focus(); quickText = ""; quickFocus = true; quickAdd(v, opts); };
+  inp.addEventListener("input", () => { quickText = inp.value; });
+  inp.addEventListener("keydown", e => {
+    if (e.key === "Enter"){ e.preventDefault(); go(); }
+    else if (e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); close(); }
+  });
+  // Clicked away with nothing typed: fold it back up. Not when a re-render
+  // took it out of the page (after Enter), nor when focus went to its buttons.
+  inp.addEventListener("blur", () => setTimeout(() => {
+    if (inp.isConnected && !inp.value.trim() && !box.contains(document.activeElement)) close();
+  }, 0));
+  box.querySelector(".qok").onclick = go;
+  box.querySelector(".qx").onclick = close;
+  return box;
 }
 
 const shortDay = d => d.toLocaleDateString([], {weekday:"short", timeZone:"UTC"});
@@ -2315,29 +2790,50 @@ function card(t){
   c.innerHTML =
     `<div class="ckey">${esc(t.key)}${b && b.critical ? '<span class="cc" title="on the critical path">critical</span>' : ""}${
        ov ? `<span class="co" title="${esc(overTip(t, ov))}">overloaded</span>` : ""}${
-       due === "late" ? `<span class="clate" title="Planned to finish ${iso(b.finish)}">late</span>`
-       : due === "soon" ? `<span class="csoon" title="Planned to finish ${iso(b.finish)}">due ${esc(shortDay(b.finish))}</span>` : ""}</div>
+       due === "late" ? `<span class="clate" title="Planned to finish ${fmtDate(b.finish)}">late</span>`
+       : due === "soon" ? `<span class="csoon" title="Planned to finish ${fmtDate(b.finish)}">due ${esc(shortDay(b.finish))}</span>` : ""}</div>
      <div class="ctitle">${esc(t.title)}${t.repeat ? ` <span class="crep" title="Repeats ${esc(repeatName(t.repeat))}">↻</span>` : ""}</div>
      <div class="cmeta">
        ${t.points != null ? `<span class="chip">${fmtPts(t.points)} pts</span>` : ""}
        ${chips}
        ${nAtt ? `<span class="chip" title="${nAtt} attachment${nAtt > 1 ? "s" : ""}">${CLIP} ${nAtt}</span>` : ""}
-       ${t.assignee ? `<span class="cwho">${esc(t.assignee)}</span>` : ""}
+       ${t.assignee ? `<span class="cwho" title="${esc(shareText(t))}">${avatars(t)}${
+         peopleOf(t).length === 1 ? `<span>${esc(t.assignee)}</span>` : ""}</span>` : ""}
        ${stale !== null ? `<span class="cstale" title="In ${esc(t.status)} for ${stale} days, past the ${S.statusCfg[t.status].staleDays}-day limit for this column">${stale}d</span>` : ""}
      </div>
      ${pct ? `<div class="cprog" title="${pct}% done"><i style="width:${pct}%"></i></div>` : ""}`;
-  c.onclick = () => { sel = t.id; render(); drawer(); };
+  c.onclick = () => { if (performance.now() < noClickUntil) return; sel = t.id; render(); drawer(); };
   cardGrab(c, t);
   return c;
 }
 
-/* drag a card to another column: same journalled commit as the drawer */
+/* Card order in a column. A card dragged up or down gets a place (`cpos`),
+   renumbered 10, 20, 30... across its whole column in one commit, as tree
+   order is (invariant 13). Cards never placed come after the placed ones:
+   stale first, since flagging is so they surface, then by key, numerically,
+   so a new card lands at the foot. Changing column drops the place. */
+const cardCmp = (a, b) => (a.cpos ?? Infinity) - (b.cpos ?? Infinity)
+  || (staleBy(b) ?? -1) - (staleBy(a) ?? -1)
+  || String(a.rank ?? "").localeCompare(String(b.rank ?? ""))
+  || a.key.localeCompare(b.key, undefined, {numeric: true});
+/* t's column, in order, with t put before `before` (or last) */
+function cardOrder(t, before){
+  const list = boardTasks().filter(x => x.status === t.status && x !== t).sort(cardCmp);
+  const i = before ? list.findIndex(x => x.id === before) : -1;
+  list.splice(i < 0 ? list.length : i, 0, t);
+  return list;
+}
+
+/* Drag a card to another column, or up or down its own: the same journalled
+   commit as the drawer. Where it lands is before the first card whose middle
+   is below the pointer, marked with a line while dragging. */
 function cardGrab(node, t){
   node.addEventListener("pointerdown", ev => {
     if (!ev.isPrimary || ev.button > 0) return;
     const pid = ev.pointerId;
     const sx = ev.clientX, sy = ev.clientY;
-    let moved = false, ghost = null, col = null;
+    let moved = false, ghost = null, col = null, at = null;
+    const unmark = () => { at?.classList.remove("dropbefore"); col?.querySelector(".colbody")?.classList.remove("dropend"); };
 
     const move = e => {
       if (e.pointerId !== pid) return;
@@ -2352,9 +2848,15 @@ function cardGrab(node, t){
       ghost.style.left = (e.clientX + CFG.ui.ghostOffset) + "px";
       ghost.style.top  = (e.clientY + CFG.ui.ghostOffset) + "px";
       const over = document.elementFromPoint(e.clientX, e.clientY)?.closest?.(".col");
+      unmark();
       if (col && col !== over) col.classList.remove("dropinto");
       col = over;
       if (col) col.classList.add("dropinto");
+      at = !col ? null : [...col.querySelectorAll(".colbody .card")].find(c => {
+        if (c === node) return false;
+        const r = c.getBoundingClientRect(); return e.clientY < r.top + r.height / 2; }) || null;
+      at?.classList.add("dropbefore");
+      if (col && !at) col.querySelector(".colbody")?.classList.add("dropend");
     };
     const up = e => {
       if (e && e.pointerId !== pid) return;
@@ -2363,12 +2865,353 @@ function cardGrab(node, t){
       document.removeEventListener("pointercancel", up);
       node.classList.remove("dragging");
       ghost?.remove();
+      unmark();
       col?.classList.remove("dropinto");
       if (!moved || !col) return;
-      const to = col.dataset.status;
-      if (to === t.status) return;
-      commit(`${t.key} → ${to}`, () => setStatus(t, to));
+      noClickUntil = performance.now() + 300;          // the drop is not also a click
+      const to = col.dataset.status, before = at?.dataset.id ?? null;
+      if (to === t.status){
+        // up or down its own column: nothing to do if the order stays as it is
+        const now = boardTasks().filter(x => x.status === to).sort(cardCmp).map(x => x.id);
+        if (cardOrder(t, before).map(x => x.id).join() === now.join()) return;
+        commit(`Reorder ${t.key}`, () => cardOrder(t, before).forEach((x, k) => { x.cpos = (k + 1) * 10; }));
+      } else commit(`${t.key} → ${to}`, () => {
+        setStatus(t, to);
+        cardOrder(t, before).forEach((x, k) => { x.cpos = (k + 1) * 10; });
+      });
       render(); drawer();
+    };
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
+    document.addEventListener("pointercancel", up);
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ * Sprints: Jira's backlog page. A sprint is a name, two dates and the
+ * tasks put in it, planned by dragging rows between a sprint and the
+ * backlog, or with the drawer's Sprint field. What a sprint is not:
+ *   - a schedule. Being in one moves nothing: dates still come from
+ *     durations and links (invariant 3). A task planned to finish after its
+ *     sprint ends is flagged, never pulled in;
+ *   - a velocity measure. It adds up the points it holds against each
+ *     person's weekly limit for its length -- the workload question, asked
+ *     of a sprint -- and keeps no tally of points done per sprint.
+ * One sprint is active at a time, and the board can show just that one.
+ * Completing a sprint closes it and carries its unfinished tasks on; the
+ * finished ones keep the closed sprint, as its record. S.sprints is a
+ * project field and t.sprint a task field, so all of it undoes as usual.
+ * ------------------------------------------------------------------ */
+
+/* The next sprint: from the day after the last one ends (or this Monday,
+   if that is later), CFG.sprint.days long. Made, not committed. */
+function makeSprint(){
+  const last = S.sprints.reduce((a, s) => !a || s.end > a.end ? s : a, null);
+  const monday = D(weekOf(todayDate()));
+  let start = last ? addD(D(last.end), 1) : monday;
+  if (start < monday) start = monday;
+  const n = Math.max(0, ...S.sprints.map(s => +(/^Sprint (\d+)$/.exec(s.name)?.[1] || 0))) + 1;
+  return {id:newId(), name:`Sprint ${n}`, start:iso(start), end:iso(addD(start, CFG.sprint.days - 1)), state:"planned"};
+}
+function newSprint(){
+  const s = makeSprint();
+  commit(`New sprint: ${s.name}`, () => { S.sprints = [...S.sprints, s]; });
+  render();
+}
+/* What a sprint got done, recorded when it completes: its finished tasks'
+   points, plus each finish of a repeating task inside its dates -- one never
+   sits in Done, it comes straight back -- split by each task's shares. A
+   snapshot, as in Jira: editing a task later does not rewrite the record. */
+function sprintDone(s){
+  const parents = parentSet(), by = {};
+  let pts = 0;
+  for (const t of S.tasks){
+    if (t.sprint !== s.id || parents.has(t.id) || !(t.points > 0)) continue;
+    const n = (isDone(t) ? 1 : 0) + (t.done_dates || []).filter(d => d >= s.start && d <= s.end).length;
+    if (!n) continue;
+    pts += t.points * n;
+    for (const {name, f} of sharesOf(t)) by[name] = (by[name] || 0) + t.points * n * f;
+  }
+  return {pts, by};
+}
+/* Velocity: the average done per sprint over the last few completed ones,
+   for the team and for each person -- someone with nothing in a sprint
+   counts 0 for it. null until a sprint has been completed. */
+function velocity(){
+  const done = S.sprints.filter(s => s.state === "closed" && s.done)
+    .sort((a, b) => b.end.localeCompare(a.end)).slice(0, CFG.sprint.velocityOf);
+  if (!done.length) return null;
+  const by = {};
+  for (const s of done) for (const [k, v] of Object.entries(s.done.by)) by[k] = (by[k] || 0) + v / done.length;
+  return {avg: done.reduce((a, s) => a + s.done.pts, 0) / done.length, by, n: done.length};
+}
+/* The last few completed sprints as bars, the average as a dashed line, and
+   each person's average beside it. Colours come from the tokens, via CSS. */
+function velocityPanel(vel){
+  const done = S.sprints.filter(s => s.state === "closed" && s.done).sort((a, b) => a.end.localeCompare(b.end)).slice(-6);
+  const max = Math.max(1, ...done.map(s => s.done.pts)), H = 64, BW = 34, GAP = 14, w = done.length * (BW + GAP) - GAP;
+  const y = v => H - v / max * (H - 14), ay = y(vel.avg);
+  const cols = done.map((s, i) => { const x0 = i * (BW + GAP), y0 = y(s.done.pts);
+    return `<g><title>${esc(s.name)}: ${fmtPts(s.done.pts)} pts done</title>
+      <rect x="${x0}" y="${y0}" width="${BW}" height="${Math.max(0, H - y0)}" rx="7"/>
+      <text x="${x0 + BW / 2}" y="${y0 - 4}" class="vv">${fmtPts(s.done.pts)}</text>
+      <text x="${x0 + BW / 2}" y="${H + 14}" class="vl">${esc(s.name.replace(/^Sprint /, "#"))}</text></g>`; }).join("");
+  const sec = document.createElement("section"); sec.className = "spr spvel";
+  sec.innerHTML = `<div class="sphd"><b class="spname">Velocity</b>
+      <span class="spsum">${fmtPts(vel.avg)} pts a sprint: the average of the last ${vel.n === 1 ? "one" : vel.n}</span>
+      ${Object.entries(vel.by).sort((a, b) => b[1] - a[1]).map(([n, v]) =>
+        `<span class="pchip" title="Usually gets ${fmtPts(v)} pts done a sprint">${avatar(n, n)}<b>${esc(n)}</b> ${fmtPts(v)} pts</span>`).join("")}</div>
+    <div class="velbody"><svg class="velchart" width="${w}" height="${H + 20}" viewBox="0 -2 ${w} ${H + 20}" role="img"
+      aria-label="Points done in each of the last ${done.length} sprints">${cols}
+      <line x1="0" x2="${w}" y1="${ay}" y2="${ay}" class="vavg"/></svg></div>`;
+  return sec;
+}
+
+function startSprint(id){
+  const s = S.sprints.find(x => x.id === id), cur = activeSprint();
+  if (!s || s.state !== "planned") return;
+  if (cur) return note(`${cur.name} is still active. Complete it first: one sprint runs at a time.`, {warn:true});
+  commit(`Start ${s.name}`, () => { s.state = "active"; });
+  render();
+}
+/* Unfinished work has to go somewhere, so ask where -- unless there is none. */
+function completeSprint(id){
+  const s = S.sprints.find(x => x.id === id); if (!s || s.state === "closed") return;
+  const open = S.tasks.filter(t => t.sprint === id && !isDone(t));
+  if (!open.length) return closeSprint(id, null, []);
+  const done = S.tasks.filter(t => t.sprint === id && isDone(t)).length;
+  el("sdTitle").textContent = `Complete ${s.name}`;
+  el("sdInfo").textContent = `${done ? `${done} done. ` : ""}${open.length} not finished: `
+    + open.slice(0, 6).map(t => t.key).join(", ") + (open.length > 6 ? " …" : "") + ".";
+  el("sdTo").innerHTML = openSprints().filter(x => x.state === "planned")
+      .map(x => `<option value="${esc(x.id)}">${esc(x.name)} (${fmtDay(x.start)} – ${fmtDay(x.end)})</option>`).join("")
+    + `<option value="">the backlog</option><option value="new">a new sprint</option>`;
+  el("sdOk").onclick = () => { el("dsprDone").close(); closeSprint(id, el("sdTo").value, open.map(t => t.id)); };
+  el("dsprDone").showModal();
+}
+/* One commit: the sprint closes, its unfinished tasks move on, and a new
+   sprint to take them is made if asked -- so one undo takes back all of it. */
+function closeSprint(id, to, ids){
+  const name = sprintName(id), move = new Set(ids), made = to === "new" ? makeSprint() : null;
+  const target = made ? made.id : to || null;
+  commit(`Complete ${name}`, () => {
+    if (made) S.sprints = [...S.sprints, made];
+    const s = S.sprints.find(x => x.id === id);
+    // recorded before the unfinished move on: a repeating task's finishes go with them
+    s.state = "closed"; s.done = sprintDone(s); s.closed = iso(todayDate());
+    for (const t of S.tasks) if (move.has(t.id)) t.sprint = target;
+  });
+  render();
+  const got = S.sprints.find(x => x.id === id)?.done?.pts || 0;
+  note(`${name} is complete: ${fmtPts(got)} pts done.`
+     + (ids.length ? ` ${ids.length} unfinished task${ids.length > 1 ? "s" : ""} moved to ${sprintName(target)}.` : ""), {undo:true});
+}
+
+let editingSprint = null;
+function editSprint(id){
+  const s = S.sprints.find(x => x.id === id); if (!s) return;
+  editingSprint = id;
+  el("seName").value = s.name; el("seStart").value = s.start; el("seEnd").value = s.end;
+  el("seWarn").hidden = true;
+  el("dsprEdit").showModal(); el("seName").select();
+}
+el("seOk").onclick = () => {
+  const name = el("seName").value.trim(), start = el("seStart").value, end = el("seEnd").value;
+  const bad = !name ? "Give it a name." : !start || !end ? "It needs a start and an end."
+            : end < start ? "It can't end before it starts." : "";
+  if (bad){ el("seWarn").textContent = bad; el("seWarn").hidden = false; return; }
+  const s = S.sprints.find(x => x.id === editingSprint);
+  if (s) commit(`Edit sprint ${name}`, () => { Object.assign(s, {name, start, end}); });
+  el("dsprEdit").close(); render(); drawer();
+};
+el("seDel").onclick = () => {
+  const s = S.sprints.find(x => x.id === editingSprint); if (!s) return;
+  const n = S.tasks.filter(t => t.sprint === s.id).length;
+  commit(`Delete ${s.name}`, () => {
+    S.sprints = S.sprints.filter(x => x.id !== s.id);
+    for (const t of S.tasks) if (t.sprint === s.id) t.sprint = null;
+  });
+  el("dsprEdit").close(); render(); drawer();
+  note(`Deleted ${s.name}.` + (n ? ` Its ${n} task${n > 1 ? "s are" : " is"} back in the backlog.` : ""), {undo:true});
+};
+// Enter in a field saves: the form's own submit would only close it
+el("dsprEdit").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.tagName === "INPUT"){ e.preventDefault(); el("seOk").click(); }
+});
+
+function moveToSprint(id, to){
+  const t = taskOf(id); if (!t || (t.sprint ?? null) === to) return;
+  commit(`Move ${t.key} to ${sprintName(to)}`, () => { t.sprint = to; });
+  render(); drawer();
+  if (!to && isDone(t)) note(`${t.key} is finished, so the backlog does not list it.`, {undo:true});
+}
+
+function renderSprintView(){
+  readRH();
+  el("pname").textContent = S.name || "Untitled project";
+  document.title = S.name || "Schedule";
+  el("empty").hidden = S.tasks.length > 0;
+  if (S.tasks.length && !recompute()) return;       // bars give each row its dates
+  const matched = renderSprints();
+  el("nomatch").hidden = !filtering() || matched > 0;
+  const act = activeSprint(), open = openSprints().length, back = boardTasks().filter(inBacklog).length;
+  el("stat").innerHTML = (act ? `${esc(act.name)} active · ` : "")
+    + `${open} open sprint${open === 1 ? "" : "s"} · ${back} in the backlog` + (S.tasks.length ? overStat() : "");
+  syncUndoButtons();
+}
+
+let spDoneOpen = false;          // whether the completed sprints are expanded
+function renderSprints(){
+  const wrap = el("sprints"), f = filterSets(), leaves = boardTasks();
+  const by = new Map(S.tasks.map(t => [t.id, t])), rank = new Map(S.statuses.map((s, i) => [s, i]));
+  const fin = t => +(bars?.get(t.id)?.finish ?? 0);
+  // by column, then by planned finish: what is due first, first
+  const order = (a, b) => (rank.get(a.status) ?? 99) - (rank.get(b.status) ?? 99) || fin(a) - fin(b)
+                        || a.key.localeCompare(b.key, undefined, {numeric:true});
+  let matched = 0;
+  wrap.innerHTML = `<div class="sptop"><button type="button" class="ghost" id="spNew">+ New sprint</button>
+    <span class="hint" style="margin:0">Drag a task by its number between a sprint and the backlog, or set
+    its Sprint in the drawer. Sprint, above the board, shows one sprint's cards.</span></div>`;
+  el("spNew").onclick = newSprint;
+  const vel = velocity();
+  if (vel) wrap.appendChild(velocityPanel(vel));
+  const section = (s, all) => {
+    const rows = f ? all.filter(t => f.self.has(t.id)) : all;
+    matched += rows.length;
+    wrap.appendChild(sprintSection(s, all, rows, by));
+  };
+  for (const s of openSprints()) section(s, leaves.filter(t => t.sprint === s.id).sort(order));
+  section(null, leaves.filter(inBacklog).sort(order));
+  const finished = leaves.filter(t => isDone(t) && notInSprint(t)).length;
+  if (finished) wrap.lastChild.insertAdjacentHTML("beforeend", `<p class="hint sphint">${finished} finished
+    task${finished > 1 ? "s" : ""} outside any sprint ${finished > 1 ? "aren't" : "isn't"} listed.</p>`);
+  const closed = S.sprints.filter(s => s.state === "closed").sort((a, b) => b.end.localeCompare(a.end));
+  if (closed.length){
+    const d = document.createElement("details"); d.className = "spdone"; d.open = spDoneOpen;
+    d.innerHTML = `<summary>Completed sprints (${closed.length})</summary>` + closed.map(s => {
+      const ts = S.tasks.filter(t => t.sprint === s.id && isDone(t));
+      return `<div class="spold"><b>${esc(s.name)}</b><span>${fmtDay(s.start)} – ${fmtDay(s.end)}</span>
+        <span title="${esc(ts.map(t => `${t.key} ${t.title}`).join("\n"))}">${ts.length} done</span>${s.done
+          ? `<span>${fmtPts(s.done.pts)} pts</span><span>${Object.entries(s.done.by).map(([n, v]) => `${esc(n)} ${fmtPts(v)}`).join(" · ")}</span>` : ""}</div>`;
+    }).join("");
+    d.ontoggle = () => { spDoneOpen = d.open; };
+    wrap.appendChild(d);
+  }
+  if (quickFocus){ quickFocus = false; wrap.querySelector(".qin")?.focus(); }
+  return matched;
+}
+
+/* One sprint (s), or the backlog (s null): its heading, its rows, and a
+   quick-add box. `all` is everything in it, `rows` what the filter leaves. */
+function sprintSection(s, all, rows, by){
+  const sec = document.createElement("section");
+  sec.className = "spr"; sec.dataset.sprint = s ? s.id : "";
+  const pts = all.reduce((a, t) => a + (t.points > 0 ? t.points : 0), 0), done = all.filter(isDone).length;
+  const count = (filtering() ? `${rows.length} of ${all.length}` : `${all.length}`) + ` task${all.length === 1 ? "" : "s"}`;
+  const sum = `<span class="spsum">${count}${pts ? ` · ${fmtPts(pts)} pts` : ""}${done ? ` · ${done} done` : ""}</span>`;
+  if (s){
+    // against what the last few sprints actually got done
+    const vel = velocity(), velc = vel && pts ? `<span class="spvelc${pts > vel.avg + OVER_EPS ? " over" : ""}" title="The last ${
+      vel.n} completed sprint${vel.n > 1 ? "s" : ""} averaged ${fmtPts(vel.avg)} pts done">usually ${fmtPts(vel.avg)}</span>` : "";
+    // a limit is points per week, so a two-week sprint holds twice it
+    const weeks = ((D(s.end) - D(s.start)) / DAY + 1) / 7, per = new Map();
+    for (const t of all) if (t.points > 0) for (const {name, f} of sharesOf(t)) per.set(name, (per.get(name) || 0) + t.points * f);
+    const chips = [...per].map(([name, p]) => {
+      const cap = S.people.find(x => x.name === name)?.capacity, lim = cap != null ? cap * weeks : null;
+      const over = lim != null && p > lim + OVER_EPS;
+      const tip = (lim == null ? `${name} has no limit set` : `${fmtPts(cap)} pts a week × ${fmtPts(weeks)} weeks = ${fmtPts(lim)}`)
+                + (vel?.by[name] != null ? `; usually gets ${fmtPts(vel.by[name])} done a sprint` : "");
+      return `<span class="pchip${over ? " over" : ""}" title="${esc(tip)}">${avatar(name, tip)}<b>${esc(name)}</b> ${fmtPts(p)}${lim != null ? ` / ${fmtPts(lim)}` : ""} pts</span>`;
+    }).join("");
+    const act = s.state === "active" ? "complete" : "start";
+    sec.innerHTML = `<div class="sphd"><button type="button" class="spname" title="Rename, change the dates, or delete">${esc(s.name)}</button>
+        <span class="spdates">${fmtDay(s.start)} – ${fmtDay(s.end)}</span>
+        ${s.state === "active" ? '<span class="spstate">Active</span>' : ""}${sum}${velc}${chips}<span class="spacer"></span>
+        <button type="button" class="ghost" data-act="${act}">${act === "complete" ? "Complete sprint" : "Start sprint"}</button></div>
+      <div class="spbody"></div>`;
+    sec.querySelector(".spname").onclick = () => editSprint(s.id);
+    sec.querySelector("[data-act]").onclick = () => act === "start" ? startSprint(s.id) : completeSprint(s.id);
+  } else {
+    sec.innerHTML = `<div class="sphd"><b class="spname">Backlog</b>${sum}</div><div class="spbody"></div>`;
+  }
+  const body = sec.querySelector(".spbody");
+  for (const t of rows) body.appendChild(sprintRow(t, s, by));
+  if (!rows.length) body.innerHTML = `<p class="spempty">${all.length ? "Nothing here matches the filter."
+    : s ? "Empty. Drag tasks in from the backlog, or add one below." : "Nothing waiting: every unfinished task is in a sprint."}</p>`;
+  sec.appendChild(quickBox("spr:" + (s ? s.id : ""), {sprint: s ? s.id : null, peers: all, where: s ? s.name : "the backlog"}));
+  return sec;
+}
+
+function sprintRow(t, s, by){
+  const r = document.createElement("div");
+  r.className = "srow"; r.dataset.id = t.id;
+  if (sel === t.id) r.dataset.sel = 1;
+  if (isDone(t)) r.dataset.done = 1;
+  const b = bars?.get(t.id), p = t.parent_id != null ? by.get(t.parent_id) : null, due = dueState(t);
+  const after = s && b && !isDone(t) && iso(b.finish) > s.end;
+  r.innerHTML = `<span class="skey" title="Drag to a sprint or the backlog">${esc(t.key)}</span>
+    <span class="stitle">${p ? `<span class="sgrp">${esc(p.title)} › </span>` : ""}${esc(t.title)}${
+      t.repeat ? ` <span class="crep" title="Repeats ${esc(repeatName(t.repeat))}">↻</span>` : ""}${
+      after ? ` <span class="safter" title="Planned to finish ${fmtDate(b.finish)}, after ${esc(s.name)} ends on ${fmtDate(s.end)}">after sprint</span>` : ""}</span>
+    <span class="chip sst">${esc(t.status)}</span>
+    <span class="swho" title="${esc(shareText(t))}">${avatars(t)}<span>${esc(whoShort(t))}</span></span>
+    <span class="spts">${t.points != null ? `${fmtPts(t.points)} pts` : ""}</span>
+    <span class="sdue${due === "late" ? " late" : ""}" title="Planned finish">${b ? (due === "late" ? "late · " : "") + fmtDay(iso(b.finish)) : ""}</span>`;
+  r.onclick = () => { if (performance.now() < noClickUntil) return; sel = t.id; render(); drawer(); };
+  sprintGrab(r, t);
+  return r;
+}
+
+/* Drag a row onto another sprint, or the backlog. With a mouse the whole
+   row is a handle; by touch only its number is (touch-action:none there),
+   so a swipe anywhere else still scrolls the page -- as on the Gantt. */
+function sprintGrab(node, t){
+  node.addEventListener("pointerdown", ev => {
+    if (!ev.isPrimary || ev.button > 0) return;
+    if (ev.pointerType !== "mouse" && !ev.target.closest(".skey")) return;
+    const pid = ev.pointerId, sx = ev.clientX, sy = ev.clientY;
+    const SLOP = ev.pointerType === "mouse" ? CFG.ui.slopMouse : CFG.ui.slopTouch;
+    const from = node.closest(".spr")?.dataset.sprint ?? "";
+    let moved = false, ghost = null, over = null, cx = sx, cy = sy, raf = 0;
+    const paint = () => {
+      const s = document.elementFromPoint(cx, cy)?.closest?.("#sprints .spr[data-sprint]") || null;
+      if (over !== s){ over?.classList.remove("dropinto"); over = s; over?.classList.add("dropinto"); }
+      const to = over?.dataset.sprint;
+      ghost.textContent = to == null ? t.key : to === from ? `${t.key} is already here` : `${t.key} → ${sprintName(to || null)}`;
+    };
+    // near the top or bottom of the page, scroll it, so a far sprint can be reached
+    const edgeScroll = () => {
+      const sc = el("sprintwrap"), r = sc.getBoundingClientRect();
+      const dy = cy < r.top + CFG.ui.dragEdge ? -CFG.ui.dragScroll : cy > r.bottom - CFG.ui.dragEdge ? CFG.ui.dragScroll : 0;
+      if (dy){ sc.scrollTop += dy; paint(); }
+      raf = requestAnimationFrame(edgeScroll);
+    };
+    const move = e => {
+      if (e.pointerId !== pid) return;
+      if (!moved && Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) < SLOP) return;
+      if (!moved){
+        moved = true; node.classList.add("dragging");
+        ghost = document.createElement("div"); ghost.className = "rowghost";
+        document.body.appendChild(ghost);
+        raf = requestAnimationFrame(edgeScroll);
+      }
+      cx = e.clientX; cy = e.clientY;
+      ghost.style.left = cx + CFG.ui.ghostOffset + "px";
+      ghost.style.top  = cy + CFG.ui.ghostOffset + "px";
+      paint();
+    };
+    const up = e => {
+      if (e.pointerId !== pid) return;
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", up);
+      document.removeEventListener("pointercancel", up);
+      cancelAnimationFrame(raf);
+      if (!moved) return;
+      ghost.remove(); node.classList.remove("dragging"); over?.classList.remove("dropinto");
+      noClickUntil = performance.now() + 300;
+      const to = over?.dataset.sprint;
+      if (e.type === "pointercancel" || to == null || to === from) return;
+      moveToSprint(t.id, to || null);
     };
     document.addEventListener("pointermove", move);
     document.addEventListener("pointerup", up);
@@ -2413,12 +3256,18 @@ function drawArrows(rows, delta = false){
     const sx = d.kind === "FF" ? x(addD(bs.finish,1)) : x(bs.start);
     const crit = bp.critical && bs.critical && el("tCrit").checked;
 
-    const {elbow:g, lane, headGap, backGap} = CFG.arrow;
+    const {elbow:g, lane, headGap, backGap, curve, round:r} = CFG.arrow;
     let path;
-    if (sx >= px + g*2) path = `M${px} ${py} H${px+g} V${sy} H${sx-headGap}`;
-    else {
-      const back = py < sy ? py + lane : py - lane;
-      path = `M${px} ${py} H${px+g} V${back} H${sx-g-backGap} V${sy} H${sx-headGap}`;
+    if (sx >= px + g*2){
+      // forward: one smooth S from the end of one bar into the start of the next
+      const k = Math.min(Math.max((sx - headGap - px) / 2, g), curve);
+      path = `M${px} ${py} C${px + k} ${py} ${sx - headGap - k} ${sy} ${sx - headGap} ${sy}`;
+    } else {
+      // backward: loop out to the right into the gap between the rows, run
+      // back along it, and loop round into the successor's start
+      const back = py < sy ? py + lane : py - lane, bx = sx - g - backGap;
+      path = `M${px} ${py} C${px + g + r} ${py} ${px + g + r} ${back} ${px + g} ${back}`
+           + ` L${bx} ${back} C${bx - r} ${back} ${bx - r} ${sy} ${sx - headGap} ${sy}`;
     }
     // Only offer deletion when the drawn arrow IS this dependency. When a
     // collapsed subtree reroutes it onto an ancestor, one line can stand for
@@ -2536,6 +3385,8 @@ async function push(t){
 /* ------------------------------------------------------------------ *
  * Detail drawer
  * ------------------------------------------------------------------ */
+// the task whose drawer shows a blank row for one more person
+let addingPerson = null;
 function drawer(){
   flushEdits();          // never tear a field out of the page mid-edit
   const d = el("drawer");
@@ -2562,7 +3413,7 @@ function drawer(){
   const keyAt = id => esc(taskOf(id)?.key ?? "?");
   // Bookkeeping says nothing to a person: `pos` moves whenever a sibling is
   // re-ordered, `status_since` with every status change.
-  const QUIET = new Set(["pos", "status_since"]);
+  const QUIET = new Set(["pos", "cpos", "status_since"]);
   const LABEL = {actual_start:"started", actual_finish:"finished", pct:"% done", not_before:"not before"};
   // A create or delete has no field, from or to -- it used to print as
   // ": — → —". Say what happened instead.
@@ -2573,6 +3424,19 @@ function drawer(){
     const where = id => id == null ? "top level" : keyAt(id);
     if (op === "upd" && c.field === "parent_id") return `parent: ${where(c.from)} → ${where(c.to)}`;
     if (op === "upd" && c.field === "repeat") return `repeats: ${esc(repeatName(c.from) || "never")} → ${esc(repeatName(c.to) || "never")}`;
+    if (op === "upd" && c.field === "sprint") return `sprint: ${esc(sprintName(c.from))} → ${esc(sprintName(c.to))}`;
+    if (op === "upd" && c.field === "done_dates"){          // a repeating task finished, or that undone
+      const a = c.from || [], z = c.to || [];
+      return z.length >= a.length ? z.slice(a.length).map(d => `done on ${esc(fmtDate(d))}`).join("<br>") || "done dates changed"
+                                  : a.slice(z.length).map(d => `done on ${esc(fmtDate(d))}, taken back`).join("<br>");
+    }
+    if (op === "upd" && c.field === "assignees"){
+      const many = l => Array.isArray(l) && l.length > 1;
+      const who = l => many(l) ? l.map(p => `${esc(p.name)} ${p.pct}%`).join(", ") : "one person";
+      return many(c.from) || many(c.to) ? `shares: ${who(c.from)} → ${who(c.to)}` : "";
+    }
+    if (op === "upd" && (c.field === "not_before" || c.field === "actual_start" || c.field === "actual_finish"))
+      return `${esc(LABEL[c.field])}: ${c.from ? esc(fmtDate(c.from)) : "—"} → ${c.to ? esc(fmtDate(c.to)) : "—"}`;
     // JSON fields read as what changed inside them, not as two blobs of JSON
     if (op === "upd" && c.field === "attach"){
       const had = new Set((c.from || []).map(a => a.url)), has = new Set((c.to || []).map(a => a.url));
@@ -2598,8 +3462,34 @@ function drawer(){
   const rp = isSum ? rollPct(sel) : null;
   const preds = S.deps.filter(x => x.succ === sel), succs = S.deps.filter(x => x.pred === sel);
   const att = t.attach || [];
-  const repeatOpts = ["", ...Object.keys(REPEATS), ...(t.repeat && !REPEATS[t.repeat] ? [t.repeat] : [])]
-    .map(v => `<option value="${esc(v)}" ${v === (t.repeat || "") ? "selected" : ""}>${v ? esc(repeatName(v)) : "never"}</option>`).join("");
+  // Repeats: every [n] [unit]; "never" hides the number
+  const rpt = parseRepeat(t.repeat), rn = rpt?.n ?? 1, dd = t.done_dates || [];
+  const unitOpts = [["", "never"], ...Object.entries(UNITS).map(([u, w]) => [u, rn === 1 ? w : w + "s"])]
+    .map(([v, l]) => `<option value="${v}"${v === (rpt?.unit ?? "") ? " selected" : ""}>${l}</option>`).join("");
+  // Parent: every task it could go under, in tree order. Skipping its own
+  // row skips its subtree too, so nothing inside it is offered.
+  const km = childMap(), popts = [`<option value="">none — top level</option>`];
+  const walkP = (p, depth) => { for (const x of km.get(p) || []){
+    if (x.id === sel) continue;
+    popts.push(`<option value="${esc(x.id)}"${x.id === t.parent_id ? " selected" : ""}>${" ".repeat(depth)}${esc(x.key)} `
+             + `${esc(x.title.length > 42 ? x.title.slice(0, 41) + "…" : x.title)}</option>`);
+    walkP(x.id, depth + 1); } };
+  walkP(null, 0);
+  // Sprint: the open ones, plus a completed one it is still filed under
+  const mySpr = sprintOf(t);
+  const sprOpts = `<option value="">backlog — no sprint</option>`
+    + [...openSprints(), ...(mySpr?.state === "closed" ? [mySpr] : [])].map(s => `<option value="${esc(s.id)}"${s.id === t.sprint ? " selected" : ""}>`
+        + `${esc(s.name)}${s.state === "active" ? " (active)" : s.state === "closed" ? " (completed)" : ""}</option>`).join("");
+  // People: the lead first; with more than one, each carries a share of the
+  // points. "+ Add person" shows a blank row until a name goes into it.
+  const ppl = peopleOf(t), prow = [...ppl, ...(addingPerson === sel && t.assignee ? [{name:"", pct:""}] : [])];
+  const shSum = ppl.length > 1 ? ppl.reduce((a, p) => a + (+p.pct || 0), 0) : 100;
+  const pplHtml = (prow.length ? prow : [{name:"", pct:""}]).map((p, i) => `<div class="pprow">${
+      p.name ? avatar(p.name) : '<span class="av av0" aria-hidden="true">+</span>'}<input id="${i ? "fAs" + i : "fAs"}"
+      class="ppname" data-pp="${i}" list="dlPeople" placeholder="${i ? "Who else" : "Nobody yet"}" value="${esc(p.name)}" ${isSum ? "disabled" : ""}>${
+      prow.length > 1 ? `<input id="fSh${i}" class="ppsh" data-sh="${i}" type="number" min="0" max="100" step="5" value="${esc(p.pct)}"
+        aria-label="${esc(p.name || "Their")} share, in percent"><span class="pct">%</span>` : ""}${
+      p.name && !isSum ? `<button type="button" class="pprm" data-pprm="${i}" title="Take ${esc(p.name)} off this task">✕</button>` : ""}</div>`).join("");
   const linkRow = (x, rel, other) => `<div class="lk"><span class="lkrel">${rel}</span>
       <b>${keyAt(other)}</b><span class="lkt">${esc(taskOf(other)?.title ?? "")}</span>
       <span class="lkk">${esc(linkName(x))}</span><button type="button" data-link="${esc(x.id)}">Edit</button></div>`;
@@ -2608,10 +3498,15 @@ function drawer(){
     <div class="dhd"><div class="key">${esc(t.key)}</div><h2>${esc(t.title)}</h2></div>
     <div class="sect">
       <div class="fld"><label>Title</label><input id="fTi" value="${esc(t.title)}"></div>
+      <div class="fld"><label>Parent</label><span class="pwrap"><select id="fPa">${popts.join("")}</select>${t.parent_id != null
+        ? `<button type="button" id="fOut" title="Out of ${keyAt(t.parent_id)}, to just below it (Alt+Shift+←)">Move out</button>` : ""}</span></div>
       <div class="fld"><label>Status</label>
         <select id="fSt" ${isSum?"disabled":""}>${S.statuses.map(s=>`<option ${s===t.status?"selected":""}>${esc(s)}</option>`).join("")}</select></div>
-      <div class="fld"><label>Assignee</label><input id="fAs" list="dlPeople" value="${esc(t.assignee)}" ${isSum?"disabled":""}></div>
+      <div class="fld ppl"><label>People</label><div class="pplist">${pplHtml}${!isSum && t.assignee
+        ? `<button type="button" id="fPpAdd" class="ppadd">+ Add person</button>` : ""}${shSum !== 100
+        ? `<p class="hint" style="margin:2px 0 0">The shares add up to ${shSum}%, so each counts as its part of that.</p>` : ""}</div></div>
       <datalist id="dlPeople">${allPeople().map(n => `<option value="${esc(n)}">`).join("")}</datalist>
+      ${!isSum && S.sprints.length ? `<div class="fld"><label>Sprint</label><select id="fSp">${sprOpts}</select></div>` : ""}
       <div class="fld"><label>Duration</label><input id="fDu" type="number" min="0" value="${t.duration}" ${isSum?"disabled":""}></div>
       <div class="fld"><label>Points</label><input id="fPt" type="number" min="0" step="any" placeholder="none" value="${t.points ?? ""}" ${isSum?"disabled":""}></div>
       <div class="fld"><label>Not before</label><input id="fNb" type="date" value="${t.not_before??""}" ${isSum?"disabled":""}></div>
@@ -2619,9 +3514,9 @@ function drawer(){
     </div>
     <div class="sect">
       <h3>Schedule</h3>
-      <div class="fld"><label>Early start</label><span>${iso(b.start)}</span></div>
-      <div class="fld"><label>Early finish</label><span>${iso(b.finish)}</span></div>
-      <div class="fld"><label>Late finish</label><span>${iso(b.lateFin)}</span></div>
+      <div class="fld"><label>Early start</label><span>${fmtDate(b.start)}</span></div>
+      <div class="fld"><label>Early finish</label><span>${fmtDate(b.finish)}</span></div>
+      <div class="fld"><label>Late finish</label><span>${fmtDate(b.lateFin)}</span></div>
       <div class="fld"><label>Total float</label><span${b.slack<=0&&!b.summary?' style="color:var(--crit);font-weight:var(--fwb)"':""}>${b.summary?"—":b.slack+" d"}</span></div>
       ${ov ? `<div class="fld"><label>Workload</label><span style="color:var(--over);font-weight:var(--fwb)">${esc(overTip(t, ov))}</span></div>` : ""}
     </div>
@@ -2632,8 +3527,12 @@ function drawer(){
         : `<div class="fld"><label>% done</label><input id="fPc" type="number" min="0" max="100" step="10" placeholder="0" value="${t.pct ?? ""}"></div>
            <div class="fld"><label>Started</label><input id="fAS" type="date" value="${t.actual_start ?? ""}"></div>
            <div class="fld"><label>Finished</label><input id="fAF" type="date" value="${t.actual_finish ?? ""}"></div>
-           <div class="fld"><label>Repeats</label><select id="fRp">${repeatOpts}</select></div>`}
-      ${bl ? `<div class="fld"><label>Baseline</label><span>${bl[0]} → ${bl[1]}${fslip
+           <div class="fld"><label>Repeats</label><span class="rep"><span class="every"${rpt ? "" : " hidden"}>every</span><input id="fRpN"
+             type="number" min="1" max="999" step="1" value="${rn}" aria-label="Every how many"${rpt ? "" : " hidden"}><select id="fRpU"
+             aria-label="Repeats">${unitOpts}</select></span></div>
+           ${dd.length ? `<p class="hint" style="margin:0 0 7px">Done ${dd.length === 1 ? "once" : `${dd.length} times`}, most recently
+             ${esc(fmtDate(dd[dd.length - 1]))}. Each time it comes back to the first column, same number.</p>` : ""}`}
+      ${bl ? `<div class="fld"><label>Baseline</label><span>${fmtDate(bl[0])} → ${fmtDate(bl[1])}${fslip
                ? ` · <b style="color:${fslip > 0 ? "var(--crit)" : "var(--bar-done)"}">finish ${fslip > 0 ? "+" : "−"}${Math.abs(fslip)} d</b>`
                : " · on plan"}</span></div>` : ""}
       ${!isSum && !t.actual_start ? `<p class="hint" style="margin:6px 0 0">Moving the card out of the first column fills in Started; a Done column fills in Finished.</p>` : ""}
@@ -2683,7 +3582,37 @@ function drawer(){
     commit(`${label} on ${t.key}`, () => fn(e.target.value)); render(); drawer(); }; };
   bind("fTi", "Title",    v => t.title = v.trim() || t.title);
   bind("fSt", "Status",   v => setStatus(t, v));
-  bind("fAs", "Assignee", v => t.assignee = v || null);
+  // People: any change rewrites the whole list through setPeople(), as one entry
+  const readPeople = () => [...d.querySelectorAll(".pprow")].map(r => ({
+    name: r.querySelector(".ppname").value, pct: r.querySelector(".ppsh")?.value ?? 100}));
+  const commitPeople = (list, what) => {
+    addingPerson = null;
+    commit(`${what} on ${t.key}`, () => setPeople(t, list));
+    render(); drawer();
+  };
+  d.querySelectorAll(".ppname").forEach(n => n.onchange = () => {
+    const list = readPeople(), i = +n.dataset.pp;
+    // someone new gets an equal share, and the rest make room in proportion
+    if (i > 0 && i >= ppl.length && list[i].name.trim()){
+      const share = Math.round(100 / list.length), rest = list.slice(0, i);
+      const tot = rest.reduce((a, p) => a + (+p.pct || 0), 0) || 1;
+      for (const p of rest) p.pct = Math.round((+p.pct || 0) * (100 - share) / tot);
+      list[i].pct = share;
+    }
+    commitPeople(list, "People");
+  });
+  d.querySelectorAll(".ppsh").forEach(n => n.onchange = () => {
+    const list = readPeople(), i = +n.dataset.sh;
+    // with two, the other takes what is left, so they still make 100
+    if (list.length === 2 && list[1 - i].name.trim()) list[1 - i].pct = 100 - Math.max(0, Math.min(100, +n.value || 0));
+    commitPeople(list, "Shares");
+  });
+  d.querySelectorAll("[data-pprm]").forEach(n => n.onclick = () => {
+    const list = readPeople().filter((_, k) => k !== +n.dataset.pprm);
+    if (list.filter(p => p.name.trim()).length === 1) for (const p of list) p.pct = 100;
+    commitPeople(list, "People");
+  });
+  if (el("fPpAdd")) el("fPpAdd").onclick = () => { addingPerson = sel; drawer(); el("fAs" + ppl.length)?.focus(); };
   bind("fDu", "Duration", v => { t.duration = Math.max(0, +v||0); push(t); });
   bind("fPt", "Points",   v => { const n = parseFloat(v); t.points = Number.isFinite(n) ? Math.max(0, n) : null; });
   bind("fNb", "Date",     v => { t.not_before = v || null; push(t); });
@@ -2695,7 +3624,15 @@ function drawer(){
     // setStatus, so a repeating task still leaves its next one behind
     if (v && !S.statusCfg[t.status]?.done){ const dn = S.statuses.find(s => S.statusCfg[s]?.done); if (dn) setStatus(t, dn); }
   });
-  bind("fRp", "Repeat",   v => { t.repeat = v || null; });
+  const repeatVal = () => { const u = el("fRpU").value, n = Math.max(1, Math.round(+el("fRpN").value || 1));
+                            return u ? `${n}${u}` : null; };
+  bind("fRpU", "Repeat",  () => { t.repeat = repeatVal(); });
+  bind("fRpN", "Repeat",  () => { if (el("fRpU").value) t.repeat = repeatVal(); });
+  bind("fSp", "Sprint",   v => { t.sprint = v || null; });
+  // re-parenting journals itself (reparent() checks for loops first); the
+  // second drawer() puts the list back if it refused
+  el("fPa").onchange = e => { reparent(t.id, e.target.value || null); drawer(); };
+  if (el("fOut")) el("fOut").onclick = () => outdent(t.id);
   d.querySelectorAll("[data-link]").forEach(n => n.onclick = () => openLink(n.dataset.link));
   d.querySelectorAll("[data-rmatt]").forEach(n => n.onclick = () => {
     const i = +n.dataset.rmatt;
@@ -2704,7 +3641,7 @@ function drawer(){
   });
   el("atAdd").onclick = () => {
     const url = safeUrl(el("atUrl").value || "");
-    if (!url) return note("That is not a web link. Paste one that starts with https://");
+    if (!url) return note("That is not a web link. Paste one that starts with https://", {warn:true});
     const label = el("atLbl").value.trim() || url.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60);
     commit(`Attach to ${t.key}`, () => { t.attach = [...att, {label, url}]; });   // replaced, not mutated
     render(); drawer();
@@ -2747,7 +3684,7 @@ function csv(){
   const keyOf = id => taskOf(id).key;
   const cols = ["key","title","parent_key","status","assignee","duration_days","points","not_before",
                 "early_start","early_finish","late_finish","total_float","critical","depends_on",
-                "pct_done","actual_start","actual_finish","repeats",
+                "pct_done","actual_start","actual_finish","repeats","sprint",
                 "baseline_start","baseline_finish","finish_slip_days","attachments",
                 ...S.fields.map(f => f.name)];
   const rows = S.tasks.map(t => {
@@ -2755,10 +3692,11 @@ function csv(){
     const dep = S.deps.filter(d => d.succ === t.id)
                       .map(d => keyOf(d.pred) + (d.kind !== "FS" || d.lag ? `:${d.kind}${d.lag>=0?"+":""}${d.lag}` : ""))
                       .join(" ");
-    return [t.key, t.title, t.parent_id?keyOf(t.parent_id):"", t.status, t.assignee, t.duration,
+    return [t.key, t.title, t.parent_id?keyOf(t.parent_id):"", t.status,
+            peopleOf(t).length > 1 ? peopleOf(t).map(p => `${p.name} ${p.pct}%`).join("; ") : t.assignee, t.duration,
             t.points, t.not_before, iso(b.start), iso(b.finish), iso(b.lateFin),
             b.summary?"":b.slack, b.critical?"yes":"", dep,
-            b.summary ? (rollPct(t.id) ?? "") : (t.pct ?? ""), t.actual_start, t.actual_finish, repeatName(t.repeat),
+            b.summary ? (rollPct(t.id) ?? "") : (t.pct ?? ""), t.actual_start, t.actual_finish, repeatName(t.repeat), sprintOf(t)?.name,
             bl?.[0], bl?.[1], bl ? slipDays(b.finish, bl[1]) : "", (t.attach || []).map(a => a.url).join(" "),
             ...S.fields.map(f => t.custom[f.name])];
   });
@@ -2850,11 +3788,11 @@ function saveAsApp(){
 async function importProject(file){
   let doc;
   try { doc = JSON.parse(await file.text()); }
-  catch { return note("That file is not valid JSON."); }
+  catch { return note("That file is not valid JSON.", {warn:true}); }
   if (!doc || !doc.S || !Array.isArray(doc.S.tasks))
-    return note("That does not look like a project file — no tasks in it.");
+    return note("That does not look like a project file — no tasks in it.", {warn:true});
   if (doc.schema !== SCHEMA)
-    return note(`That file is schema ${doc.schema}, this app reads ${SCHEMA}.`);
+    return note(`That file is schema ${doc.schema}, this app reads ${SCHEMA}.`, {warn:true});
 
   // Import replaces; there is no merge. The failure that actually bites when
   // you work on two devices is importing the STALE side and silently burying
@@ -2880,7 +3818,7 @@ async function importProject(file){
   S = normalize(doc.S);
   LOG.length = 0; LOG.push(...(doc.LOG || []).map(t => ({...t, at: new Date(t.at)})));
   sel = null; collapsed.clear();
-  el("warn").hidden = true;
+  bar(lockMsg || storeMsg);
   render(); drawer(); save();
   note(`Imported ${S.tasks.length} tasks. A backup of the previous project `
      + `was downloaded as backup-before-import-….json`);
@@ -2888,11 +3826,12 @@ async function importProject(file){
 
 /* ------------------------------------------------------------------ */
 function setView(v){
-  view = v;
+  if (!VIEWS.includes(v)) v = "gantt";
+  view = v; quickSlot = null;
   try { localStorage.setItem("pm.view", v); } catch { /* storage blocked */ }
   [...el("vw").children].forEach(c => c.setAttribute("aria-pressed", c.dataset.v === v));
   // zoom and the Show menu only mean anything on the timeline
-  for (const id of ["zoom","mShow"]) el(id).style.display = v === "board" ? "none" : "";
+  for (const id of ["zoom","mShow"]) el(id).style.display = v === "gantt" ? "" : "none";
   render(); drawer();
 }
 el("vw").onclick = e => {
@@ -2910,7 +3849,7 @@ el("zoom").onclick = e => {
 el("csv").onclick = csv;
 // wrapped, not passed by reference: onclick would hand the click event in
 // as `prefix` and the file would be named after a PointerEvent
-el("save").onclick = () => exportProject();
+el("save").onclick = () => backupNow(false);       // an export is a backup: it resets the weekly clock
 el("saveapp").onclick = saveAsApp;
 el("open").onclick = () => el("file").click();
 el("file").onchange = e => {
@@ -3011,7 +3950,7 @@ function icsText(){
     L.push("BEGIN:VEVENT", `UID:${t.id}@schedule`, `DTSTAMP:${stamp}`,
       `DTSTART;VALUE=DATE:${d8(b.finish)}`, `DTEND;VALUE=DATE:${d8(addD(b.finish, 1))}`,
       `SUMMARY:${txt(`Due: ${t.key} ${t.title}`)}`,
-      `DESCRIPTION:${txt([t.assignee && `For ${t.assignee}`, `Planned ${iso(b.start)} to ${iso(b.finish)}`,
+      `DESCRIPTION:${txt([t.assignee && `For ${whoText(t)}`, `Planned ${iso(b.start)} to ${iso(b.finish)}`,
                           ...(t.attach || []).map(a => a.url)].filter(Boolean).join("\n"))}`,
       "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${txt(`${t.key} ${t.title} is due tomorrow`)}`,
       "TRIGGER:-PT15H", "END:VALARM", "END:VEVENT");
@@ -3023,6 +3962,37 @@ el("ics").onclick = () => {
   const name = (S.name || "schedule").replace(/[^A-Za-z0-9._-]+/g, "-").slice(0, 40);
   dl(`${name}-due-${stampName(new Date())}.ics`, icsText(), "text/calendar");
 };
+
+/* ---- weekly backup ---- */
+/* The live copy is this browser's storage, which a "clear site data" or a
+   wiped tablet takes without a word. So once a week -- if anything changed
+   since the last one -- a backup .json goes to Downloads. It waits for the
+   first tap or key after it falls due: browsers want a person behind a
+   download. A device preference, like the view: {on, last}. Export project
+   counts as a backup too. */
+let backup = (() => { try { return {on:true, last:null, ...JSON.parse(localStorage.getItem("pm.backup") || "{}")}; }
+                      catch { return {on:true, last:null}; } })();
+const keepBackup = () => { try { localStorage.setItem("pm.backup", JSON.stringify(backup)); } catch { /* blocked */ } paintBackup(); };
+function paintBackup(){
+  el("bkOn").checked = backup.on;
+  el("bkInfo").textContent = !backup.on ? "Off on this device. Export project still works."
+    : backup.last ? `Last one ${fmtWhen(new Date(backup.last))}, in Downloads.` : "The first comes a week from now.";
+}
+function backupDue(){
+  if (!backup.on || lockMsg || !S.tasks.length) return false;
+  if (!backup.last){ backup.last = new Date().toISOString(); keepBackup(); return false; }     // starts the clock
+  const last = new Date(backup.last), edited = lastEdit(LOG);
+  return Date.now() - last >= CFG.backup.days * DAY && !!edited && edited > last;
+}
+function backupNow(weekly){
+  exportProject(weekly ? "weekly-backup" : "project");
+  backup.last = new Date().toISOString(); keepBackup();
+  if (weekly) note("This week's backup is in your Downloads. A copy somewhere else, like Google Drive, makes it a real one.");
+}
+addEventListener("pointerdown", () => { if (backupDue()) backupNow(true); }, true);
+addEventListener("keydown", () => { if (backupDue()) backupNow(true); }, true);
+el("bkOn").onchange = () => { backup.on = el("bkOn").checked; keepBackup(); };
+paintBackup();
 
 /* ---- the task list's width ---- */
 /* A device preference, like the text size, and kept as a multiple of the
@@ -3039,7 +4009,7 @@ catch { /* blocked */ }
 el("gridsizer").addEventListener("pointerdown", ev => {
   if (!ev.isPrimary || ev.button > 0) return;
   ev.preventDefault();
-  const pid = ev.pointerId, x0 = ev.clientX, w0 = el("grid").getBoundingClientRect().width, fs = appear.fs;
+  const pid = ev.pointerId, x0 = ev.clientX, w0 = el("grid").getBoundingClientRect().width, fs = fsNow();
   el("gridsizer").classList.add("on");
   const move = e => {
     if (e.pointerId !== pid) return;
@@ -3067,7 +4037,7 @@ el("gridsizer").addEventListener("dblclick", () => {
   }
   const cols = [...el("grid").querySelector(".ghd").children].slice(1)
     .reduce((a, c) => a + c.getBoundingClientRect().width, 0);
-  applyGridW(+Math.min(GRID_MAX, Math.max(GRID_MIN, (need + cols + 4) / appear.fs)).toFixed(2));
+  applyGridW(+Math.min(GRID_MAX, Math.max(GRID_MIN, (need + cols + 4) / fsNow())).toFixed(2));
 });
 
 /* Where the keyboard's own undo belongs: anything you type text into.
@@ -3103,23 +4073,31 @@ document.addEventListener("keydown", e => {
   if (e.key === "/"){ e.preventDefault(); el("q").focus(); el("q").select(); return; }
   if (e.key === "Insert"){ e.preventDefault(); addTask(sel ? taskOf(sel)?.parent_id ?? null : null); }
   if (e.key === "Delete" && sel){ e.preventDefault(); deleteTask(sel); }
+  // MS Project's outline keys: out a level, or in under the task above
+  if (e.altKey && e.shiftKey && sel && (e.key === "ArrowLeft" || e.key === "ArrowRight")){
+    e.preventDefault(); e.key === "ArrowLeft" ? outdent(sel) : indent(sel);
+  }
 });
 
 /* ---- appearance ---- */
 function paintAppearance(){
-  el("aSize").textContent = appear.fs;
+  const fs = fsNow();
+  el("aSize").textContent = fs;
   el("aFont").value = appear.font;
   for (const b of el("aTheme").children)  b.setAttribute("aria-pressed", b.dataset.t === appear.theme);
   for (const b of el("aWeight").children) b.setAttribute("aria-pressed", b.dataset.w === appear.weight);
-  el("aMinus").disabled = appear.fs <= FS_MIN;
-  el("aPlus").disabled  = appear.fs >= FS_MAX;
+  for (const b of el("aSizeP").children)  b.setAttribute("aria-pressed", b.dataset.s === String(appear.fs));
+  for (const b of el("aDens").children)   b.setAttribute("aria-pressed", b.dataset.d === appear.density);
+  for (const b of el("aDates").children)  b.setAttribute("aria-pressed", b.dataset.f === appear.dates);
+  el("aMinus").disabled = fs <= FS_MIN;
+  el("aPlus").disabled  = fs >= FS_MAX;
 }
 // Live. An appearance control that needs a Save button is a bad one --
 // you are choosing by looking at the result.
 const setAppear = patch => {
   appear = {...appear, ...patch};
   applyAppearance(); staleRH(); paintAppearance();
-  render();          // bar and column geometry is measured from the font
+  render(); drawer();   // bar and column geometry is measured from the font; the drawer shows dates
 };
 el("bApp").onclick = () => { paintAppearance(); el("dapp").showModal(); };
 el("bTheme").onclick = () => setAppear({theme: document.documentElement.dataset.theme === "dark" ? "light" : "dark"});
@@ -3131,8 +4109,11 @@ el("pname").addEventListener("keydown", e => { if (e.key === "Enter" || e.key ==
 el("aTheme").onclick  = e => { const b = e.target.closest("[data-t]"); if (b) setAppear({theme:b.dataset.t}); };
 el("aWeight").onclick = e => { const b = e.target.closest("[data-w]"); if (b) setAppear({weight:b.dataset.w}); };
 el("aFont").onchange  = e => setAppear({font:e.target.value});
-el("aMinus").onclick  = () => setAppear({fs:Math.max(FS_MIN, appear.fs - 1)});
-el("aPlus").onclick   = () => setAppear({fs:Math.min(FS_MAX, appear.fs + 1)});
+el("aSizeP").onclick  = e => { const b = e.target.closest("[data-s]"); if (b) setAppear({fs: b.dataset.s === "auto" ? "auto" : +b.dataset.s}); };
+el("aDens").onclick   = e => { const b = e.target.closest("[data-d]"); if (b) setAppear({density:b.dataset.d}); };
+el("aDates").onclick  = e => { const b = e.target.closest("[data-f]"); if (b) setAppear({dates:b.dataset.f}); };
+el("aMinus").onclick  = () => setAppear({fs:Math.max(FS_MIN, fsNow() - 1)});
+el("aPlus").onclick   = () => setAppear({fs:Math.min(FS_MAX, fsNow() + 1)});
 el("aReset").onclick  = () => { applyGridW(null); setAppear({...APPEAR_DEFAULT}); };
 
 /* ---- project settings ---- */
@@ -3219,7 +4200,7 @@ el("sFieldAdd").onclick = () => {
    then anyone else a task is assigned to. */
 function allPeople(){
   const names = S.people.map(p => p.name);
-  for (const t of S.tasks) if (t.assignee && !names.includes(t.assignee)) names.push(t.assignee);
+  for (const t of S.tasks) for (const p of peopleOf(t)) if (!names.includes(p.name)) names.push(p.name);
   return names;
 }
 
@@ -3317,7 +4298,8 @@ el("sOk").onclick = () => {
     for (const t of S.tasks){
       if (moved.has(t.status)) t.status = moved.get(t.status);       // rename, not a move
       if (!names.includes(t.status)) setStatus(t, names[0]);
-      if (renamed.has(t.assignee)) t.assignee = renamed.get(t.assignee);   // likewise
+      if (peopleOf(t).some(p => renamed.has(p.name)))                       // likewise, shares and all
+        setPeople(t, peopleOf(t).map(p => ({...p, name: renamed.get(p.name) ?? p.name})));
     }
   });
   el("dset").close();
@@ -3369,6 +4351,7 @@ function normalize(st){
   st.people    = st.people   || [];      // points-per-week limits; see workload()
   st.boardFrom = st.boardFrom || 1;      // first level of the tree that gets cards
   st.baseline  = st.baseline  || null;   // never undefined: undo JSON.parses it back
+  st.sprints   = st.sprints   || [];     // see makeSprint()
   st.statuses  = st.statuses || ["Backlog", "In Progress", "Done"];
   st.deps      = (st.deps || []).map(d => d.id ? d : {...d, id: newId()});
 
@@ -3400,7 +4383,6 @@ function staleBy(t){
   const d = daysInStatus(t);
   return d >= cfg.staleDays ? d : null;
 }
-const staleTasks = () => boardTasks().filter(t => staleBy(t) !== null);
 
 function idb(){
   return new Promise((res, rej) => {
@@ -3444,9 +4426,10 @@ function save(){
     writeState().catch(e => {
       if (saveWarned) return;
       saveWarned = true;
-      note("Changes are NOT being saved — this browser is blocking storage for "
-         + "this page (a private window, or site data turned off). Use Export to "
-         + "keep your work. (" + e.message + ")");
+      storeMsg = "Changes are NOT being saved — this browser is blocking storage for "
+               + "this page (a private window, or site data turned off). Use Export to "
+               + "keep your work. (" + e.message + ")";
+      bar(lockMsg || storeMsg);
     });
   }, CFG.ui.saveDebounceMs);
 }
@@ -3483,9 +4466,10 @@ async function load(){
       return;
     }
   } catch (e) {
-    note("This browser is blocking storage for this page, so nothing will be "
-       + "saved (a private window, or site data turned off). Use Export to keep "
-       + "your work. (" + e.message + ")");
+    storeMsg = "This browser is blocking storage for this page, so nothing will be "
+             + "saved (a private window, or site data turned off). Use Export to keep "
+             + "your work. (" + e.message + ")";
+    bar(lockMsg || storeMsg);
   }
 
   // 3. a project baked into this file by "Save as app" -- the normal path
