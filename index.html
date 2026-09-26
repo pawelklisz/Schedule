@@ -175,6 +175,14 @@ details.menu.right .menupop{left:auto;right:0}
 .filt{padding:4px 9px;border:1px solid var(--rule);border-radius:var(--r-md);background:var(--paper)}
 #q{width:calc(var(--fs)*9)}
 #who,#due{max-width:calc(var(--fs)*11)}
+#fSum.on{border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
+.fpop{min-width:calc(var(--fs)*18)}
+.fpop .fld{margin:0}
+/* the level picker sits in the fold group, looking like its buttons */
+#gFold select{border:0;background:none;color:var(--muted);padding:3px 6px;border-radius:calc(var(--r-md) - 3px);cursor:pointer;font:inherit}
+#gFold select:hover{color:var(--ink)}
+#gFold select[hidden]{display:none}
+#statusbar .shown{color:var(--ink);font-weight:var(--fwb)}
 .filt.on{border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
 #nomatch{margin:0;padding:10px 15px;background:var(--panel);color:var(--muted);border-bottom:1px solid var(--rule)}
 #nomatch[hidden]{display:none}
@@ -279,6 +287,10 @@ details.menu.right .menupop{left:auto;right:0}
 .sum::before,.sum::after{content:"";position:absolute;top:100%;border-top:5px solid var(--summary)}
 .sum::before{left:0;border-right:5px solid transparent}
 .sum::after{right:0;border-left:5px solid transparent}
+/* a group with critical work in it, and a critical row's name */
+.sum[data-crit="1"]{background:var(--crit)}
+.sum[data-crit="1"]::before,.sum[data-crit="1"]::after{border-top-color:var(--crit)}
+.grow[data-crit="1"] .ttl{color:var(--crit)}
 .ms{position:absolute;width:var(--ms-h);height:var(--ms-h);background:var(--summary);
   transform:rotate(45deg);border-radius:3px;cursor:grab;touch-action:none}
 .ms[data-crit="1"]{background:var(--crit)}
@@ -401,6 +413,14 @@ table.cfg input[type=color]{width:34px;height:24px;padding:1px 2px;cursor:pointe
 .cmeta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .chip{background:var(--panel);border:1px solid var(--rule-soft);border-radius:var(--r-pill);
   padding:0 7px;font-size:calc(var(--fs)*.85);color:var(--muted)}
+/* a custom field's value, tinted by the field (its hue from its name, as a person's is) */
+.chip.fchip{background:hsl(var(--h) var(--av-s) var(--av-l));color:hsl(var(--h) var(--av-fs) var(--av-fl));border-color:transparent}
+.chip.fchip b{font-weight:var(--fwb)}
+/* the group a card sits in, above its title, when the Card menu shows it */
+.cup{margin-top:2px;color:var(--muted);font-size:calc(var(--fs)*.85);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.colhd .av{width:calc(var(--fs)*1.35);height:calc(var(--fs)*1.35)}
+.av.av0{background:var(--rule-soft);color:var(--muted)}
+.cdot.fdot{background:hsl(var(--h) var(--av-fs) var(--av-fl))}
 /* a card with no dates yet reads as such; a Day or Night mark stays on one line */
 .chip.nod{font-style:italic;color:var(--muted)}
 .chip.whn{white-space:nowrap}
@@ -638,6 +658,38 @@ table.cfg input[type=color]{width:34px;height:24px;padding:1px 2px;cursor:pointe
 .prdiv.soft{color:var(--muted)}
 .prnone{margin:4px 0}
 
+/* ---- Present: today's work, big, for a tablet on the wall ---- */
+#present{position:fixed;inset:0;z-index:55;background:var(--shell);display:flex;flex-direction:column;gap:18px;
+  padding:22px 26px;overflow:auto;font-size:calc(var(--fs)*1.5)}
+#present[hidden]{display:none}
+.pshd{display:flex;align-items:baseline;gap:18px}
+#psDay{font-size:1.5em}
+#psClock{color:var(--muted);font-size:1.25em;font-variant-numeric:tabular-nums}
+#psX{font:inherit;font-size:.75em;border:1px solid var(--rule);background:var(--paper);color:var(--ink);border-radius:var(--r-md);
+  padding:6px 14px;cursor:pointer}
+#psBody{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.psc{flex:1 1 calc(var(--fs)*26);max-width:calc(var(--fs)*44);background:var(--panel);border:1px solid var(--rule);
+  border-radius:var(--r-lg);padding:14px 16px}
+.psh{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.psh b{font-size:1.15em}
+.psh .pscap{margin-left:auto;color:var(--muted);font-size:.75em}
+.psh .av{width:1.7em;height:1.7em}
+.psi{display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--paper);border:1px solid var(--rule-soft);
+  border-radius:var(--r-md);margin-bottom:10px}
+.psi.dim{opacity:.6;border-style:dashed}
+.psn{flex:none;display:inline-grid;place-items:center;width:1.6em;height:1.6em;border-radius:50%;background:var(--accent-soft);
+  color:var(--accent-ink);font-weight:var(--fwb);font-size:.8em}
+.pst{flex:1;min-width:0;display:flex;flex-direction:column}
+.pst b{font-weight:var(--fwb);line-height:1.25}
+.pst span{color:var(--muted);font-size:.6em}
+.psi button{flex:none;font:inherit;font-size:1.1em;width:2em;height:2em;border-radius:50%;border:2px solid var(--bar-done);
+  background:var(--paper);color:var(--bar-done);cursor:pointer;line-height:1}
+.psi button:hover,.psi button:focus-visible{background:var(--bar-done);color:var(--on-accent)}
+.psdiv{margin:12px 0 8px;color:var(--warn-ink);font-size:.6em;font-weight:var(--fwb);text-transform:uppercase;letter-spacing:.05em}
+.psdiv.soft{color:var(--muted)}
+.psnext{margin:0;padding-left:1.2em;color:var(--muted);font-size:.75em}
+.psnone{color:var(--muted);margin:4px 0 10px}
+
 /* ---- table: every task a row, every field a cell (table.js) ---- */
 #tablewrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--shell)}
 #tablewrap[hidden]{display:none}
@@ -709,6 +761,132 @@ input[type=number].ted{-moz-appearance:textfield;appearance:textfield}
   .tt .tttl{position:static}
   #tscroll{margin:0 6px 6px}
   .thint{display:none}
+}
+
+/* ---- templates: a list of them, and the one open (templates.js) ---- */
+#tplwrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:auto;background:var(--shell)}
+#tplwrap[hidden]{display:none}
+#tplbar{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;padding:10px 12px;flex:none}
+#tplbody{display:flex;gap:12px;padding:0 12px 12px;align-items:flex-start;min-width:0}
+#tpllist{flex:none;width:calc(var(--fs)*19);display:flex;flex-direction:column;gap:6px}
+.tplitem{display:flex;flex-direction:column;gap:2px;text-align:left;padding:8px 10px;border:1px solid var(--rule);
+  border-radius:var(--r-md);background:var(--paper);cursor:pointer;color:var(--ink);font:inherit}
+.tplitem:hover{border-color:var(--muted)}
+.tplitem.on{border-color:var(--focus);box-shadow:0 0 0 1px var(--focus)}
+.tplitem span{color:var(--muted);font-size:calc(var(--fs)*.88)}
+#tpled{flex:1;min-width:0;background:var(--paper);border:1px solid var(--rule);border-radius:var(--r-lg);padding:12px}
+#tpled:empty{display:none}
+.tphd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.tpname{font:inherit;font-size:calc(var(--fs)*1.1);font-weight:var(--fwb);padding:4px 8px;border:1px solid var(--rule);
+  border-radius:var(--r-sm);background:var(--paper);min-width:0;flex:1 1 16em;max-width:32em}
+.tpdesc{width:100%;padding:5px 8px;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--paper);
+  font:inherit;resize:vertical;margin-bottom:10px}
+.tpscroll{overflow-x:auto}
+.tpt{table-layout:fixed;min-width:calc(var(--fs)*62)}
+.tpt th{white-space:nowrap}
+.tpt td.tpn{color:var(--muted);text-align:right;padding-right:6px}
+.tpt td.tpms{text-align:center}
+.tpt td.tpms input{width:auto}
+.tpt input:disabled{opacity:.5}
+.tpt .tpact{white-space:nowrap}
+.tpt .tpact button{border:0;background:none;padding:2px 5px;border-radius:var(--r-sm);cursor:pointer;color:var(--muted);font:inherit}
+.tpt .tpact button:hover:not(:disabled){background:var(--panel);color:var(--ink)}
+.tpt .tpact button:disabled{opacity:.3;cursor:default}
+.tpfoot{justify-content:flex-start;margin:6px 0 8px}
+#tpRoles .fld label{overflow:hidden;text-overflow:ellipsis}
+#tpSprintRow[hidden]{display:none}
+@media (max-width:900px){
+  #tplbody{flex-direction:column;align-items:stretch}
+  #tpllist{width:auto}
+}
+
+/* ---- metrics: tiles, then panels of charts and lists (metrics.js) ---- */
+#metricswrap{flex:1;min-width:0;min-height:0;overflow:auto;background:var(--shell)}
+#metricswrap[hidden]{display:none}
+#metrics{padding:12px;display:flex;flex-direction:column;gap:12px}
+.mtiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(var(--fs)*12),1fr));gap:10px}
+.mtile{display:flex;flex-direction:column;gap:2px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--r-lg);
+  padding:10px 12px;min-width:0}
+.mtile .mth{color:var(--muted);font-size:calc(var(--fs)*.85);text-transform:uppercase;letter-spacing:.04em;font-weight:var(--fwb)}
+.mtile b{font-size:calc(var(--fs)*1.35);font-weight:var(--fwb);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mtile .mts{color:var(--muted);font-size:calc(var(--fs)*.85)}
+.mtile[data-level="warn"] b{color:var(--warn-ink)}
+.mtile[data-level="bad"] b{color:var(--crit)}
+.mtile[data-act]{cursor:pointer}
+.mtile[data-act]:hover{border-color:var(--muted)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(calc(var(--fs)*30),1fr));gap:12px;align-items:start}
+.mpanel{background:var(--paper);border:1px solid var(--rule);border-radius:var(--r-lg);padding:12px;min-width:0}
+.mpanel.mwide{grid-column:1/-1}
+.mpanel h3{margin:0 0 10px;font-size:calc(var(--fs)*.95);font-weight:var(--fwb)}
+.mbar{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;margin-bottom:8px}
+#mBurn{max-width:100%}
+.mneed{margin:4px 0 8px;font-weight:var(--fwb)}
+/* the chart, and what it says beside it */
+.mburn{display:flex;gap:8px 20px;flex-wrap:wrap;align-items:flex-start}
+.mburn .burn{flex:1 1 calc(var(--fs)*34)}
+.mside{flex:1 1 calc(var(--fs)*16);min-width:0}
+.mkey{color:var(--muted);font-size:calc(var(--fs)*.88);display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:0 0 8px}
+.mkey .k{display:inline-block;width:18px;height:0;border-top:2px solid}
+.mkey .k.act{border-color:var(--accent);border-top-width:3px}
+.mkey .k.ideal{border-color:var(--muted);border-top-style:dashed}
+.mkey .k.tday{border-color:var(--today)}
+.mkey .k.tgt{border-color:var(--kd);border-top-style:dashed}
+/* the burn-down */
+.burn{width:100%;max-width:calc(var(--fs)*60);height:auto;display:block}
+.burn .axis{stroke:var(--rule)}
+.burn .ideal{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4}
+.burn .act{stroke:var(--accent);stroke-width:2.5;fill:none}
+.burn circle.act{fill:var(--accent)}
+.burn .tday{stroke:var(--today);stroke-width:1.2}
+.burn .tgt{stroke:var(--kd);stroke-width:1.2;stroke-dasharray:3 3}
+.burn text{fill:var(--muted);font-size:11px}
+.burn .by{text-anchor:end}
+.burn .bx{text-anchor:middle}
+.burn .bx.first{text-anchor:start}
+.burn .bx.last{text-anchor:end}
+.burn .bx.tday{fill:var(--today)}
+.burn .bx.tgt{fill:var(--kd)}
+/* done each week */
+.thru{width:100%;max-width:calc(var(--fs)*40);height:auto;display:block}
+.thru rect{fill:var(--bar)}
+.thru text{fill:var(--muted);font-size:11px;text-anchor:middle}
+.thru .tv{fill:var(--ink);font-weight:var(--fwb)}
+/* rows of a label, a bar and a value */
+.mrow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) calc(var(--fs)*5) calc(var(--fs)*6);align-items:center;gap:8px;
+  padding:4px 0;border-bottom:1px solid var(--rule-soft)}
+.mrow:last-of-type{border-bottom:0}
+.mrow.mms{grid-template-columns:minmax(0,1.6fr) calc(var(--fs)*6) minmax(0,1.2fr) minmax(0,.8fr)}
+.mlab{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.mlab .key{color:var(--key)}
+.mlab .kdk{color:var(--kd)}
+.mrow .lb{margin:0}
+.mval{text-align:right;font-weight:var(--fwb);white-space:nowrap}
+.msub{color:var(--muted);font-size:calc(var(--fs)*.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mst{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:calc(var(--fs)*.9)}
+.mst[data-s="bad"]{color:var(--crit);font-weight:var(--fwb)}
+.mst[data-s="warn"]{color:var(--warn-ink)}
+.mst[data-s="ok"],.mst[data-s="done"]{color:var(--muted)}
+/* effort against points */
+.mtab{border-collapse:collapse;width:100%;margin:8px 0 4px}
+.mtab th,.mtab td{padding:5px 8px;border-bottom:1px solid var(--rule-soft);text-align:left;white-space:nowrap}
+.mtab thead th{color:var(--muted);font-size:calc(var(--fs)*.88);font-weight:var(--fwb)}
+.mtab tbody th{font-weight:var(--fwb)}
+.mtab .num{text-align:right}
+.mtab .av{vertical-align:middle;margin-right:4px}
+.lmix{display:flex;height:8px;min-width:calc(var(--fs)*8);border-radius:var(--r-pill);overflow:hidden;background:var(--rule-soft)}
+.lmix .light{background:var(--bar-done)}
+.lmix .normal{background:var(--bar-open)}
+.lmix .heavy{background:var(--crit)}
+.mv.quick{color:var(--bar-done);font-weight:var(--fwb)}
+.mv.slow{color:var(--crit);font-weight:var(--fwb)}
+.mv.even,.mnone{color:var(--muted)}
+/* the card asking how much work a finished task was */
+.loec{background:var(--paper);border:1px solid var(--rule);border-left:4px solid var(--bar-done);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-lg);padding:10px 12px;animation:toastin .18s ease-out}
+.loec .rmb{flex-wrap:wrap}
+@media (max-width:640px){
+  .mrow,.mrow.mms{grid-template-columns:minmax(0,1fr) auto;row-gap:2px}
+  .mrow .lb,.mrow .msub{display:none}
 }
 /* messages: a pop-up at the foot of the screen; the red bar is for trouble */
 #toast{position:fixed;left:50%;bottom:calc(var(--fs)*2.4 + 22px);transform:translateX(-50%);z-index:60;
@@ -846,6 +1024,57 @@ dialog .danger{color:var(--warn-ink);border-color:var(--crit-soft)}
 #impInfo{white-space:pre-line}
 #impWarn{color:var(--warn-ink)}
 #impWarn:empty,#impMerge[hidden],#mgUndo[hidden]{display:none}
+/* Start over: three ways, each said */
+#dstart form{max-width:calc(var(--fs)*36)}
+.soopt{display:grid;grid-template-columns:calc(var(--fs)*13) 1fr;gap:10px;align-items:start;padding:8px 0;border-top:1px solid var(--rule-soft)}
+.soopt .hint{margin:2px 0 0}
+@media (max-width:640px){ .soopt{grid-template-columns:1fr} }
+/* Help: topics down the side, one open (help.js) */
+#dhelp form{width:calc(var(--fs)*60);max-width:100%}
+.hphd{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.hphd h2{margin:0}
+.hphd input{flex:1;min-width:0;padding:4px 8px;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--paper)}
+.hpwrap{display:flex;gap:16px;align-items:flex-start;min-height:calc(var(--fs)*24)}
+#hpTopics{flex:none;width:calc(var(--fs)*14);display:flex;flex-direction:column;gap:2px}
+#hpTopics button{border:0;background:none;text-align:left;padding:5px 8px;border-radius:var(--r-sm);cursor:pointer;color:var(--muted)}
+#hpTopics button:hover{background:var(--panel);color:var(--ink)}
+#hpTopics button[aria-current="true"]{background:var(--accent-soft);color:var(--accent-ink);font-weight:var(--fwb)}
+#hpBody{flex:1;min-width:0;max-height:62vh;overflow:auto;line-height:1.5}
+#hpBody h3{margin:2px 0 8px;font-size:calc(var(--fs)*1.05)}
+#hpBody ul{margin:0;padding-left:18px}
+#hpBody li{margin:0 0 7px}
+#hpBody p{margin:0 0 8px}
+kbd{display:inline-block;padding:0 5px;border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;background:var(--panel);
+  font:inherit;font-size:calc(var(--fs)*.85);line-height:1.5}
+.hkeys{border-collapse:collapse}
+.hkeys td{padding:4px 12px 4px 0;vertical-align:top}
+.hkeys td:first-child{white-space:nowrap}
+@media (max-width:640px){ .hpwrap{flex-direction:column} #hpTopics{width:auto;flex-direction:row;flex-wrap:wrap} }
+/* History: every change, newest first (history.js) */
+#dhistory form{width:calc(var(--fs)*54);max-width:100%}
+.hsbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.hsbar input{flex:1 1 14em;min-width:0}
+.hsbar input,.hsbar select{padding:4px 8px;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--paper)}
+.hslist{max-height:58vh;overflow:auto;margin-bottom:8px}
+.hsrow{display:grid;grid-template-columns:calc(var(--fs)*11) calc(var(--fs)*5.5) minmax(0,1fr);gap:8px;padding:6px 0;border-top:1px solid var(--rule-soft)}
+.hsrow:first-child{border-top:0}
+.hswhen,.hswho{color:var(--muted);font-size:calc(var(--fs)*.9)}
+.hswho{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hswhat .delta{color:var(--muted);font-size:calc(var(--fs)*.92)}
+.hsk{color:var(--muted);font-style:italic}
+.hsrow[data-kind="undo"] .hswhat>b,.hsrow[data-kind="redo"] .hswhat>b{font-style:italic;font-weight:normal}
+.hkey{border:0;background:none;padding:0;color:var(--key);font:inherit;cursor:pointer}
+.hkey:hover{text-decoration:underline}
+#hsMore[hidden]{display:none}
+@media (max-width:640px){ .hsrow{grid-template-columns:1fr} }
+/* the merge preview: what merging would change here */
+.impdiff{max-height:42vh;overflow:auto;max-width:calc(var(--fs)*48);margin-bottom:6px}
+.impdiff:empty{display:none}
+.impdiff h3{margin:8px 0 2px;font-size:calc(var(--fs)*.92);font-weight:var(--fwb)}
+.impdiff h3 span{color:var(--muted);font-weight:normal}
+.impdiff ul{margin:0 0 4px;padding-left:18px}
+.impdiff li{margin:1px 0}
+.impdiff li.more{color:var(--muted);list-style:none}
 #mgList{margin:0 0 8px;padding-left:18px;max-height:40vh;overflow:auto;max-width:calc(var(--fs)*44)}
 #mgList li{margin:3px 0}
 #mgList .mgk{color:var(--muted)}
@@ -951,6 +1180,8 @@ dialog h2+.hint{margin-top:-6px}
       <button data-v="sprints" title="Plan sprints: drag tasks between a sprint and the backlog">Sprints</button>
       <button data-v="load" title="Who has what on which day: the work planned into each person's week">Load</button>
       <button data-v="table" title="Every task as a row: edit in place, sort by any column, change many at once">Table</button>
+      <button data-v="templates" title="Sets of tasks you do again and again, made into tasks at a date">Templates</button>
+      <button data-v="metrics" title="How the work is going: done, left, burn-down, pace, and effort against points">Metrics</button>
     </nav>
     <div class="spacer"></div>
     <div class="grp">
@@ -960,9 +1191,13 @@ dialog h2+.hint{margin-top:-6px}
       <button id="bRedo" class="ico" title="Redo (Ctrl+Shift+Z)" aria-label="Redo" disabled><svg width="16" height="16"
         viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 3 14 6.5 10.5 10M13.5 6.5h-7a3.8 3.8 0 0 0 0 7.5H9" fill="none"
         stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button id="bHist" class="ico" type="button" title="History: every change to the project" aria-label="History"><svg width="16" height="16"
+        viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path
+        d="M8 4.6V8l2.4 1.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <button class="ghost" id="bSet" title="Project name, start date and holidays">Settings</button>
     <button class="ghost" id="bApp" title="Display: size, spacing, font and theme (this device only)">Aa</button>
+    <button class="ghost icon" id="bHelp" type="button" title="Help (?)" aria-label="Help">?</button>
     <button class="ghost icon" id="bTheme" type="button"></button>
     <details class="menu right" id="mFile">
       <summary class="ghost" title="Export, import, and the other ways out">File</summary>
@@ -998,6 +1233,17 @@ dialog h2+.hint{margin-top:-6px}
       <option value="late">Late</option>
       <option value="soon">Due in 7 days</option>
     </select>
+    <details class="menu" id="mFilt">
+      <summary class="ghost" id="fSum" title="Narrow every view: by column, critical work, or any pick-list field">Filters</summary>
+      <div class="menupop fpop">
+        <div class="fld"><label for="fStatus">Column</label><select id="fStatus"></select></div>
+        <label class="tog" title="Work on the critical path: a day late there is a day late at the end"><input type="checkbox" id="fCrit"> Critical only</label>
+        <div id="fFields"></div>
+        <hr>
+        <button type="button" id="fClear">Clear every filter</button>
+      </div>
+    </details>
+    <button type="button" class="ghost" id="bClearAll" hidden title="Clear the search and every filter">Clear filters</button>
     <span class="hsep" aria-hidden="true"></span>
     <div class="grp" id="zoom">
       <button data-z="fit" title="The whole plan across the width of the screen">Fit</button>
@@ -1028,6 +1274,7 @@ dialog h2+.hint{margin-top:-6px}
     <div class="grp" id="gFold">
       <button type="button" id="bExpand" title="Open every group in the task list">Expand all</button>
       <button type="button" id="bCollapse" title="Fold every group, leaving the top of the tree">Collapse all</button>
+      <select id="fLevel" aria-label="Show levels" title="Fold the task list to a level: the groups at it and below close"></select>
     </div>
   </div>
   <input type="file" id="file" accept="application/json,.json" hidden>
@@ -1036,6 +1283,9 @@ dialog h2+.hint{margin-top:-6px}
 <div id="rhprobe" aria-hidden="true"></div>
 <p class="warn" id="warn" hidden><span id="warnMsg"></span><button type="button" class="ghost"
   id="warnGo" hidden>Reload</button></p>
+<!-- Present: today's work, big and full screen (priorities.js) -->
+<div id="present" hidden><div class="pshd"><b id="psDay"></b><span id="psClock"></span><span class="spacer"></span>
+  <button type="button" id="psX">✕ Close</button></div><div id="psBody"></div></div>
 <!-- reminders due while the app is open: one card each, Done or Snooze -->
 <div id="remind" aria-live="polite" hidden></div>
 <div id="toast" role="status" aria-live="polite" hidden><span id="tmsg"></span><button type="button"
@@ -1131,14 +1381,18 @@ dialog h2+.hint{margin-top:-6px}
     <p class="hint">One ISO date per line. These are skipped along with the days off
       when the schedule counts working days.</p>
     <div class="fld"><label>Work week</label><span id="sWeek" class="spdays"></span></div>
+    <p class="hint">The days the schedule counts as working days. Tick all seven for work
+      that goes on at weekends: a task then takes its days straight through. Changing it
+      moves dates.</p>
     <div class="fld"><label for="sNum">Task numbers</label><select id="sNum">
       <option value="">Keys, like ENG-12: fixed for good</option>
       <option value="wbs">WBS, like 1.2.3: their place in the tree</option></select></div>
     <p class="hint">WBS numbers renumber themselves as tasks move. The key stays underneath, for links
       and history; search finds either, and a task's drawer shows both.</p>
-    <p class="hint">The days the schedule counts as working days. Tick all seven for work
-      that goes on at weekends: a task then takes its days straight through. Changing it
-      moves dates.</p>
+    <div class="fld"><label for="sPrefix">New keys start</label><input id="sPrefix" maxlength="10" autocomplete="off"
+      title="Letters and digits, starting with a letter"></div>
+    <p class="hint">New tasks are numbered with this, from 1: HOME-1, HOME-2. Tasks you have keep their
+      numbers, which links, history and the other device know them by. Blank carries on as they are.</p>
     <p class="hint" id="sWarn" hidden></p>
 
     <h2>Columns</h2>
@@ -1202,7 +1456,7 @@ dialog h2+.hint{margin-top:-6px}
     <div class="rowend"><button type="button" id="sKeyAdd">Add key date</button></div>
 
     <div class="rowend">
-      <button type="button" id="sNew" class="danger">Start empty project…</button>
+      <button type="button" id="sStart" class="danger">Start over…</button>
       <span class="spacer"></span>
       <button value="cancel">Cancel</button>
       <button type="button" id="sOk" class="primary">Save</button>
@@ -1301,10 +1555,78 @@ dialog h2+.hint{margin-top:-6px}
   </form>
 </dialog>
 
+<dialog id="dtpl">
+  <form method="dialog">
+    <h2 id="tpTitle">Use template</h2>
+    <p class="hint" id="tpInfo"></p>
+    <div class="fld"><label for="tpStart">Starts</label><input id="tpStart" type="date"></div>
+    <div id="tpRoles"></div>
+    <datalist id="dlTpPeople"></datalist>
+    <div class="fld"><label for="tpGroup">Group</label><span class="pwrap"><label class="tog"><input type="checkbox"
+      id="tpGroupOn" checked> Under a new task named</label><input id="tpGroup" aria-label="The new group's name"></span></div>
+    <div class="fld"><label for="tpUnder">Under</label><input id="tpUnder" list="dlTpUnder" autocomplete="off"
+      placeholder="Top level. Type to find a task"><datalist id="dlTpUnder"></datalist></div>
+    <div class="fld" id="tpSprintRow"><label for="tpSprint">Sprint</label><select id="tpSprint"></select></div>
+    <p class="hint" id="tpSays"></p>
+    <div class="rowend"><span class="spacer"></span><button value="cancel">Cancel</button>
+      <button type="button" id="tpOk" class="primary">Make the tasks</button></div>
+  </form>
+</dialog>
+
+<dialog id="dtcap">
+  <form method="dialog">
+    <h2>Capture a template</h2>
+    <p class="hint">Pick a group of tasks. Its tasks become the template's rows: their people its roles, where
+      they sit its offsets, and the links between them its links.</p>
+    <div class="fld"><label for="tcWhat">From</label><input id="tcWhat" list="dlTcap" autocomplete="off"
+      placeholder="Type to find a task"><datalist id="dlTcap"></datalist></div>
+    <div class="rowend"><span class="spacer"></span><button value="cancel">Cancel</button>
+      <button type="button" id="tcOk" class="primary">Capture</button></div>
+  </form>
+</dialog>
+
+<dialog id="dstart">
+  <form method="dialog">
+    <h2>Start over</h2>
+    <p class="hint">Each downloads a backup of this project first, and one Ctrl+Z takes it back.</p>
+    <div class="soopt"><button type="button" id="soClear">Clear the tasks</button>
+      <p class="hint">Every task, link and comment goes. The name, columns, fields, people and their weeks,
+        holidays, key dates, sprints and templates stay: the same set-up, ready for new work.</p></div>
+    <div class="soopt"><button type="button" id="soEmpty" class="danger">Start an empty project</button>
+      <p class="hint">Everything goes, the settings too: a new project with the usual three columns and nothing else.</p></div>
+    <div class="soopt"><button type="button" id="soSample">Load the sample project</button>
+      <p class="hint">The demo, <i>Thruster qualification</i>, in place of this project: to try things out.</p></div>
+    <div class="rowend"><span class="spacer"></span><button value="cancel">Cancel</button></div>
+  </form>
+</dialog>
+
+<dialog id="dhelp">
+  <form method="dialog">
+    <div class="hphd"><h2>Help</h2><input id="hpQ" type="search" placeholder="Search the help" aria-label="Search the help" autocomplete="off"></div>
+    <div class="hpwrap"><nav id="hpTopics" aria-label="Topics"></nav><div id="hpBody"></div></div>
+    <div class="rowend"><span class="spacer"></span><button value="close" class="primary">Close</button></div>
+  </form>
+</dialog>
+
+<dialog id="dhistory">
+  <form method="dialog">
+    <h2>History</h2>
+    <p class="hint" id="hsInfo"></p>
+    <div class="hsbar"><input id="hsQ" type="search" placeholder="Search: a task's number, or a word" aria-label="Search the history" autocomplete="off">
+      <select id="hsWho" aria-label="Whose changes"></select>
+      <select id="hsKind" aria-label="What kind"><option value="">Every change</option><option value="edits">Edits</option>
+        <option value="undo">Undo and redo</option><option value="merges">Merges</option></select></div>
+    <div id="hsList" class="hslist"></div>
+    <div class="rowend"><button type="button" id="hsMore">Show more</button><button type="button" id="hsCsv"
+      title="What is shown, a row per change">Download as CSV</button><span class="spacer"></span><button value="close" class="primary">Close</button></div>
+  </form>
+</dialog>
+
 <dialog id="dimp">
   <form method="dialog">
     <h2 id="impTitle">Import</h2>
     <p class="hint" id="impInfo"></p>
+    <div id="impDiff" class="impdiff"></div>
     <p class="hint" id="impWarn"></p>
     <div class="rowend">
       <button type="button" id="impReplace" class="danger">Replace this device's project</button>
@@ -1368,6 +1690,12 @@ dialog h2+.hint{margin-top:-6px}
 
 <div id="boardwrap" hidden>
   <div id="boardbar">
+    <label class="bspr">Group by
+      <select id="bGroup" class="filt" title="What the columns are: the task's column, its person, the week it starts, or a pick-list field. Dragging a card between them changes that. This device remembers the choice."></select></label>
+    <details class="menu" id="mCard">
+      <summary class="ghost" title="What a card shows, on this device">Card</summary>
+      <div class="menupop"><div id="bCardPick" class="tcpick"></div></div>
+    </details>
     <label class="bspr" id="bSprWrap" hidden>Sprint
       <select id="bSpr" class="filt" title="Which sprint's tasks the board shows. This device remembers the choice."></select></label>
     <div id="weekstrip" hidden></div>
@@ -1407,6 +1735,20 @@ dialog h2+.hint{margin-top:-6px}
   <div id="tscroll"><table id="tbl" class="tt"></table></div>
   <datalist id="tlPeople"></datalist>
 </div>
+
+<div id="tplwrap" hidden>
+  <div id="tplbar">
+    <button type="button" class="primary" id="tplNew">+ New template</button>
+    <button type="button" class="ghost" id="tplCap" title="Make a template from a group of tasks you already have">Capture from tasks…</button>
+    <button type="button" class="ghost" id="tplImport" title="Bring in templates from a file: a templates file, or a project's">Import…</button>
+    <button type="button" class="ghost" id="tplExport" title="Download every template as a file, for another project">Export all</button>
+    <input type="file" id="tplFile" accept="application/json,.json" hidden>
+    <span class="hint" style="margin:0">Kept with the project, so they travel in its file.</span>
+  </div>
+  <div id="tplbody"><div id="tpllist"></div><div id="tpled"></div></div>
+</div>
+
+<div id="metricswrap" hidden><div id="metrics"></div></div>
 
 <!-- beside whichever view is up: inside #wrap it went when the Gantt did -->
 <aside id="drawer" hidden></aside>
@@ -1481,6 +1823,16 @@ class Cal {
  * schedule.py takes the same (status_date, Node.soft_start, Node.deadline);
  * `after` is folded into not_before by the page, so it has no counterpart.
  * ------------------------------------------------------------------ */
+/* Part of a day. A duration may be a fraction of a working day (0.5, 0.25),
+   so the passes count in hundredths of one -- SUB units -- still whole
+   numbers, so the arithmetic stays exact and both schedulers stay the same to
+   the last bit (invariant 3). Every day offset from the calendar, every lag,
+   is multiplied up on the way in. On the way out a bar's es/ef/ls/lf/slack
+   are working days again, a fraction for part of one, and its dates are the
+   days those fall on. schedule.py does the same, with the same rounding. */
+const SUB = 100;
+const subOf = d => Math.max(0, Math.round((+d || 0) * SUB));
+
 function cpm(tasks, deps, cal, extra = {}){
   const by = new Map(tasks.map(t => [t.id, t]));
   const kids = new Map();
@@ -1488,7 +1840,8 @@ function cpm(tasks, deps, cal, extra = {}){
     (kids.get(t.parent_id) ?? kids.set(t.parent_id,[]).get(t.parent_id)).push(t.id);
 
   const leaves = tasks.filter(t => !kids.has(t.id)).map(t => t.id);
-  const dur = new Map(leaves.map(i => [i, Math.max(0, by.get(i).duration)]));
+  const dur = new Map(leaves.map(i => [i, subOf(by.get(i).duration)]));
+  const off = s => cal.toOffset(s) * SUB;                 // a date, as the start of its working day
 
   const leavesOf = id => {
     if (!kids.has(id)) return [id];
@@ -1501,7 +1854,7 @@ function cpm(tasks, deps, cal, extra = {}){
   for (const d of deps)
     for (const p of leavesOf(d.pred))
       for (const s of leavesOf(d.succ))
-        if (p !== s) { const e = {pred:p, succ:s, kind:d.kind, lag:d.lag||0};
+        if (p !== s) { const e = {pred:p, succ:s, kind:d.kind, lag:(d.lag||0) * SUB};
                        suc.get(p).push(e); pre.get(s).push(e); }
 
   // Kahn
@@ -1536,21 +1889,21 @@ function cpm(tasks, deps, cal, extra = {}){
   // and whether the date is what holds it back. A report for the screen;
   // the schedule is exactly what it was without it.
   const holds = new Map();
-  const today = extra.today ? cal.toOffset(extra.today) : null;
+  const today = extra.today ? off(extra.today) : null;
   const pinOf = t => {                                    // its own start date, if any: the later of the two
-    const a = t.not_before ? cal.toOffset(t.not_before) : null, k = extra.after?.get(t.id);
-    const b = k ? cal.toOffset(k) : null;
+    const a = t.not_before ? off(t.not_before) : null, k = extra.after?.get(t.id);
+    const b = k ? off(k) : null;
     return a === null ? b : b === null ? a : Math.max(a, b);
   };
   // A deadline's last day, as an exclusive end: the first working day AFTER
   // it, so one on a Saturday means Friday's close, not Monday's.
-  const dueOf = i => { const d = extra.due?.get(i); return d ? cal.toOffset(iso(addD(D(d), 1))) : null; };
+  const dueOf = i => { const d = extra.due?.get(i); return d ? off(iso(addD(D(d), 1))) : null; };
   const suggested = new Set(), unsched = new Set();
   for (const i of order){
     const t = by.get(i);
-    const af = t.actual_finish ? cal.toOffset(t.actual_finish) + 1 : null;    // exclusive
+    const af = t.actual_finish ? off(t.actual_finish) + SUB : null;          // exclusive: the day's close
     let s;
-    if (t.actual_start) s = cal.toOffset(t.actual_start);
+    if (t.actual_start) s = off(t.actual_start);
     else if (af !== null) s = Math.max(0, af - dur.get(i));
     else {
       const nb = pinOf(t);
@@ -1558,7 +1911,7 @@ function cpm(tasks, deps, cal, extra = {}){
         // Nothing gives it a start: from today, or from its sprint if later.
         // Nothing at either end, and it is not scheduled at all.
         const sf = extra.soft?.get(i);
-        s = Math.max(0, today, sf ? cal.toOffset(sf) : 0);
+        s = Math.max(0, today, sf ? off(sf) : 0);
         suggested.add(i);
         if (!suc.get(i).length && !sf && !extra.due?.has(i)) unsched.add(i);
       } else {
@@ -1610,14 +1963,19 @@ function cpm(tasks, deps, cal, extra = {}){
       es:Math.min(...cb.map(b=>b.es)), ef:Math.max(...cb.map(b=>b.ef)),
       ls:Math.min(...cb.map(b=>b.ls)), lf:Math.max(...cb.map(b=>b.lf))});
   }
+  // back to working days; a date is the day an offset falls in, and an end
+  // (exclusive) is the day its last part falls in
+  const day0 = u => Math.floor(u / SUB), dayEnd = (s, e) => Math.max(day0(s), Math.ceil(e / SUB) - 1);
   for (const b of bars.values()){
-    b.slack    = b.ls - b.es;
-    b.critical = !b.summary && !b.finished && !b.unscheduled && b.slack <= 0;   // done work is never critical
-    b.start    = cal.toDate(b.es);
-    b.finish   = cal.toDate(Math.max(b.es, b.ef - 1));
-    b.lateFin  = cal.toDate(Math.max(b.es, b.lf - 1));
-    if (b.hold){ b.hold.freeStart = cal.toDate(b.hold.free);        // where its links alone start it
-                 b.hold.atDate = cal.toDate(b.hold.at); }          // and the fixed date itself
+    b.slack    = (b.ls - b.es) / SUB;
+    b.critical = !b.summary && !b.finished && !b.unscheduled && b.ls - b.es <= 0;   // done work is never critical
+    b.start    = cal.toDate(day0(b.es));
+    b.finish   = cal.toDate(dayEnd(b.es, b.ef));
+    b.lateFin  = cal.toDate(dayEnd(b.es, b.lf));
+    if (b.hold){ b.hold.freeStart = cal.toDate(day0(b.hold.free));  // where its links alone start it
+                 b.hold.atDate = cal.toDate(day0(b.hold.at));      // and the fixed date itself
+                 b.hold.free /= SUB; b.hold.at /= SUB; }
+    b.es /= SUB; b.ef /= SUB; b.ls /= SUB; b.lf /= SUB;
   }
   return bars;
 }
@@ -1671,9 +2029,11 @@ const DEMO = {
     {name:"J. Reyes",  capacity:10},
   ],
   keyDates:[],        // named dates tasks start after or are due by (keydates.js)
+  templates:[],       // sets of tasks made again and again (templates.js)
   sprintPattern:null, // sprints made by themselves on set days (sprintauto.js)
   workWeek:null,      // the working days, Monday 0 .. Sunday 6; null is Monday to Friday
   numbering:null,     // "wbs": tasks shown by their place in the tree (1.2.3) rather than their key
+  keyPrefix:null,     // what new keys start with (HOME-1); null carries on with the tasks' own
   tasks:[
     {id:"demo-01",key:"ENG-1",title:"Thruster qualification",parent_id:null,status:"In Progress",assignee:null,duration:0,not_before:null,custom:{priority:"P0"}},
     {id:"demo-02",key:"ENG-2",title:"Design",               parent_id:"demo-01",   status:"In Progress",assignee:null,duration:0,not_before:null,custom:{priority:"P1"}},
@@ -1750,6 +2110,14 @@ const CFG = {
     // of its room, gets a word on opening; Fill lists up to fillList tasks
     warnDays:3, fullShare:0.75, fillList:30},
   backup: {days:7},                   // a backup file this often, if anything changed
+  /* Metrics (metrics.js): weeks of throughput shown; weeks the recent pace
+     and the pop-up share are taken over; how far back a burn-down starts
+     (a sprint's starts at the sprint); how many judged tasks a verdict
+     needs, and how far from "as expected" (-1 lighter .. 1 heavier) it must
+     lean; how long the "how much work was it" card waits. */
+  metrics: {weeks:8, paceWeeks:4, burnBackDays:56, judgeMin:3, verdictAt:0.34, askMs:60000},
+  // Present (priorities.js): how often it is drawn again, and how many of each person's Next up it shows
+  present: {refreshMs:60000, next:3},
   // the hours the evening starts and the morning comes back: a sprint lists
   // its Night work first from `evening` until `morning` (sprints.js)
   dayParts: {evening:17, morning:5},
@@ -1777,7 +2145,9 @@ const CFG = {
   },
 
   // how much of a long list to show before it stops being useful
-  show: {historyRows:12, cardChips:3, badDatesInError:3, prioNext:5},   // prioNext: Priorities' Next up, per person
+  show: {historyRows:12, cardChips:3, badDatesInError:3, prioNext:5,    // prioNext: Priorities' Next up, per person
+         mergePreview:30,                      // lines a heading in the merge preview, then "and N more"
+         historyPage:100, historyLines:12},    // History: entries a page, and lines an entry before "and N more"
 
   // workload band: a week cell narrower than numW px rounds its number,
   // and one narrower than intW shows none -- the tooltip always has it
@@ -2117,14 +2487,16 @@ function workload(){
     if (S.statusCfg[t.status]?.done) continue;
     const b = bars.get(t.id);
     if (!b || b.unscheduled) continue;             // no dates yet: nowhere to put its load
-    const days = Math.max(1, b.ef - b.es);          // its span (actual dates move it); a milestone's points land on its day
+    // the days its span touches (actual dates move it; part of a day is a day
+    // here); a milestone's points land on its day
+    const d0 = Math.floor(b.es), days = Math.max(1, Math.ceil(b.ef) - d0);
     // shared between people, each carries their fraction of the points
     for (const {name, f} of sharesOf(t)){
       if (!(f > 0)) continue;
       const per = t.points * f / days;
       if (!byPerson.has(name)) byPerson.set(name, new Map());
       const weeks = byPerson.get(name);
-      for (let o = b.es; o < b.es + days; o++){
+      for (let o = d0; o < d0 + days; o++){
         const wk = weekOf(cal.toDate(o));
         const w = weeks.get(wk) ?? weeks.set(wk, {pts:0, items:new Map()}).get(wk);
         w.pts += per;
@@ -2290,7 +2662,7 @@ function plan(){
     const shares = sharesOf(t);
     if (!shares.length){ unassigned += left; continue; }
     for (const {name, f} of shares) if (f > 0)
-      jobs.push({t, b, name, pts:left * f, from:cal.toDate(b.es), to:cal.toDate(Math.max(b.es, b.lf - 1))});
+      jobs.push({t, b, name, pts:left * f, from:b.start, to:cal.toDate(Math.max(Math.floor(b.es), Math.ceil(b.lf) - 1))});
   }
   // the highest score first (score.js); then the one that must start soonest
   const sc = t => SCORES.get(t.id)?.total ?? 0;
@@ -2339,14 +2711,21 @@ function plan(){
   return {today, people:[...people.values()], unassigned};
 }
 /* ------------------------------------------------------------------ *
- * Filters: search text, whose tasks, and when due. A device preference like
- * the view -- never journalled, never exported. "Whose" is remembered, so a
- * tablet set to one person opens on that person's tasks: "my tasks".
+ * Filters: search text, whose tasks, when due, and under Filters its
+ * column, critical work only, and any pick-list field's value. A device
+ * preference like the view -- never journalled, never exported. "Whose" is
+ * remembered, so a tablet set to one person opens on that person's tasks:
+ * "my tasks"; the rest last until cleared or the page closes.
  * ------------------------------------------------------------------ */
-const NOBODY = "\u2205";                    // the "Unassigned" choice
-const filt = {q:"", due:"",
+const NOBODY = "\u2205";                    // the "Unassigned" choice, and a field's "not set"
+const filt = {q:"", due:"", status:"", crit:false, fields:{},
   who:(() => { try { return localStorage.getItem("pm.who") || ""; } catch { return ""; } })()};
-const filtering = () => !!(filt.q.trim() || filt.who || filt.due);
+// how many of the ones under Filters are on
+const moreFilters = () => (filt.status ? 1 : 0) + (filt.crit ? 1 : 0) + Object.keys(filt.fields).length;
+const filtering = () => !!(filt.q.trim() || filt.who || filt.due) || moreFilters() > 0;
+// a task's value for a pick-list field is the one picked, or NOBODY for none
+const fieldsMatch = t => Object.entries(filt.fields).every(([k, v]) => {
+  const x = t.custom?.[k]; return v === NOBODY ? x == null || x === "" : x === v; });
 
 /* late: its planned finish has passed and it is not done. soon: due within
    CFG.due.soonDays. Tasks only -- a group is late through what is under it. */
@@ -2399,7 +2778,9 @@ const textOf = t => [t.key, WBS.get(t.id), t.title, whoText(t), t.status, sprint
 
 /* Which tasks match (self), and which are shown because something under
    them matches (show). A group whose own name matches brings its subtree;
-   "whose" and "due" only ever match tasks, never groups. null = no filter. */
+   whose, due, column, critical and fields only ever match tasks, never
+   groups (a group has no column, and its fields would bring in all of it).
+   null = no filter. */
 function filterSets(kids = childMap()){
   if (!filtering()) return null;
   const q = filt.q.trim().toLowerCase(), self = new Set(), show = new Set();
@@ -2411,7 +2792,10 @@ function filterSets(kids = childMap()){
     const leaf = !cs.length;
     const me = txt
       && (!filt.who || (leaf && (filt.who === NOBODY ? !t.assignee : peopleOf(t).some(p => p.name === filt.who))))
-      && (!filt.due || (leaf && dueState(t) === filt.due));
+      && (!filt.due || (leaf && dueState(t) === filt.due))
+      && (!filt.status || (leaf && t.status === filt.status))
+      && (!filt.crit || (leaf && !!bars?.get(t.id)?.critical))
+      && (!Object.keys(filt.fields).length || (leaf && fieldsMatch(t)));
     if (me) self.add(t.id);
     if (me || below) show.add(t.id);
     return me || below;
@@ -2474,7 +2858,7 @@ const FIELDS = {
   task: ["key","title","parent_id","status","assignee","duration","points","pct","not_before",
          "actual_start","actual_finish","repeat","sprint","pos","cpos","status_since","when",
          "start_key","start_days","due_key","importance",
-         "due_date","popup","rush","repeat_to","remind_at","remind_lead","spos"],
+         "due_date","popup","rush","repeat_to","remind_at","remind_lead","spos","loe"],
   dep:  ["pred","succ","kind","lag"],
   comment: [],                       // a comment is immutable once made
 };
@@ -2486,8 +2870,8 @@ const rowOfChange = c => rowsOf(cE(c)).find(r => r.id === c.id);
 // Project-level settings, diffed as a single pseudo-row so that renaming
 // the project, adding a column and editing a custom field are all undoable
 // through exactly the same path as editing a task.
-const PROJF = ["name", "origin", "boardFrom", "doneDays", "numbering"];
-const PROJ_JSON = ["holidays", "statuses", "statusCfg", "fields", "people", "baseline", "sprints", "keyDates", "sprintPattern", "workWeek"];
+const PROJF = ["name", "origin", "boardFrom", "doneDays", "numbering", "keyPrefix"];
+const PROJ_JSON = ["holidays", "statuses", "statusCfg", "fields", "people", "baseline", "sprints", "keyDates", "sprintPattern", "workWeek", "templates"];
 const projSnap = () => {
   const o = {};
   for (const f of PROJF) o[f] = S[f];
@@ -2717,6 +3101,7 @@ function setStatus(t, v){
   if (ph === "done"){
     t.actual_finish = t.actual_finish || today;
     t.pct = 100;
+    loeAsk(t);                                         // how much work was it? (metrics.js)
     const next = recur(t);
     // said once the caller has re-rendered: render() clears the warning line
     if (next){ const m = `${t.key} is done. It repeats ${repeatName(t.repeat)}, so it is back in ${t.status} `
@@ -2786,14 +3171,16 @@ function recur(t){
  * caller's commit() and takes the value as a form control gives it: text,
  * "" for nothing.
  * ------------------------------------------------------------------ */
+// a number of working days, as a duration holds it: not below 0, to two decimals
+const days2 = v => Math.max(0, Math.round((+v || 0) * 100) / 100);
 const EDITS = {
   title:      (t, v) => { t.title = String(v).trim() || t.title; },
   status:     (t, v) => { if (S.statuses.includes(v)) setStatus(t, v); },       // invariant 10c
   // one person, in place of whoever was on it; several, with shares, are the drawer's
   who:        (t, v) => setPeople(t, String(v).trim() ? [{name: v, pct: 100}] : []),
   sprint:     (t, v) => setSprint(t, v),
-  // whole days: the schedule counts in them (invariant 3), and 1.5 took the chart down
-  duration:   (t, v) => { t.duration = Math.max(0, Math.round(+v) || 0); push(t); },
+  // working days, to two decimals: the schedulers count in hundredths of one (invariant 3)
+  duration:   (t, v) => { t.duration = days2(v); push(t); },
   // whole numbers, about an hour each; anything above nothing is at least one
   points:     (t, v) => { const n = parseFloat(v); t.points = Number.isFinite(n) ? (n > 0 ? Math.max(1, Math.round(n)) : 0) : null; },
   pct:        (t, v) => { const n = parseFloat(v); t.pct = Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : null; },
@@ -2832,10 +3219,13 @@ function setCustom(t, f, v){
 
 /* Keys are the human handle (ENG-12) and stay sequential per prefix --
    unlike ids, a colliding key across devices is cosmetic, not corrupting. */
-function nextKey(){
-  const m = S.tasks.map(t => /^([A-Za-z][A-Za-z0-9]*)-(\d+)$/.exec(t.key || "")).filter(Boolean);
-  const prefix = m.length ? m[0][1] : "T";
-  const max = m.reduce((a, x) => Math.max(a, +x[2]), 0);
+const KEY_RE = /^([A-Za-z][A-Za-z0-9]*)-(\d+)$/, KEY_PREFIX = /^[A-Za-z][A-Za-z0-9]{0,9}$/;
+// the prefix new keys get: Settings' (S.keyPrefix), else the one the tasks have, else T
+const keyPrefixNow = () => S.keyPrefix || S.tasks.map(t => KEY_RE.exec(t.key || "")).find(Boolean)?.[1] || "T";
+function nextKey(more = []){              // more: tasks made but not in the project yet
+  const prefix = keyPrefixNow();
+  const max = [...S.tasks, ...more].map(t => KEY_RE.exec(t.key || "")).filter(m => m && m[1] === prefix)
+    .reduce((a, m) => Math.max(a, +m[2]), 0);
   return `${prefix}-${max + 1}`;
 }
 
@@ -3148,7 +3538,7 @@ matchMedia("(pointer:coarse)")
 /* Which projection you last had open is a per-device UI preference, not
    part of the project, so it lives in localStorage and never touches the
    journal or the exported file. Wrapped because storage can be blocked. */
-const VIEWS = ["gantt", "board", "prio", "sprints", "load", "table"];
+const VIEWS = ["gantt", "board", "prio", "sprints", "load", "table", "templates", "metrics"];
 let view = (() => { try { const v = localStorage.getItem("pm.view"); return VIEWS.includes(v) ? v : "gantt"; }
                     catch { return "gantt"; } })();
 
@@ -3162,8 +3552,11 @@ function render(){
   el("loadwrap").hidden = view !== "load";
   el("priowrap").hidden = view !== "prio";
   el("tablewrap").hidden = view !== "table";
+  el("tplwrap").hidden = view !== "templates";
+  el("metricswrap").hidden = view !== "metrics";
   (view === "board" ? renderBoardView : view === "sprints" ? renderSprintView : view === "load" ? renderLoadView
-    : view === "prio" ? renderPrioView : view === "table" ? renderTableView : renderGantt)();
+    : view === "prio" ? renderPrioView : view === "table" ? renderTableView
+    : view === "templates" ? renderTemplatesView : view === "metrics" ? renderMetricsView : renderGantt)();
   soonHealth();                  // on every view: just after, so the chart is not kept waiting
 }
 
@@ -3276,6 +3669,18 @@ const NO_DATES = "No dates yet: nothing sets when it happens. Drag it to a date,
 const SUGGESTED = "Suggested: nothing sets its start, so it goes from today. Drag it, or set Not before, to pin it.";
 
 function statGantt(all){
+  // with rows filtered or folded away: how many are shown, and the dates they span
+  const rows = lastRows || [], cut = rows.length < S.tasks.length;
+  let shown = "";
+  if (cut){
+    const bs = rows.filter(r => !r.ctx).map(r => bars.get(r.t.id)).filter(b => b && !b.unscheduled);
+    const a = bs.length ? Math.min(...bs.map(b => +b.start)) : null, z = bs.length ? Math.max(...bs.map(b => +b.finish)) : null;
+    shown = `<span class="shown">${rows.length} of ${S.tasks.length} shown</span>${a ? `, ${esc(fmtDate(new Date(a)))} – ${esc(fmtDate(new Date(z)))}` : ""} · `;
+  }
+  statGantt0(all);
+  if (shown) el("stat").innerHTML = shown + el("stat").innerHTML;
+}
+function statGantt0(all){
   const sch = all.filter(b => !b.unscheduled);
   const nod = S.tasks.filter(t => { const b = bars.get(t.id); return b && !b.summary && b.unscheduled; });
   const nodTxt = nod.length ? ` · <span title="${esc(nod.map(t => `${num(t)} ${t.title}`).join("\n"))}">${nod.length} without dates</span>` : "";
@@ -3428,6 +3833,7 @@ function drawGrid(rows){
     r.className = ctx ? "grow ctx" : "grow"; r.dataset.id = t.id;
     r.dataset.sum = kids ? 1 : 0;
     if (sel === t.id) r.dataset.sel = 1;
+    if (el("tCrit").checked && b && (b.critical || CRITG.has(t.id))) r.dataset.crit = 1;   // its name red, as its bar
 
     const n = document.createElement("div");
     n.className = "name"; n.style.paddingLeft = (6 + depth*15) + "px";
@@ -3544,7 +3950,7 @@ function editGridCell(cell){
   const inp = document.createElement("input");
   inp.className = "ted gedit"; inp.dataset.k = c.k;
   inp.type = c.ed === "num" ? "number" : c.ed === "date" ? "date" : "text";
-  if (c.ed === "num"){ inp.min = "0"; inp.step = "1"; }
+  if (c.ed === "num"){ inp.min = "0"; inp.step = c.k === "dur" ? "any" : "1"; }
   if (c.k === "who"){ el("tlPeople").innerHTML = allPeople().map(p => `<option value="${esc(p)}">`).join(""); inp.setAttribute("list", "tlPeople"); }
   inp.value = inp.defaultValue = c.raw(t, b);
   inp.setAttribute("aria-label", `${c.label}, ${t.key}`);
@@ -3597,6 +4003,31 @@ for (const m of [NARROW, PHONE]) m.addEventListener("change", () => render());
  * (invariant 7) -- the drop commits one parent_id change.
  * ------------------------------------------------------------------ */
 let noClickUntil = 0;
+
+/* A task found by typing: every task that `keep` lets through, as a map
+   from what is shown ("ENG-5 Build", or its WBS number) to its id, and a
+   datalist's options saying where each sits. */
+function taskChoices(keep){
+  const km = childMap(), byId = new Map(S.tasks.map(x => [x.id, x])), map = new Map(), html = [];
+  const pname = x => `${num(x)} ${x.title}`;
+  const walk = p => { for (const x of km.get(p) || []){
+    if (keep(x)){ const v = pname(x), up = x.parent_id != null ? byId.get(x.parent_id) : null;
+      if (!map.has(v)) map.set(v, x.id);
+      html.push(`<option value="${esc(v)}"${up ? ` label="in ${esc(pname(up))}"` : ""}></option>`); }
+    walk(x.id); } };
+  walk(null);
+  return {map, html: html.join("")};
+}
+/* What was typed into such a field: the one picked from its list, or else
+   the one task whose number or name holds it. Several, or none, is said,
+   and undefined comes back. */
+function pickTask(v, map){
+  if (map.has(v)) return map.get(v);
+  const q = v.toLowerCase(), hits = [...map].filter(([k, id]) => id && k.toLowerCase().includes(q));
+  if (hits.length === 1) return hits[0][1];
+  note(hits.length ? `${hits.length} tasks match “${v}”: pick one from the list.` : `No task matches “${v}”.`, {warn:true});
+  return undefined;
+}
 const TOP_LEVEL = "Top level: no parent";      // the drawer's Parent, for none           // a drop must not also count as a click on the row
 
 /* is `id` somewhere inside `anc`'s subtree? */
@@ -3874,6 +4305,13 @@ function drawBg(n){
   g.style.backgroundSize = `100% ${RH}px`;
 }
 
+/* Where a bar starts and ends on the timeline: at its day, plus the part of
+   that day it starts at, or has used by its end (a duration may be part of a
+   day, so two half-day tasks share one). Its arrows start and end there too. */
+const barX0 = b => x(b.start) + (b.es - Math.floor(b.es)) * DW;
+const barX1 = b => x(b.finish) + (b.ef > b.es ? b.ef - (Math.ceil(b.ef) - 1) : 1) * DW;
+const lateX1 = b => x(b.lateFin) + (b.lf > b.es ? b.lf - (Math.ceil(b.lf) - 1) : 1) * DW;
+
 let barEls = new Map();          // task id -> {sig, els}: what drawBars last drew for that row
 function drawBars(rows, delta = false){
   const root = el("bars");
@@ -3887,18 +4325,18 @@ function drawBars(rows, delta = false){
     // the row's drawing reads; forget one and that row goes stale mid-drag.
     const ov0 = LOAD.overTask.get(t.id);
     const sig = [i, RH, +T0, DW, zoom, COARSE, showF, showC, showR, showL, el("tBase").checked, sel === t.id, ctx,
-      +b.start, +b.finish, +b.lateFin, b.slack, b.critical, b.finished, ROLL.get(t.id),
+      +b.start, +b.finish, +b.lateFin, b.es, b.ef, b.lf, b.slack, b.critical, b.finished, ROLL.get(t.id),
       t.key, num(t), t.title, t.status, phaseOf(t.status), t.duration, t.pct, t.repeat, t.points, shareText(t), t.not_before, appear.dates,
       t.actual_start, t.actual_finish, dueState(t), ov0 ? ov0.map(o => o.wk + ":" + o.pts).join() : "",
       S.baseline?.bars?.[t.id]?.join(), b.hold ? `${b.hold.binding}:${+b.hold.freeStart}:${+b.hold.atDate}` : "",
-      b.unscheduled, b.suggested, t.when].join("|");
+      b.unscheduled, b.suggested, t.when, CRITG.has(t.id)].join("|");
     const old = barEls.get(t.id);
     if (delta && old && old.sig === sig) return;
     if (old) for (const n of old.els) n.remove();
     const els = [];
     const c = {appendChild: n => { root.appendChild(n); els.push(n); }};
     barEls.set(t.id, {sig, els});
-    const x0 = x(b.start), x1 = x(addD(b.finish, 1));
+    const x0 = barX0(b), x1 = barX1(b);
     baseBar(c, t, top);
     pinFor(c, t, b, top);
 
@@ -3906,9 +4344,11 @@ function drawBars(rows, delta = false){
       if (b.unscheduled) return;        // nothing under it has dates yet
       const s = document.createElement("div"); s.className = ctx ? "sum ctx" : "sum";
       s.dataset.id = t.id;
+      s.dataset.crit = showC && CRITG.has(t.id) ? 1 : 0;       // critical work in it
       s.style.cssText = `left:${x0}px;width:${Math.max(CFG.bar.minSumW,x1-x0)}px;top:${top+midY(CFG.bar.sumH)}px`;
       const rp = rollPct(t.id);
-      s.title = `${num(t)} ${t.title}\n${fmtDate(b.start)} → ${fmtDate(b.finish)}` + (rp != null ? ` · ${rp}% done` : "");
+      s.title = `${num(t)} ${t.title}\n${fmtDate(b.start)} → ${fmtDate(b.finish)}` + (rp != null ? ` · ${rp}% done` : "")
+              + (CRITG.has(t.id) ? "\nOn the critical path: something in it can't slip" : "");
       linkGrab(s, t);                 // a link onto a summary expands to its leaves
       c.appendChild(s); return;
     }
@@ -3929,7 +4369,7 @@ function drawBars(rows, delta = false){
     // visible just off the right edge, so the label has to clear it.
     let labelAt = x1 - x0 + (COARSE ? 26 : 16);
     if (showF && b.slack > 0){
-      const fw = x(addD(b.lateFin,1)) - x1;
+      const fw = lateX1(b) - x1;
       const f = document.createElement("div"); f.className = "float";
       f.style.cssText = `left:${x1}px;width:${fw}px;top:${top+midY(CFG.bar.h)}px`;
       f.title = `${b.slack} working days of float — the bar can slide this far without moving the finish date`;
@@ -4025,19 +4465,23 @@ function baseBar(c, t, top){
 /* Every group's % done -- its tasks' %, weighted by duration -- in one
    bottom-up pass per schedule. null = nothing under it has any progress
    recorded, which is not the same as 0%. Asking each group separately
-   scanned the whole plan per group, and a 639-task drag took 1.2s a frame. */
-let ROLL = new Map();
+   scanned the whole plan per group, and a 639-task drag took 1.2s a frame.
+   The same pass finds the groups with critical work in them (CRITG), which
+   the chart draws red: a group is never critical itself, only what is in it. */
+let ROLL = new Map(), CRITG = new Set();
 function rollups(){
-  const kids = childMap(), out = new Map();
+  const kids = childMap(), out = new Map(), crit = new Set();
   const walk = t => {
     const cs = kids.get(t.id);
-    if (!cs){ const w = Math.max(1, t.duration || 0); return {w, done: w * (t.pct || 0), any: t.pct != null}; }
-    let w = 0, done = 0, any = false;
-    for (const c of cs){ const r = walk(c); w += r.w; done += r.done; any = any || r.any; }
+    if (!cs){ const w = Math.max(1, t.duration || 0); return {w, done: w * (t.pct || 0), any: t.pct != null, crit: !!bars?.get(t.id)?.critical}; }
+    let w = 0, done = 0, any = false, cr = false;
+    for (const c of cs){ const r = walk(c); w += r.w; done += r.done; any = any || r.any; cr = cr || r.crit; }
     out.set(t.id, any && w ? Math.round(done / w) : null);
-    return {w, done, any};
+    if (cr) crit.add(t.id);
+    return {w, done, any, crit: cr};
   };
   for (const t of kids.get(null) || []) walk(t);
+  CRITG = crit;
   return out;
 }
 const rollPct = id => ROLL.get(id) ?? null;
@@ -4114,7 +4558,30 @@ function boardCards(pick = boardSprint()){
   const all = boardTasks();
   return !pick ? all : pick === "none" ? all.filter(notInSprint) : all.filter(t => t.sprint === pick.id);
 }
+/* What the columns are: the statuses (the board as it always was), each
+   person, each week a task starts in, or the options of a pick-list field.
+   And what a card shows. Both are this device's, like the view. */
+let boardGroup = (() => { try { return localStorage.getItem("pm.bgroup") || "status"; } catch { return "status"; } })();
+const CARD_BITS = [["score", "Score"], ["dates", "Dates"], ["points", "Points"], ["when", "Day or night"], ["float", "Float"],
+                   ["fields", "Fields"], ["fieldNames", "Fields' names"], ["people", "People"], ["parent", "The group it is in"],
+                   ["progress", "Progress"]];
+const CARD_OFF = ["fieldNames", "parent"];                       // off until ticked
+let cardBits = (() => { try { const v = JSON.parse(localStorage.getItem("pm.bcard") || "{}"); return v && typeof v === "object" ? v : {}; }
+                        catch { return {}; } })();
+const shows = k => cardBits[k] ?? !CARD_OFF.includes(k);
+const groupFields = () => S.fields.filter(f => f.kind === "select");
+
 function paintBoardBar(){
+  if (!(boardGroup === "status" || boardGroup === "who" || boardGroup === "week" || groupFields().some(f => `cf:${f.name}` === boardGroup)))
+    boardGroup = "status";
+  const g = el("bGroup"), want = JSON.stringify(groupFields().map(f => [f.name, f.label]));
+  if (g.dataset.opts !== want){
+    g.innerHTML = `<option value="status">Column</option><option value="who">Person</option><option value="week">Week it starts</option>`
+      + groupFields().map(f => `<option value="cf:${esc(f.name)}">${esc(f.label)}</option>`).join("");
+    g.dataset.opts = want;
+  }
+  g.value = boardGroup; g.classList.toggle("on", boardGroup !== "status");
+  el("bCardPick").innerHTML = CARD_BITS.map(([k, l]) => `<label class="tog"><input type="checkbox" data-bit="${k}"${shows(k) ? " checked" : ""}> ${l}</label>`).join("");
   const open = openSprints(), act = activeSprint(), pick = boardSprint(), s = el("bSpr");
   const opts = [["", "All tasks"], ...(act ? [["active", `Active: ${act.name}`]] : []),
                 ...open.filter(x => x !== act).map(x => [x.id, x.name]), ["none", "Not in a sprint"]];
@@ -4122,8 +4589,18 @@ function paintBoardBar(){
   s.value = !pick ? "" : pick === "none" ? "none" : pick === act ? "active" : pick.id;
   s.classList.toggle("on", !!pick);
   el("bSprWrap").hidden = !open.length && !pick;
-  el("boardbar").hidden = el("bSprWrap").hidden && el("weekstrip").hidden;
 }
+el("bGroup").onchange = e => {
+  boardGroup = e.target.value;
+  try { localStorage.setItem("pm.bgroup", boardGroup); } catch { /* blocked */ }
+  quickSlot = null; render();
+};
+el("bCardPick").addEventListener("change", e => {
+  const k = e.target.dataset.bit; if (!k) return;
+  cardBits = {...cardBits, [k]: e.target.checked};
+  try { localStorage.setItem("pm.bcard", JSON.stringify(cardBits)); } catch { /* blocked */ }
+  render();
+});
 el("bSpr").onchange = () => {
   boardPick = el("bSpr").value;
   try { localStorage.setItem("pm.bspr", boardPick); } catch { /* blocked */ }
@@ -4161,20 +4638,66 @@ const showOlder = new Set();
 // the day a card finished: its actual finish, set by a done column (setStatus)
 const finishedOn = t => t.actual_finish || String(t.status_since || "").slice(0, 10);
 
+/* The board's columns for the grouping picked: each a key, a name, how its
+   heading marks it, the cards in it, and what dropping a card there (move)
+   or adding one there (add) does to it -- none, where it can't take one. By
+   status the board is what it always was: WIP limits, done columns folding,
+   cards in their own order. Otherwise cards go by score, as sprints do,
+   and only unfinished work: done work has a column only by status. */
+let boardCols = new Map();                 // key -> column, from the last render, for a drop
+function boardColumns(leaves){
+  const score = (a, b) => isDone(a) - isDone(b) || sprScore(b) - sprScore(a) || a.key.localeCompare(b.key, undefined, {numeric: true});
+  if (boardGroup === "status") return S.statuses.map(name => ({key: name, name, status: name,
+    head: `<span class="cdot" style="--c:${esc(colColor(name))}" aria-hidden="true"></span>`,
+    cards: leaves.filter(t => t.status === name).sort(cardCmp), add: {status: name}}));
+  if (boardGroup === "who"){
+    const lead = t => peopleOf(t)[0]?.name ?? "", names = allPeople().filter(n => S.people.some(p => p.name === n) || leaves.some(t => lead(t) === n));
+    return [...names, ""].map(n => ({key: n, name: n || "Nobody yet", head: n ? avatar(n) : `<span class="av av0" aria-hidden="true">?</span>`,
+      cards: leaves.filter(t => !isDone(t) && lead(t) === n).sort(score),
+      // the lead changes; anyone sharing it stays, and keeps their share
+      move: t => { const ps = peopleOf(t), rest = ps.slice(1).filter(p => p.name !== n);
+        setPeople(t, n ? [{name: n, pct: ps[0]?.pct ?? 100}, ...rest] : rest); },
+      add: {apply: t => setPeople(t, n ? [{name: n, pct: 100}] : [])}}));
+  }
+  if (boardGroup === "week"){
+    const today = todayDate(), mon = D(weekOf(today)), open = leaves.filter(t => !isDone(t) && !bars.get(t.id)?.finished);
+    const at = t => { const b = bars.get(t.id); return !b || b.unscheduled ? null : b.start; };
+    // the first working day of the week that is not in the past
+    const firstDay = a => { const d = a < today ? today : a; return cal.toDate(cal.toOffset(iso(d))); };
+    const wk = (i, name) => { const a = addD(mon, 7 * i), z = addD(a, 7);
+      return {key: `w${i}`, name, cards: open.filter(t => at(t) && at(t) >= a && at(t) < z).sort(score),
+        move: t => { t.not_before = iso(firstDay(a)); }, add: {apply: t => { t.not_before = iso(firstDay(a)); }},
+        hint: `${fmtDate(a)} – ${fmtDate(addD(a, 6))}`}; };
+    return [{key: "before", name: "Before this week", cards: open.filter(t => at(t) && at(t) < mon).sort(score)},
+      wk(0, "This week"), wk(1, "Next week"), wk(2, `Week of ${fmtDate(addD(mon, 14))}`), wk(3, `Week of ${fmtDate(addD(mon, 21))}`),
+      {key: "later", name: "Later", cards: open.filter(t => at(t) && at(t) >= addD(mon, 28)).sort(score)},
+      {key: "none", name: "No dates yet", cards: open.filter(t => !at(t)).sort(score)}];
+  }
+  const f = groupFields().find(x => `cf:${x.name}` === boardGroup);
+  return [...(f.options || []), ""].map(v => ({key: v, name: v || "Not set",
+    head: v ? `<span class="cdot fdot" style="--h:${hueOf(f.name)}" aria-hidden="true"></span>` : "",
+    cards: leaves.filter(t => !isDone(t) && (t.custom?.[f.name] ?? "") === v).sort(score),
+    move: t => setCustom(t, f, v), add: {apply: t => setCustom(t, f, v)}}));
+}
+
 function renderBoard(){
   const wrap = el("board");
   wrap.innerHTML = "";
   const pick = boardSprint(), leaves = boardCards(pick), f = filterSets();
+  const cols = boardColumns(leaves);
+  boardCols = new Map(cols.map(c => [c.key, c]));
   // columns share the width; below their minimum the board scrolls sideways
-  wrap.style.minWidth = `calc(${S.statuses.length} * var(--fs) * 16 + ${S.statuses.length - 1} * 10px + 24px)`;
+  wrap.style.minWidth = `calc(${cols.length} * var(--fs) * 16 + ${cols.length - 1} * 10px + 24px)`;
   let matched = 0;
 
-  for (const name of S.statuses){
-    const cfg = S.statusCfg[name] || {};
+  for (const c of cols){
+    const name = c.status ?? c.name, cfg = c.status != null ? S.statusCfg[c.status] || {} : {};
     const col = document.createElement("div");
-    col.className = "col"; col.dataset.status = name;
+    col.className = "col"; col.dataset.col = c.key;
+    if (c.status != null) col.dataset.status = c.status;
+    if (!c.status && !c.move) col.dataset.fixed = 1;         // shows, takes no drop
 
-    const mine = leaves.filter(t => t.status === name).sort(cardCmp);
+    const mine = c.cards;
 
     const over = cfg.wip != null && mine.length > cfg.wip;
     let cards = f ? mine.filter(t => f.self.has(t.id)) : mine;
@@ -4189,8 +4712,8 @@ function renderBoard(){
       ? `${cards.length} of ${mine.length}${cfg.wip != null ? ` · limit ${esc(cfg.wip)}` : ""}`
       : `${mine.length}${cfg.wip != null ? ` / ${esc(cfg.wip)}` : ""}`;
     col.innerHTML =
-      `<div class="colhd${over ? " over" : ""}">
-         <span class="cdot" style="--c:${esc(colColor(name))}" aria-hidden="true"></span><span class="cname">${esc(name)}</span>
+      `<div class="colhd${over ? " over" : ""}"${c.hint ? ` title="${esc(c.hint)}"` : ""}>
+         ${c.head || ""}<span class="cname">${esc(c.name)}</span>
          <span class="ccount">${count}</span>
        </div>`;
     if (over) col.querySelector(".colhd").title =
@@ -4207,8 +4730,8 @@ function renderBoard(){
       more.firstChild.onclick = () => { showOlder.has(name) ? showOlder.delete(name) : showOlder.add(name); render(); };
       col.appendChild(more);
     }
-    col.appendChild(quickBox("col:" + name, {status:name, peers:mine,
-                                             sprint: pick && pick !== "none" ? pick.id : null}));
+    if (c.add) col.appendChild(quickBox(`col:${boardGroup}:${c.key}`, {status: c.add.status, apply: c.add.apply, peers: mine,
+                                          where: c.name, sprint: pick && pick !== "none" ? pick.id : null}));
     wrap.appendChild(col);
   }
   // Focus the quick-add box in the same turn as the click or Enter that opened
@@ -4217,6 +4740,52 @@ function renderBoard(){
   return matched;
 }
 
+
+/* A card dropped in a column: in its own column (by status), its place
+   there; in another, whatever that column means -- its status, its person,
+   its week, its field -- in one entry either way. */
+function boardMove(t, key, before){
+  const c = boardCols.get(key); if (!c) return;
+  if (c.status != null){
+    const to = c.status;
+    if (to === t.status){
+      // up or down its own column: nothing to do if the order stays as it is
+      const now = boardTasks().filter(x => x.status === to).sort(cardCmp).map(x => x.id);
+      if (cardOrder(t, before).map(x => x.id).join() === now.join()) return;
+      commit(`Reorder ${t.key}`, () => cardOrder(t, before).forEach((x, k) => { x.cpos = (k + 1) * 10; }));
+    } else {
+      const was = t.status;
+      commit(`${t.key} → ${to}`, () => { setStatus(t, to); cardOrder(t, before).forEach((x, k) => { x.cpos = (k + 1) * 10; }); });
+      render(); drawer();
+      return warnStarted(t, was);
+    }
+    return render(), drawer();
+  }
+  if (!c.move || c.cards.includes(t)) return;
+  if (boardGroup === "week" && t.actual_start)
+    return note(`${t.key} has started, so its dates come from when it did: change them in its task panel.`, {warn:true});
+  commit(`${t.key} → ${c.name}`, () => c.move(t));
+  render(); drawer();
+  // a week can only ask: what it waits for may hold it later than that
+  if (boardGroup === "week" && !c.cards.includes(t) && !boardCols.get(key)?.cards.includes(t)){
+    const b = bars.get(t.id);
+    if (b && !b.unscheduled) note(`${t.key} can't start until ${fmtDate(b.start)}: what it waits for holds it there.`, {undo:true});
+  }
+}
+/* Moved out of a column that has not started into one that has: does that
+   give anyone more work under way than their week holds? Said, not stopped. */
+function warnStarted(t, was){
+  if (phaseOf(was) !== "open" || phaseOf(t.status) !== "wip") return;
+  const over = [], ps = parentSet();
+  for (const {name} of peopleOf(t)){
+    const cap = S.people.find(p => p.name === name)?.capacity;
+    if (!(cap > 0)) continue;
+    const under = S.tasks.filter(x => phaseOf(x.status) === "wip" && !ps.has(x.id))
+      .reduce((a, x) => a + ptsLeft(x) * (sharesOf(x).find(p => p.name === name)?.f ?? 0), 0);
+    if (under > cap + OVER_EPS) over.push(`${name} has ${fmtLoad(under)} pts under way, more than their week of ${fmtLoad(cap)}`);
+  }
+  if (over.length) note(`${t.key} is under way, and ${over.join("; ")}.`, {warn:true, undo:true});
+}
 
 /* days a task has sat in its current status, in CALENDAR days */
 const daysInStatus = t => {
@@ -4263,7 +4832,7 @@ function quickAdd(title, opts){
              status_since:new Date().toISOString(), assignee:who, duration:1, points:null, pct:null,
              not_before:iso(todayDate()), actual_start:null, actual_finish:null, repeat:null,
              sprint:opts.sprint ?? null, custom:{}};
-  commit(`Add ${t.key} to ${opts.where || status}`, () => { S.tasks.push(t); setStatus(t, status); });
+  commit(`Add ${t.key} to ${opts.where || status}`, () => { S.tasks.push(t); setStatus(t, status); opts.apply?.(t); });
   render();
   const f = filterSets();
   if (f && !f.self.has(t.id)) note(`Added ${t.key}; the filter hides it.`, {undo:true});
@@ -4320,10 +4889,13 @@ function card(t){
   if (sel === t.id) c.dataset.sel = 1;
   const b = bars.get(t.id);
   const stale = staleBy(t);
-  const chips = S.fields
+  // each field in its own colour, so a Discipline and a Location saying the same word can't be taken for each other
+  const chips = !shows("fields") ? "" : S.fields
     .filter(f => t.custom[f.name] !== undefined && t.custom[f.name] !== "")
     .slice(0, CFG.show.cardChips)
-    .map(f => `<span class="chip">${esc(t.custom[f.name])}</span>`).join("");
+    .map(f => `<span class="chip fchip" style="--h:${hueOf(f.name)}" title="${esc(`${f.label}: ${t.custom[f.name]}`)}">${
+      shows("fieldNames") ? `<b>${esc(f.label)}</b> ` : ""}${esc(t.custom[f.name])}</span>`).join("");
+  const up = shows("parent") && t.parent_id != null ? taskOf(t.parent_id) : null;
 
   const ov = LOAD.overTask.get(t.id), due = dueState(t);
   const pct = t.pct > 0 && t.pct < 100 ? t.pct : 0, nAtt = (t.attach || []).length;
@@ -4332,22 +4904,23 @@ function card(t){
        ov ? `<span class="co" title="${esc(overTip(t, ov))}">overloaded</span>` : ""}${
        due === "late" ? `<span class="clate" title="Planned to finish ${fmtDate(b.finish)}">late</span>`
        : due === "soon" ? `<span class="csoon" title="Planned to finish ${fmtDate(b.finish)}">due ${esc(shortDay(b.finish))}</span>` : ""}${
-       SCORES.has(t.id) ? `<span class="csc" title="${esc(scoreTip(SCORES.get(t.id)))}">${SCORES.get(t.id).total}</span>` : ""}</div>
+       SCORES.has(t.id) && shows("score") ? `<span class="csc" title="${esc(scoreTip(SCORES.get(t.id)))}">${SCORES.get(t.id).total}</span>` : ""}</div>
+     ${up ? `<div class="cup" title="${esc(`In ${num(up)} ${up.title}`)}">${esc(up.title)}</div>` : ""}
      <div class="ctitle">${esc(t.title)}${t.repeat ? ` <span class="crep" title="Repeats ${esc(repeatName(t.repeat))}">↻</span>` : ""}</div>
      <div class="cmeta">
-       ${cardWhen(t, b)}
-       ${t.points != null ? `<span class="chip">${fmtPts(t.points)} pts</span>` : noPoints(t) ? `<span class="chip nopts" title="${esc(NO_POINTS)}">no pts</span>` : ""}
-       ${t.when ? `<span class="chip whn" title="${WHEN_NAME[t.when]} work only">${whenMark(t)} ${WHEN_NAME[t.when]}</span>` : ""}
+       ${shows("dates") ? cardWhen(t, b) : ""}
+       ${!shows("points") ? "" : t.points != null ? `<span class="chip">${fmtPts(t.points)} pts</span>` : noPoints(t) ? `<span class="chip nopts" title="${esc(NO_POINTS)}">no pts</span>` : ""}
+       ${t.when && shows("when") ? `<span class="chip whn" title="${WHEN_NAME[t.when]} work only">${whenMark(t)} ${WHEN_NAME[t.when]}</span>` : ""}
        ${t.popup ? `<span class="chip pop" title="Unplanned work, logged as a pop-up${t.rush ? ", done first" : ""}">⚡ Pop-up</span>` : ""}
-       ${b && !b.summary && !b.unscheduled && !isDone(t) && b.slack > 0
+       ${shows("float") && b && !b.summary && !b.unscheduled && !isDone(t) && b.slack > 0
          ? `<span class="chip" title="Working days it can slip without moving the finish">Float ${b.slack}d</span>` : ""}
        ${chips}
        ${nAtt ? `<span class="chip" title="${nAtt} attachment${nAtt > 1 ? "s" : ""}">${CLIP} ${nAtt}</span>` : ""}
-       ${t.assignee ? `<span class="cwho" title="${esc(shareText(t))}">${avatars(t)}${
+       ${t.assignee && shows("people") ? `<span class="cwho" title="${esc(shareText(t))}">${avatars(t)}${
          peopleOf(t).length === 1 ? `<span>${esc(t.assignee)}</span>` : ""}</span>` : ""}
        ${stale !== null ? `<span class="cstale" title="In ${esc(t.status)} for ${stale} days, past the ${esc(S.statusCfg[t.status].staleDays)}-day limit for this column">${stale}d</span>` : ""}
      </div>
-     ${pct ? `<div class="cprog" title="${pct}% done"><i style="width:${pct}%"></i></div>` : ""}`;
+     ${pct && shows("progress") ? `<div class="cprog" title="${pct}% done"><i style="width:${pct}%"></i></div>` : ""}`;
   c.onclick = () => { if (performance.now() < noClickUntil) return; sel = t.id; render(); drawer(); };
   cardGrab(c, t);
   return c;
@@ -4397,11 +4970,11 @@ function cardGrab(node, t){
       lx = e.clientX; ly = e.clientY;
       const over = document.elementFromPoint(e.clientX, e.clientY)?.closest?.(".col");
       unmark();
+      // over the middle of another card: onto it, to put it under or link it -- in any column
+      onto = over ? ontoOf(e.clientX, e.clientY, node, ".colbody .card") : null;
       if (col && col !== over) col.classList.remove("dropinto");
-      col = over;
-      if (col) col.classList.add("dropinto");
-      // over the middle of another card: onto it, to put it under or link it
-      onto = col ? ontoOf(e.clientX, e.clientY, node, ".colbody .card") : null;
+      col = over && (onto || !over.dataset.fixed) ? over : null;     // a column of dates it can't be dropped in
+      if (col && !onto) col.classList.add("dropinto");
       if (onto){ onto.classList.add("droponto"); at = null; return; }
       at = !col ? null : [...col.querySelectorAll(".colbody .card")].find(c => {
         if (c === node) return false;
@@ -4420,21 +4993,11 @@ function cardGrab(node, t){
       col?.classList.remove("dropinto");
       if (!moved || !col) return;
       noClickUntil = performance.now() + 300;          // the drop is not also a click
-      const to = col.dataset.status, before = at?.dataset.id ?? null;
+      const key = col.dataset.col, c = boardCols.get(key), before = at?.dataset.id ?? null;
       const p = onto && taskOf(onto.dataset.id);
-      if (p) return dropMenu(t, p, {x: lx, y: ly}, to === t.status ? [] : [{label: `Move it to ${to}`, act: () => {
-        commit(`${t.key} → ${to}`, () => { setStatus(t, to); cardOrder(t, p.id).forEach((x, k) => { x.cpos = (k + 1) * 10; }); });
-        render(); drawer(); }}]);
-      if (to === t.status){
-        // up or down its own column: nothing to do if the order stays as it is
-        const now = boardTasks().filter(x => x.status === to).sort(cardCmp).map(x => x.id);
-        if (cardOrder(t, before).map(x => x.id).join() === now.join()) return;
-        commit(`Reorder ${t.key}`, () => cardOrder(t, before).forEach((x, k) => { x.cpos = (k + 1) * 10; }));
-      } else commit(`${t.key} → ${to}`, () => {
-        setStatus(t, to);
-        cardOrder(t, before).forEach((x, k) => { x.cpos = (k + 1) * 10; });
-      });
-      render(); drawer();
+      if (p) return dropMenu(t, p, {x: lx, y: ly}, !c || c.cards.includes(t) || (!c.move && c.status == null) ? []
+        : [{label: `Move it to ${c.name}`, act: () => boardMove(t, key, p.id)}]);
+      boardMove(t, key, before);
     };
     document.addEventListener("pointermove", move);
     document.addEventListener("pointerup", up);
@@ -4947,8 +5510,8 @@ function drawArrows(rows, delta = false){
 
     const bp = bars.get(p), bs = bars.get(s);
     const py = rowOf.get(p)*RH + RH/2, sy = rowOf.get(s)*RH + RH/2;
-    const px = d.kind === "SS" ? x(bp.start) : x(addD(bp.finish,1));
-    const sx = d.kind === "FF" ? x(addD(bs.finish,1)) : x(bs.start);
+    const px = d.kind === "SS" ? barX0(bp) : barX1(bp);
+    const sx = d.kind === "FF" ? barX1(bs) : barX0(bs);
     const crit = bp.critical && bs.critical && el("tCrit").checked;
 
     const {elbow:g, lane, headGap, backGap, curve, round:r} = CFG.arrow;
@@ -5580,6 +6143,30 @@ el("loadgrid").addEventListener("click", e => {
  * ------------------------------------------------------------------ */
 let prioDay = null;                     // ISO date shown; null is today
 
+/* Each person's day, as Priorities and Present show it: what the day
+   planner put on them that day, highest score first; what only overbooks
+   it (beyond); and their other open work by score (next), points or not. */
+function dayLists(P, day){
+  const key = iso(day), scoreOf = t => SCORES.get(t.id)?.total ?? 0;
+  return P.people.filter(p => !filt.who || p.name === filt.who).map(p => {
+    const c = p.days.get(key) || p.cell(day);
+    // a task's pieces that day, day and evening together
+    const by = new Map();
+    for (const it of c.items){
+      const e = by.get(it.t.id) ?? by.set(it.t.id, {t:it.t, pts:0, parts:new Set(), beyond:true}).get(it.t.id);
+      e.pts += it.pts; e.parts.add(it.part === "day" ? "☀" : "☾");
+      if (!it.over) e.beyond = false;           // beyond capacity only if none of it fits
+    }
+    const list = [...by.values()].sort((a, b) => a.beyond - b.beyond || scoreOf(b.t) - scoreOf(a.t));
+    const on = new Set(list.map(e => e.t.id));
+    const next = S.tasks.filter(t => SCORES.has(t.id) && !on.has(t.id) && peopleOf(t).some(x => x.name === p.name))
+                        .sort((a, b) => scoreOf(b) - scoreOf(a)).slice(0, CFG.show.prioNext);
+    const firstDay = t => { for (const [d, cc] of p.days) if (d > key && cc.items.some(i => i.t === t)) return d; return null; };
+    return {p, c, within: list.filter(e => !e.beyond), beyond: list.filter(e => e.beyond), next, firstDay,
+            used: c.day + c.night, room: c.cap.day + c.cap.night};
+  });
+}
+
 function renderPrioView(){
   el("pname").textContent = S.name || "Untitled project";
   document.title = S.name || "Schedule";
@@ -5588,19 +6175,20 @@ function renderPrioView(){
   if (S.tasks.length && !recompute()) return;
   const P = plan(), today = P.today;
   if (prioDay && D(prioDay) < today) prioDay = null;
-  const day = prioDay ? D(prioDay) : today, key = iso(day);
-  const rows = P.people.filter(p => !filt.who || p.name === filt.who);
+  const day = prioDay ? D(prioDay) : today;
 
   el("priobar").innerHTML = `<div class="grp" role="group" aria-label="Which day">
       <button type="button" id="prPrev" title="The day before"${+day === +today ? " disabled" : ""}>◀</button>
       <button type="button" id="prToday" aria-pressed="${+day === +today}">Today</button>
       <button type="button" id="prNext" title="The day after">▶</button></div>
     <b class="prday">${esc(+day === +today ? "Today" : DOW[dowOf(day)])}, ${esc(fmtDate(day))}</b>
+    <button type="button" class="ghost" id="prPresent" title="Today's work, big and full screen: for a tablet on the wall">Present</button>
     <span class="hint" style="margin:0">Each person's work for the day, as planned into their week, highest score
       first. Hover a score for its parts; click a task to open it.</span>`;
   el("prPrev").onclick = () => { prioDay = iso(addD(day, -1)); render(); };
   el("prNext").onclick = () => { prioDay = iso(addD(day, 1)); render(); };
   el("prToday").onclick = () => { prioDay = null; render(); };
+  el("prPresent").onclick = openPresent;
 
   const scoreOf = t => SCORES.get(t.id)?.total ?? 0;
   const item = (t, n, pts, parts, beyond) => {
@@ -5619,25 +6207,10 @@ function renderPrioView(){
       <span class="prsc" title="${esc(scoreTip(s))}">${s ? s.total : ""}</span></div>`;
   };
 
+  const lists = dayLists(P, day);
   let listed = 0, overPeople = 0;
-  const cols = rows.map(p => {
-    const c = p.days.get(key) || p.cell(day);
-    // a task's pieces that day, day and evening together
-    const by = new Map();
-    for (const it of c.items){
-      const e = by.get(it.t.id) ?? by.set(it.t.id, {t:it.t, pts:0, parts:new Set(), beyond:true}).get(it.t.id);
-      e.pts += it.pts; e.parts.add(it.part === "day" ? "☀" : "☾");
-      if (!it.over) e.beyond = false;           // beyond capacity only if none of it fits
-    }
-    const list = [...by.values()].sort((a, b) => a.beyond - b.beyond || scoreOf(b.t) - scoreOf(a.t));
-    const within = list.filter(e => !e.beyond), beyond = list.filter(e => e.beyond);
-    listed += list.length; if (c.over) overPeople++;
-    const used = c.day + c.night, room = c.cap.day + c.cap.night;
-    // next up: their other open work, by score, points or not
-    const on = new Set(list.map(e => e.t.id));
-    const next = S.tasks.filter(t => SCORES.has(t.id) && !on.has(t.id) && peopleOf(t).some(x => x.name === p.name))
-                        .sort((a, b) => scoreOf(b) - scoreOf(a)).slice(0, CFG.show.prioNext);
-    const firstDay = t => { for (const [d, cc] of p.days) if (d > key && cc.items.some(i => i.t === t)) return d; return null; };
+  const cols = lists.map(({p, c, within, beyond, next, firstDay, used, room}) => {
+    listed += within.length + beyond.length; if (c.over) overPeople++;
     let n = 0;
     return `<section class="prc">
       <div class="prh">${avatar(p.name)}<b>${esc(p.name)}</b>
@@ -5660,10 +6233,76 @@ function renderPrioView(){
   for (const n of el("prio").querySelectorAll(".pri[data-id]"))
     ontoGrab(n, byId.get(n.dataset.id), {grip: ".prt .key", sel: "#prio .pri[data-id]", scroller: el("priowrap")});
   el("stat").innerHTML = `${listed} task${listed === 1 ? "" : "s"} for ${esc(+day === +today ? "today" : fmtDate(day))}`
-    + ` · ${rows.length} ${rows.length === 1 ? "person" : "people"}`
+    + ` · ${lists.length} ${lists.length === 1 ? "person" : "people"}`
     + (overPeople ? ` · <b title="People with more planned for the day than they have room for">${overPeople}</b> over capacity` : "");
   syncUndoButtons();
 }
+
+/* ---- Present: today's work, big, and nothing else ----
+   For a tablet on the wall or the fridge: each person's list for today, in
+   large type, with a ✓ to mark one done from across the room. It follows the
+   clock -- drawn again every CFG.present.refreshMs, so it moves on to
+   tomorrow by itself -- and asks for the whole screen, and for the screen to
+   stay on (a wake lock), where the browser offers them. Esc, or Close, ends
+   it; leaving full screen ends it too. It shows the "whose tasks" pick, so a
+   tablet set to one person shows just theirs. */
+let presentTimer = 0, presentLock = null, presentFull = false;
+function paintPresent(){
+  if (el("present").hidden) return;
+  if (S.tasks.length) recompute();
+  const P = plan(), today = P.today;
+  el("psDay").textContent = today.toLocaleDateString([], {weekday: "long", month: "long", day: "numeric", timeZone: "UTC"});
+  el("psClock").textContent = new Date().toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
+  el("psBody").innerHTML = dayLists(P, today).map(L => {
+    let n = 0;
+    const row = (e, dim) => `<div class="psi${dim ? " dim" : ""}" data-id="${esc(e.t.id)}"><span class="psn">${++n}</span>
+      <div class="pst"><b>${esc(e.t.title)}</b><span>${esc(num(e.t))} · ${esc(fmtLoad(e.pts))} pts ${esc([...e.parts].join(" "))}</span></div>
+      <button type="button" data-done aria-label="${esc(e.t.title)} is done" title="Done">✓</button></div>`;
+    return `<section class="psc"><div class="psh">${avatar(L.p.name)}<b>${esc(L.p.name)}</b>
+        <span class="pscap">${esc(fmtLoad(L.used))} of ${esc(fmtLoad(L.room))} pts</span></div>
+      ${L.within.map(e => row(e, false)).join("") || `<p class="psnone">${L.c.away ? "Time off today." : "Nothing left for today."}</p>`}
+      ${L.beyond.length ? `<div class="psdiv">If there is time</div>${L.beyond.map(e => row(e, true)).join("")}` : ""}
+      ${L.next.length ? `<div class="psdiv soft">Next up</div><ul class="psnext">${L.next.slice(0, CFG.present.next).map(t =>
+        `<li>${esc(t.title)}</li>`).join("")}</ul>` : ""}</section>`;
+  }).join("") || `<p class="psnone">Nobody to show: add people in Settings → People.</p>`;
+}
+function openPresent(){
+  el("present").hidden = false;
+  paintPresent();
+  clearInterval(presentTimer); presentTimer = setInterval(paintPresent, CFG.present.refreshMs);
+  try { document.documentElement.requestFullscreen?.().then(() => { presentFull = true; }, () => {}); } catch { /* not offered */ }
+  keepAwake();
+}
+const keepAwake = () => { try { navigator.wakeLock?.request("screen").then(l => { presentLock = l; }, () => {}); } catch { /* not offered */ } };
+function closePresent(){
+  if (el("present").hidden) return;
+  el("present").hidden = true;
+  clearInterval(presentTimer);
+  try { presentLock?.release(); } catch { /* gone already */ }
+  presentLock = null;
+  if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  presentFull = false;
+  render();
+}
+el("psX").onclick = closePresent;
+el("psBody").addEventListener("click", e => {
+  const b = e.target.closest("[data-done]"); if (!b) return;
+  const t = taskOf(b.closest("[data-id]").dataset.id), d = firstDone();
+  if (!t) return;
+  if (!d) return note("No column is ticked Done in Settings → Columns.", {warn:true});
+  commit(`Done: ${t.key}`, () => setStatus(t, d));
+  paintPresent();
+  note(`${t.key} is done.`, {undo:true});
+});
+// Esc ends it, before anything else hears the key
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && !el("present").hidden){ e.stopPropagation(); closePresent(); }
+}, true);
+// leaving full screen by the browser's own means (its Esc) ends it too
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && presentFull) closePresent(); });
+// a wake lock goes when the page is hidden: ask again on coming back
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !el("present").hidden) keepAwake(); });
+
 // the first column ticked Done, where ✓ takes a task
 const firstDone = () => S.statuses.find(s => S.statusCfg[s]?.done) || null;
 
@@ -5797,7 +6436,7 @@ const TBASE = [
                show:x => x.sum ? "" : sprintOf(x.t)?.name ?? "", opts:x => sprintOpts(x.t), set:EDITS.sprint,
                sort:x => x.sum ? null : sprintOf(x.t)?.start ?? null},
   "fields",                                  // the custom fields go here, as Work Planner has them
-  {k:"dur",    label:"Days",    w:4.2, num:true, ed:"num", name:"Duration", tip:"Duration, in working days", need:true,
+  {k:"dur",    label:"Days",    w:4.2, num:true, ed:"num", step:"any", name:"Duration", tip:"Duration, in working days; a part of one is fine", need:true,
                val:x => x.sum ? "" : String(x.t.duration ?? ""), set:EDITS.duration, sort:x => x.sum ? null : x.t.duration},
   {k:"pts",    label:"Points",  w:4.6, num:true, ed:"num", tip:"About an hour of work each",
                val:x => x.sum || x.t.points == null ? "" : String(x.t.points), set:EDITS.points, sort:x => x.sum ? null : x.t.points},
@@ -6135,6 +6774,743 @@ el("tBulk").addEventListener("click", e => {
   else if (e.target.id === "tbDel") bulkDelete();
   else if (e.target.id === "tbNone"){ ticked.clear(); tickFrom = null; syncTicks(); }
 });
+
+/* ------------------------------------------------------------------ *
+ * Templates: a set of tasks done again and again -- a garden bed, a test
+ * cell's gate review -- kept once and made into tasks at a date.
+ *
+ * S.templates is a project field (PROJ_JSON), so templates are journalled,
+ * travel in the project file and merge with it. Each is {id, name, desc,
+ * items}; an item is a task to be:
+ *   title, role     roles, comma-separated: who is decided when it is used
+ *   offset          working days after the start it is used at: its Not before
+ *   dur, pts, when, importance, ms (a milestone: no days)
+ *   deps            [{on, kind, lag}]: the items it waits for, by item id --
+ *                   shown and typed as row numbers, 2 or 2FS+1, so moving or
+ *                   deleting a row never leaves a link aimed at the wrong one
+ * A link to itself, to a row not there, or round in a loop is refused as it
+ * is typed, and checkTemplates() refuses one in a file. (Work Planner took
+ * a task waiting for itself.)
+ *
+ * Using one makes its tasks in one commit: each at its offset from the date
+ * picked (an item that waits for another and has no offset follows its
+ * links instead), the roles given people, the links made, optionally all
+ * under a new group, and in a sprint. Capturing makes one from a group of
+ * existing tasks: their people become its roles, their places its offsets.
+ * ------------------------------------------------------------------ */
+let tplSel = null;                     // the template open in the editor: this session's
+
+const tplOf = id => (S.templates || []).find(x => x.id === id) || null;
+const tplDur = x => x.ms ? 0 : x.dur;
+const rolesOf = x => String(x.role || "").split(",").map(r => r.trim()).filter(Boolean);
+const tplRoles = tp => [...new Set(tp.items.flatMap(rolesOf))];
+const newItem = (deps = []) => ({id: newId(), title: "New task", role: "", offset: 0, dur: 1, pts: null,
+                                 when: null, importance: null, ms: false, deps});
+
+/* The rows an item waits for, as typed: 2, 2FS+1, 3SS-2; FS with no delay
+   is the plain number. */
+function depsText(items, x){
+  const idx = new Map(items.map((y, i) => [y.id, i + 1]));
+  return (x.deps || []).filter(d => idx.has(d.on)).map(d => idx.get(d.on)
+    + (d.kind !== "FS" || d.lag ? d.kind : "") + (d.lag ? (d.lag > 0 ? "+" : "") + d.lag : "")).join(", ");
+}
+/* ...and read back: {deps}, or {err} to say. Commas between; spaces anywhere. */
+function parseDeps(text, items, self){
+  const deps = [];
+  for (const raw of String(text).split(/[,;]+/).map(s => s.replace(/\s+/g, "")).filter(Boolean)){
+    const m = /^(\d+)(FS|SS|FF)?([+-]\d+)?$/i.exec(raw);
+    if (!m) return {err: `“${raw}” isn't a link: write the row it waits for, like 2, or 2FS+1 for a day's gap`};
+    const it = items[+m[1] - 1];
+    if (!it) return {err: `There is no row ${m[1]}.`};
+    if (it.id === self) return {err: `A task can't wait for itself (row ${m[1]}).`};
+    if (!deps.some(d => d.on === it.id)) deps.push({on: it.id, kind: (m[2] || "FS").toUpperCase(), lag: m[3] ? +m[3] : 0});
+  }
+  return {deps};
+}
+/* A loop among a template's links, as row numbers (1 → 3 → 1), or null. */
+function tplLoop(items){
+  const idx = new Map(items.map((x, i) => [x.id, i])), state = new Map(), path = [];
+  const visit = id => {
+    state.set(id, 1); path.push(id);
+    for (const d of items[idx.get(id)].deps || []){
+      if (!idx.has(d.on)) continue;
+      if (state.get(d.on) === 1) return [...path.slice(path.indexOf(d.on)), d.on];
+      if (!state.get(d.on)){ const r = visit(d.on); if (r) return r; }
+    }
+    path.pop(); state.set(id, 2); return null;
+  };
+  for (const x of items) if (!state.get(x.id)){ const r = visit(x.id); if (r) return r.map(id => idx.get(id) + 1); }
+  return null;
+}
+/* Where each item starts and ends, in working days from the start it is
+   used at -- the schedulers' rules for FS, SS and FF with a delay, and the
+   end exclusive as theirs is -- and how many working days it all spans. */
+function tplTimes(tp){
+  const by = new Map(tp.items.map(x => [x.id, x])), es = new Map(), ef = new Map(), seen = new Set();
+  const place = x => {
+    if (seen.has(x.id)) return; seen.add(x.id);
+    let s = x.offset || 0;
+    for (const d of x.deps || []){
+      const p = by.get(d.on); if (!p) continue;
+      place(p);
+      s = Math.max(s, d.kind === "SS" ? es.get(p.id) + d.lag : d.kind === "FF" ? ef.get(p.id) + d.lag - tplDur(x) : ef.get(p.id) + d.lag);
+    }
+    es.set(x.id, s); ef.set(x.id, s + tplDur(x));
+  };
+  tp.items.forEach(place);
+  if (!tp.items.length) return {es, ef, first: 0, last: 0, span: 0};
+  // days, where a part of one may start or end: the day each falls in
+  const first = Math.floor(Math.min(...es.values())),
+        last = Math.max(...tp.items.map(x => tplDur(x) ? Math.ceil(ef.get(x.id)) - 1 : Math.floor(es.get(x.id))));
+  return {es, ef, first, last, span: last - first + 1};
+}
+// the working calendar, even in a project with no tasks yet, which recompute() skips
+const tplCal = () => new Cal(S.origin, S.holidays, weekendOf(S.workWeek));
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+
+function renderTemplatesView(){
+  el("pname").textContent = S.name || "Untitled project";
+  document.title = S.name || "Schedule";
+  el("empty").hidden = true; el("nomatch").hidden = true;
+  if (S.tasks.length) recompute();       // the drawer, open beside it, reads the bars
+  const T = S.templates || [];
+  if (!T.some(x => x.id === tplSel)) tplSel = T[0]?.id ?? null;
+  el("tpllist").innerHTML = T.map(tp => { const r = tplRoles(tp), n = tp.items.length;
+    return `<button type="button" class="tplitem${tp.id === tplSel ? " on" : ""}" data-tpl="${esc(tp.id)}"><b>${esc(tp.name)}</b>
+      <span>${plural(n, "task")} · ${plural(n ? tplTimes(tp).span : 0, "working day")}${r.length ? ` · roles: ${esc(r.join(", "))}` : ""}</span></button>`; }).join("")
+    || `<p class="hint">No templates yet. <b>+ New template</b> starts one, or <b>Capture from tasks</b> makes one from a group of tasks you have.</p>`;
+  const tp = tplOf(tplSel);
+  el("tpled").innerHTML = tp ? tplEditor(tp) : "";
+  el("stat").textContent = `${plural(T.length, "template")} · kept with the project, so they travel in its file`;
+  syncUndoButtons();
+}
+
+function tplEditor(tp){
+  const sel_ = (f, v, opts) => `<select data-f="${f}">${opts.map(([k, l]) => `<option value="${esc(k)}"${(v ?? "") === k ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+  const rows = tp.items.map((x, i) => `<tr data-item="${esc(x.id)}">
+      <td class="tpn">${i + 1}</td>
+      <td><input data-f="title" value="${esc(x.title)}" aria-label="Row ${i + 1}: task"></td>
+      <td><input data-f="role" value="${esc(x.role || "")}" placeholder="—" aria-label="Row ${i + 1}: roles"></td>
+      <td><input data-f="offset" type="number" min="0" step="1" value="${esc(x.offset)}" aria-label="Row ${i + 1}: offset in working days"></td>
+      <td><input data-f="dur" type="number" min="0" step="any" value="${esc(tplDur(x))}"${x.ms ? " disabled" : ""} aria-label="Row ${i + 1}: days"></td>
+      <td><input data-f="pts" type="number" min="0" step="1" value="${esc(x.pts ?? "")}" placeholder="—" aria-label="Row ${i + 1}: points"></td>
+      <td>${sel_("when", x.when, [["", "Any time"], ["day", "Day"], ["night", "Night"]])}</td>
+      <td>${sel_("importance", x.importance, [["", "—"], ...IMPORTANCE.map(k => [k, IMP_NAME[k]])])}</td>
+      <td><input data-f="deps" value="${esc(depsText(tp.items, x))}" placeholder="—" aria-label="Row ${i + 1}: waits for"></td>
+      <td class="tpms"><input data-f="ms" type="checkbox"${x.ms ? " checked" : ""} aria-label="Row ${i + 1}: a milestone"></td>
+      <td class="tpact"><button type="button" data-act="up" title="Up a row"${i ? "" : " disabled"}>↑</button><button type="button"
+        data-act="down" title="Down a row"${i < tp.items.length - 1 ? "" : " disabled"}>↓</button><button type="button"
+        data-act="del" title="Take this row out">✕</button></td></tr>`).join("");
+  const tt = tplTimes(tp);
+  return `<div class="tphd"><input class="tpname" data-f="name" value="${esc(tp.name)}" aria-label="Template name">
+      <span class="spacer"></span>
+      <button type="button" class="primary" data-act="use">Use this template…</button>
+      <button type="button" class="ghost" data-act="dup">Duplicate</button>
+      <button type="button" class="ghost" data-act="deltpl">Delete</button></div>
+    <textarea class="tpdesc" data-f="desc" rows="2" placeholder="What it is for, and when to use it" aria-label="Description">${esc(tp.desc || "")}</textarea>
+    <div class="tpscroll"><table class="cfg tpt"><colgroup><col style="width:calc(var(--fs)*2)"><col><col style="width:calc(var(--fs)*9)">
+      <col style="width:calc(var(--fs)*4.6)"><col style="width:calc(var(--fs)*4.2)"><col style="width:calc(var(--fs)*4.6)">
+      <col style="width:calc(var(--fs)*7.4)"><col style="width:calc(var(--fs)*7.4)"><col style="width:calc(var(--fs)*8)">
+      <col style="width:calc(var(--fs)*2.4)"><col style="width:calc(var(--fs)*6.6)"></colgroup>
+      <thead><tr><th>#</th><th>Task</th><th title="Who does it, decided when it is used; commas between several">Roles</th>
+        <th title="Working days after the start it is used at">Offset</th><th title="Working days it takes">Days</th><th>Points</th>
+        <th>When</th><th>Importance</th><th title="The rows it waits for: 2, or 2FS+1 for a day's gap, or 2SS to start with it">Waits for</th>
+        <th title="A milestone: a moment, no days">MS</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div class="rowend tpfoot"><button type="button" class="ghost" data-act="add">+ Add task</button></div>
+    <p class="hint">Offsets and days are working days, from the date you pick when you use it; it spans
+      ${plural(tp.items.length ? tt.span : 0, "working day")}. A task that waits for another follows it, unless it has an offset of its own.
+      Roles become people when it is used, so the same work can go to different people each time.</p>`;
+}
+
+/* ---- editing: each change one entry, as everywhere ---- */
+function tplEdit(what, fn){
+  const tp = tplOf(tplSel); if (!tp) return;
+  commit(`Template ${tp.name}: ${what}`, () => fn(tp));
+  render();
+}
+el("tpled").addEventListener("change", e => {
+  const n = e.target, f = n.dataset.f; if (!f) return;
+  const tp = tplOf(tplSel); if (!tp) return;
+  if (f === "name") return tplEdit("name", t => { t.name = n.value.trim() || t.name; });
+  if (f === "desc") return tplEdit("description", t => { t.desc = n.value.trim(); });
+  const id = n.closest("tr[data-item]")?.dataset.item, x = tp.items.find(y => y.id === id); if (!x) return;
+  const row = tp.items.indexOf(x) + 1;
+  if (f === "deps"){
+    const r = parseDeps(n.value, tp.items, x.id);
+    if (r.err){ note(r.err, {warn:true}); return render(); }
+    const loop = tplLoop(tp.items.map(y => y === x ? {...y, deps: r.deps} : y));
+    if (loop){ note(`That makes a loop: rows ${loop.join(" → ")}. A task can't wait for itself, even round the long way.`, {warn:true}); return render(); }
+    return tplEdit(`row ${row} waits for`, () => { x.deps = r.deps; });
+  }
+  const whole = v => Math.max(0, Math.round(+v) || 0);
+  tplEdit(`row ${row}`, () => {
+    if (f === "title") x.title = n.value.trim() || x.title;
+    else if (f === "role") x.role = n.value.split(",").map(s => s.trim()).filter(Boolean).join(", ");
+    else if (f === "offset") x.offset = whole(n.value);
+    else if (f === "dur") x.dur = days2(n.value);
+    else if (f === "pts"){ const p = parseFloat(n.value); x.pts = Number.isFinite(p) ? (p > 0 ? Math.max(1, Math.round(p)) : 0) : null; }
+    else if (f === "when") x.when = n.value || null;
+    else if (f === "importance") x.importance = n.value || null;
+    else if (f === "ms"){ x.ms = n.checked; if (!x.ms && !x.dur) x.dur = 1; }
+  });
+});
+el("tpled").addEventListener("click", e => {
+  const act = e.target.closest("button[data-act]")?.dataset.act; if (!act) return;
+  const tp = tplOf(tplSel); if (!tp) return;
+  const id = e.target.closest("tr[data-item]")?.dataset.item, i = tp.items.findIndex(y => y.id === id);
+  if (act === "use") return openUseTemplate(tp);
+  if (act === "add") return tplEdit("a row", t => { const last = t.items.at(-1);
+    t.items.push(newItem(last ? [{on: last.id, kind: "FS", lag: 0}] : [])); });   // most templates are a sequence
+  if (act === "up" || act === "down") return tplEdit(`row ${i + 1} ${act}`, t => {
+    const j = act === "up" ? i - 1 : i + 1; [t.items[i], t.items[j]] = [t.items[j], t.items[i]]; });
+  if (act === "del") return tplEdit(`row ${i + 1} out`, t => {
+    const [gone] = t.items.splice(i, 1);
+    for (const y of t.items) if (y.deps?.some(d => d.on === gone.id)) y.deps = y.deps.filter(d => d.on !== gone.id); });
+  if (act === "dup"){
+    const copy = copyTemplate(tp, `${tp.name} (copy)`);
+    commit(`Duplicate template ${tp.name}`, () => { S.templates = [...S.templates, copy]; });
+    tplSel = copy.id; return render();
+  }
+  if (act === "deltpl"){
+    commit(`Delete template ${tp.name}`, () => { S.templates = S.templates.filter(y => y.id !== tp.id); });
+    render(); note(`Deleted the template ${tp.name}.`, {undo:true});
+  }
+});
+// the same template under new ids throughout, its links following
+function copyTemplate(tp, name){
+  const ids = new Map(tp.items.map(x => [x.id, newId()]));
+  return {id: newId(), name, desc: tp.desc || "", items: tp.items.map(x => ({...x, id: ids.get(x.id),
+    deps: (x.deps || []).filter(d => ids.has(d.on)).map(d => ({...d, on: ids.get(d.on)}))}))};
+}
+el("tpllist").addEventListener("click", e => {
+  const b = e.target.closest("[data-tpl]"); if (!b) return;
+  tplSel = b.dataset.tpl; render();
+});
+el("tplNew").onclick = () => {
+  const tp = {id: newId(), name: "New template", desc: "", items: [newItem()]};
+  commit("New template", () => { S.templates = [...(S.templates || []), tp]; });
+  tplSel = tp.id; render();
+  el("tpled").querySelector(".tpname")?.select();
+};
+
+/* ---- capture: a group of existing tasks, as a template ----
+   Its leaves in tree order; their people become roles; each starts at its
+   place in working days from the earliest; the links among them come too.
+   One that waits for another gets no offset if its links alone put it
+   there, so it goes on following them. */
+function captureTemplate(root){
+  const km = childMap(), leaves = [];
+  const walk = t => { const ks = km.get(t.id) || []; ks.length ? ks.forEach(walk) : leaves.push(t); };
+  walk(root);
+  const inSet = new Set(leaves.map(t => t.id)), ids = new Map(leaves.map(t => [t.id, newId()]));
+  const at = leaves.map(t => { const b = bars.get(t.id); return b && !b.unscheduled ? Math.floor(b.es) : null; });   // its day
+  const known = at.filter(o => o != null), base = known.length ? Math.min(...known) : 0;
+  const items = leaves.map((t, i) => ({id: ids.get(t.id), title: t.title, role: peopleOf(t).map(p => p.name).join(", "),
+    offset: at[i] == null ? 0 : at[i] - base, dur: t.duration, pts: t.points ?? null, when: t.when || null,
+    importance: t.importance || null, ms: t.duration === 0,
+    deps: S.deps.filter(d => d.succ === t.id && inSet.has(d.pred)).map(d => ({on: ids.get(d.pred), kind: d.kind, lag: d.lag || 0}))}));
+  const tp = {id: newId(), name: root.title, desc: `Captured from ${root.key} on ${fmtDate(todayDate())}.`, items};
+  if (tplLoop(items)) for (const x of items) x.deps = [];          // cannot be: the plan has no loops; but never keep one
+  for (const x of items) if (x.deps.length){
+    const was = x.offset; x.offset = 0;
+    if (tplTimes(tp).es.get(x.id) !== was) x.offset = was;        // pinned later than its links: keep where it was
+  }
+  commit(`Capture template ${tp.name}`, () => { S.templates = [...(S.templates || []), tp]; });
+  tplSel = tp.id; setView("templates");
+  note(`Made the template “${tp.name}” from ${plural(items.length, "task")} under ${root.key}.`, {undo:true});
+}
+el("tplCap").onclick = () => {
+  const {html} = taskChoices(() => true);
+  el("dlTcap").innerHTML = html; el("tcWhat").value = "";
+  el("dtcap").showModal(); el("tcWhat").focus();
+};
+el("tcOk").onclick = () => {
+  const {map} = taskChoices(() => true), v = el("tcWhat").value.trim();
+  const id = v ? pickTask(v, map) : undefined; if (id == null) return;
+  el("dtcap").close();
+  if (!bars) recompute();
+  captureTemplate(taskOf(id));
+};
+
+/* ---- use: make the tasks ---- */
+let tplUsing = null;
+function openUseTemplate(tp){
+  if (!tp.items.length) return note("This template has no tasks in it yet.", {warn:true});
+  tplUsing = tp.id;
+  const cal_ = tplCal(), today = todayDate(), roles = tplRoles(tp), known = allPeople();
+  el("tpTitle").textContent = `Use “${tp.name}”`;
+  el("tpInfo").textContent = tp.desc || "";
+  el("tpStart").value = iso(cal_.work(today) ? today : cal_.toDate(cal_.toOffset(iso(today))));
+  el("tpRoles").innerHTML = roles.length ? roles.map(r => `<div class="fld"><label>${esc(r)}</label><input data-role="${esc(r)}"
+      list="dlTpPeople" autocomplete="off" placeholder="Nobody yet" value="${esc(known.includes(r) ? r : "")}"
+      aria-label="Who is ${esc(r)}"></div>`).join("")
+    : `<p class="hint">It has no roles, so its tasks start with nobody on them.</p>`;
+  el("dlTpPeople").innerHTML = known.map(n => `<option value="${esc(n)}">`).join("");
+  el("tpGroupOn").checked = true; el("tpGroup").value = tp.name; el("tpGroup").disabled = false;
+  el("tpUnder").value = ""; el("dlTpUnder").innerHTML = taskChoices(() => true).html;
+  el("tpSprint").innerHTML = `<option value="">No sprint</option>` + openSprints().map(s =>
+    `<option value="${esc(s.id)}">${esc(s.name)} · ${esc(fmtDay(s.start))} – ${esc(fmtDay(s.end))}</option>`).join("");
+  el("tpSprintRow").hidden = !openSprints().length;
+  paintUseSays();
+  el("dtpl").showModal();
+}
+function paintUseSays(){
+  const tp = tplOf(tplUsing), v = el("tpStart").value; if (!tp) return;
+  if (!isDay(v)){ el("tpSays").textContent = "Pick the day it starts."; return; }
+  const cal_ = tplCal(), a0 = cal_.toOffset(v), tt = tplTimes(tp), nl = tp.items.reduce((a, x) => a + (x.deps || []).length, 0);
+  el("tpSays").textContent = `Makes ${plural(tp.items.length, "task")}${el("tpGroupOn").checked ? " under a new group" : ""}${
+    nl ? `, with ${plural(nl, "link")}` : ""}: ${fmtDate(cal_.toDate(a0 + tt.first))} to ${fmtDate(cal_.toDate(a0 + tt.last))} as planned, `
+    + `${plural(tt.span, "working day")}.`;
+}
+el("tpStart").addEventListener("input", paintUseSays);
+el("tpGroupOn").onchange = () => { el("tpGroup").disabled = !el("tpGroupOn").checked; paintUseSays(); };
+el("tpOk").onclick = () => {
+  const tp = tplOf(tplUsing); if (!tp) return;
+  const start = el("tpStart").value;
+  if (!isDay(start)) return note("Pick the day it starts.", {warn:true});
+  const who = new Map([...el("tpRoles").querySelectorAll("[data-role]")].map(n => [n.dataset.role, n.value.trim()]));
+  const uv = el("tpUnder").value.trim(), under = uv ? pickTask(uv, taskChoices(() => true).map) : null;
+  if (under === undefined) return;
+  const made = useTemplate(tp, {start, who, group: el("tpGroupOn").checked ? (el("tpGroup").value.trim() || tp.name) : null,
+                               under, sprint: el("tpSprint").value || null});
+  if (made) el("dtpl").close();
+};
+
+/* The tasks, made in one commit, after the scheduler has seen them: made
+   under an existing task, they join its links' reach (invariant 2), which
+   could close a loop, as a move could. Returns the tasks, or null. */
+function useTemplate(tp, {start, who, group, under, sprint}){
+  const cal_ = tplCal(), a0 = cal_.toOffset(start), now = new Date().toISOString();
+  const tasks = [], deps = [], ids = new Map();
+  const blank = (title, parent) => ({id: newId(), key: nextKey(tasks), title, parent_id: parent ?? null, status: S.statuses[0],
+    status_since: now, assignee: null, duration: 1, points: null, pct: null, not_before: null, actual_start: null,
+    actual_finish: null, repeat: null, custom: {}});
+  let parent = under ?? null;
+  if (group){ const g = blank(group, parent); tasks.push(g); parent = g.id; }
+  for (const x of tp.items){
+    const t = blank(x.title, parent);
+    t.duration = tplDur(x);
+    t.points = x.pts ?? null;
+    if (x.when) t.when = x.when;
+    if (x.importance) t.importance = x.importance;
+    // at its offset; one that only follows its links is left to them
+    if (x.offset || !(x.deps || []).length) t.not_before = iso(cal_.toDate(a0 + (x.offset || 0)));
+    const names = [...new Set(rolesOf(x).map(r => who.get(r)).filter(Boolean))];
+    if (names.length) setPeople(t, names.map(n => ({name: n, pct: Math.round(100 / names.length)})));
+    if (sprint) t.sprint = sprint;
+    ids.set(x.id, t.id); tasks.push(t);
+  }
+  tp.items.forEach((x, i) => { if (group) tasks[i + 1].pos = (i + 1) * 10;
+    for (const d of x.deps || []) if (ids.has(d.on)) deps.push({id: newId(), pred: ids.get(d.on), succ: ids.get(x.id), kind: d.kind, lag: d.lag || 0}); });
+  try { cpm([...S.tasks, ...tasks], [...S.deps, ...deps], cal_); }
+  catch (e) { note(`Can't make them there: ${e.message}`, {warn:true}); return null; }
+  const was = under != null ? taskOf(under) : null, becomes = was && !kidsOf(was.id).length;
+  commit(`Use template ${tp.name}`, () => { for (const t of tasks) S.tasks.push(t); for (const d of deps) S.deps.push(d); });
+  if (under != null) collapsed.delete(under);
+  sel = tasks[0].id; setView("gantt");                     // where they landed, the first of them open
+  note(`Made ${plural(tasks.length, "task")} from “${tp.name}”: ${tasks[0].key} to ${tasks.at(-1).key}.`
+     + (becomes ? ` ${was.key} is a group now: its dates come from what is under it.` : ""), {undo:true});
+  return tasks;
+}
+
+/* ---- a file of templates: out, and in ---- */
+el("tplExport").onclick = () => {
+  if (!(S.templates || []).length) return note("There are no templates to export.", {warn:true});
+  dl(`templates-${stampName(new Date())}.json`,
+     JSON.stringify({format: "pm-templates", version: 1, exported: new Date().toISOString(), templates: S.templates}, null, 1),
+     "application/json");
+};
+el("tplImport").onclick = () => el("tplFile").click();
+el("tplFile").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  let doc;
+  try { doc = JSON.parse(await f.text()); } catch { return note("That file is not valid JSON.", {warn:true}); }
+  // a templates file, or a whole project file: its templates
+  const list = doc?.format === "pm-templates" ? doc.templates : doc?.S?.templates;
+  if (!Array.isArray(list) || !list.length) return note("There are no templates in that file.", {warn:true});
+  const bad = checkTemplates(list);
+  if (bad.length) return note(`Those templates can't be brought in, so nothing was changed: ${refusal(bad)}.`, {warn:true});
+  const names = new Set((S.templates || []).map(x => x.name));
+  const add = list.map(tp => copyTemplate(tp, names.has(tp.name) ? `${tp.name} (imported)` : tp.name));
+  commit(`Import ${plural(add.length, "template")}`, () => { S.templates = [...(S.templates || []), ...add]; });
+  tplSel = add[0].id; render();
+  note(`Brought in ${plural(add.length, "template")}.`, {undo:true});
+};
+
+/* ------------------------------------------------------------------ *
+ * Metrics: how the work is going, read from the plan and its history.
+ *
+ * Display only, like the load (invariant 12): nothing here changes a task
+ * but the one thing it asks -- how much work a finished task really was.
+ * Task counts stand beside points everywhere, since much of a plan may carry
+ * no points at all.
+ *
+ * The past comes from the change log. valueAt() gives a task's field as it
+ * was at a moment: the "from" of its first change after then, or what it
+ * is now. That is how the burn-down knows what was left on each day --
+ * points, % done, which sprint -- without keeping any history of its own.
+ * When a task finished is its actual finish, typed in or not, and time in
+ * each status comes from the log's status changes and their status_since.
+ * Tasks made before the log began count as there from the start; deleted
+ * ones are gone from every chart.
+ *
+ * The skill assessor is the one input: when a task with points reaches a
+ * done column, a card asks whether it was lighter than its points, about
+ * as expected, or heavier (t.loe), and can be skipped. Not for a repeating
+ * chore, which would ask every week, nor for several finished at once.
+ * Metrics sets it against each person, and against any pick-list field.
+ * ------------------------------------------------------------------ */
+const LOE = {light: "Lighter", normal: "As expected", heavy: "Heavier"};
+const LOE_SCORE = {light: -1, normal: 0, heavy: 1};
+const LOE_LONG = {light: "Lighter than its points", normal: "As expected", heavy: "Heavier than its points"};
+const pref = (k, ok, dflt) => { try { const v = localStorage.getItem(k); return v != null && ok(v) ? v : dflt; } catch { return dflt; } };
+const keep = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch { /* storage blocked */ } };
+let burnPick = pref("pm.burn", () => true, "all");
+let burnUnit = pref("pm.burnUnit", v => v === "tasks", "pts");
+let skillBy = pref("pm.skillBy", () => true, "");
+
+const leafTasks = () => { const ps = parentSet(); return S.tasks.filter(t => !ps.has(t.id)); };
+const ptsLeft = t => t.points > 0 ? t.points * (1 - Math.min(100, Math.max(0, +t.pct || 0)) / 100) : 0;
+const openLeaf = t => { const b = bars?.get(t.id); return !!b && !b.finished && !isDone(t); };
+const nPts = (n, p) => `${n} task${n === 1 ? "" : "s"}${p > PLAN_EPS ? ` · ${fmtLoad(p)} pts` : ""}`;
+
+/* ---- the log, as each task's history ---- */
+function taskHistory(){
+  const created = new Map(), changes = new Map();
+  for (const txn of LOG){
+    const at = +new Date(txn.at);
+    for (const c of txn.changes){
+      if (cE(c) !== "task") continue;
+      if (cOp(c) === "add"){ if (!(created.get(c.id) <= at)) created.set(c.id, at); }
+      else if (cOp(c) === "upd") (changes.get(c.id) ?? changes.set(c.id, []).get(c.id)).push({at, field: c.field, from: c.from});
+    }
+  }
+  for (const l of changes.values()) l.sort((a, b) => a.at - b.at);        // merged logs are not in time order
+  return {created, changes};
+}
+function valueAt(H, t, field, at){
+  for (const c of H.changes.get(t.id) || []) if (c.field === field && c.at > at) return c.from;
+  return t[field];
+}
+
+/* Everything finished, when: a done task on its finish (or the day it came
+   into its column), a repeating one on each of its done dates. */
+function completions(){
+  const out = [];
+  for (const t of leafTasks()){
+    for (const d of t.done_dates || []) out.push({t, date: d});
+    if (isDone(t)){ const d = finishedOn(t); if (d) out.push({t, date: d}); }
+  }
+  return out;
+}
+const doneIn = (list, from, to) => list.filter(c => c.date >= from && c.date <= to);
+const sumPts = list => list.reduce((a, c) => a + (c.t.points > 0 ? c.t.points : 0), 0);
+
+/* ---- the burn-down's targets, and what each one is ---- */
+// every leaf upstream of these, along links (a link onto a group is onto its leaves: invariant 2)
+function upstream(ids){
+  const kids = childMap(), leavesOf = id => { const o = [], st = [id];
+    while (st.length){ const n = st.pop(), ks = kids.get(n) || []; ks.length ? st.push(...ks.map(k => k.id)) : o.push(n); } return o; };
+  const preds = new Map();
+  for (const d of S.deps) for (const s of leavesOf(d.succ)) for (const p of leavesOf(d.pred))
+    (preds.get(s) ?? preds.set(s, new Set()).get(s)).add(p);
+  const out = new Set(ids), todo = [...ids];
+  while (todo.length) for (const p of preds.get(todo.pop()) || []) if (!out.has(p)){ out.add(p); todo.push(p); }
+  return out;
+}
+function burnTargets(){
+  const out = [{k: "all", label: "The whole project, to its planned finish"}];
+  if (filtering()) out.push({k: "filter", label: "What the filter shows, to its planned finish"});
+  for (const s of openSprints()) out.push({k: `s:${s.id}`, label: `${s.name}${s.state === "active" ? " (active)" : ""}, to its end, ${fmtDay(s.end)}`});
+  for (const k of S.keyDates || []) out.push({k: `k:${k.id}`, label: `Key date: ${k.name}, ${fmtDate(k.date)}`});
+  for (const t of leafTasks()) if (t.duration === 0 && openLeaf(t) && !bars.get(t.id).unscheduled)
+    out.push({k: `m:${t.id}`, label: `Milestone: ${num(t)} ${t.title}, ${fmtDate(bars.get(t.id).start)}`});
+  return out;
+}
+/* A target: the tasks it counts (for a sprint, whichever were in it that
+   day), its window's first day and its date. */
+function burnScope(k){
+  const leaves = leafTasks(), today = todayDate(), back = addD(today, -CFG.metrics.burnBackDays);
+  const from = D(S.origin) > back ? D(S.origin) : back;
+  const finish = ts => { const fs = ts.map(t => bars.get(t.id)).filter(b => b && !b.unscheduled && !b.finished).map(b => +b.finish);
+                         return fs.length ? new Date(Math.max(...fs)) : today; };
+  if (k.startsWith("s:")){
+    const s = S.sprints.find(x => x.id === k.slice(2)); if (!s) return null;
+    return {name: s.name, tasks: leaves, sprint: s.id, from: D(s.start), to: D(s.end)};
+  }
+  let ts = leaves;
+  if (k === "filter"){ const f = filterSets(); ts = f ? leaves.filter(t => f.self.has(t.id)) : leaves; }
+  else if (k.startsWith("k:")){
+    const kd = (S.keyDates || []).find(x => x.id === k.slice(2)); if (!kd) return null;
+    const byId = new Map(S.tasks.map(t => [t.id, t]));
+    const dueHere = t => { for (let n = t; n; n = n.parent_id != null ? byId.get(n.parent_id) : null) if (n.due_key === kd.id) return true; return false; };
+    const set = upstream(leaves.filter(dueHere).map(t => t.id));
+    return {name: kd.name, tasks: leaves.filter(t => set.has(t.id)), from, to: D(kd.date)};
+  } else if (k.startsWith("m:")){
+    const m = taskOf(k.slice(2)), b = m && bars.get(m.id); if (!b) return null;
+    const set = upstream([m.id]); set.delete(m.id);
+    return {name: `${num(m)} ${m.title}`, tasks: leaves.filter(t => set.has(t.id)), from, to: b.start};
+  }
+  return {name: k === "filter" ? "what the filter shows" : "the project", tasks: ts, from, to: finish(ts)};
+}
+/* What was left on each day from the window's first to today: points (or
+   tasks) not finished by that day's end, less their % done then. A
+   repeating task counts as done in the window once it has a done date in
+   it: it never sits in Done, it comes straight back. */
+function burnSeries(sc, H, unit){
+  const today = todayDate(), end = +today, first = iso(sc.from), out = [];
+  for (let d = sc.from; +d <= end; d = addD(d, 1)){
+    const T = +d + DAY - 1, day = iso(d);
+    let v = 0;
+    for (const t of sc.tasks){
+      if ((H.created.get(t.id) ?? -Infinity) > T) continue;                  // not made yet
+      if (sc.sprint && valueAt(H, t, "sprint", T) !== sc.sprint) continue;    // not in the sprint that day
+      if (t.repeat && (t.done_dates || []).some(x => x >= first && x <= day)) continue;
+      const af = t.actual_finish || (isDone(t) ? finishedOn(t) : null);          // when it finished, if it has
+      if (af && af <= day) continue;
+      if (unit === "tasks"){ v++; continue; }
+      const p = valueAt(H, t, "points", T), pct = valueAt(H, t, "pct", T);
+      if (p > 0) v += p * (1 - Math.min(100, Math.max(0, +pct || 0)) / 100);
+    }
+    out.push({d, v});
+  }
+  return out;
+}
+function burnChart(series, sc){
+  const W = 640, H = 210, L = 38, R = 12, T = 12, B = 26, today = todayDate();
+  const start = sc.from, end = new Date(Math.max(+sc.to, +today)), days = Math.max(1, (end - start) / DAY);
+  const v0 = series[0]?.v ?? 0, max = Math.max(1, v0, ...series.map(p => p.v));
+  const X = d => L + (d - start) / DAY / days * (W - L - R), Y = v => T + (1 - v / max) * (H - T - B);
+  const line = series.map((p, i) => `${i ? "L" : "M"}${X(p.d).toFixed(1)} ${Y(p.v).toFixed(1)}`).join(" ");
+  const lab = (x, txt, cls = "") => `<text x="${x.toFixed(1)}" y="${H - 8}" class="bx ${cls}">${esc(txt)}</text>`;
+  return `<svg class="burn" viewBox="0 0 ${W} ${H}" role="img" aria-label="What is left each day, against a straight line to ${esc(fmtDate(sc.to))}">
+    <line class="axis" x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}"/>
+    <text x="${L - 6}" y="${Y(max) + 4}" class="by">${esc(fmtLoad(max))}</text><text x="${L - 6}" y="${Y(0) + 4}" class="by">0</text>
+    <line class="ideal" x1="${X(start)}" y1="${Y(v0)}" x2="${X(sc.to)}" y2="${Y(0)}"><title>A straight line from what there was to nothing, by ${esc(fmtDate(sc.to))}</title></line>
+    <line class="tgt" x1="${X(sc.to)}" x2="${X(sc.to)}" y1="${T}" y2="${Y(0)}"/>
+    <line class="tday" x1="${X(today)}" x2="${X(today)}" y1="${T}" y2="${Y(0)}"/>
+    ${series.length ? `<path class="act" d="${line}"/><circle class="act" cx="${X(series.at(-1).d)}" cy="${Y(series.at(-1).v)}" r="3.5"/>` : ""}
+    ${lab(X(start), fmtDate(start), "first")}${+sc.to !== +today ? lab(X(sc.to), fmtDate(sc.to), `tgt${+sc.to >= +end ? " last" : ""}`) : ""}${
+      lab(X(today), "today", `tday${+today >= +end && +sc.to < +today ? " last" : ""}`)}
+  </svg>`;
+}
+
+/* ---- time in each column, from the log's status changes ---- */
+function statusTimes(H){
+  const now = Date.now(), per = new Map();
+  const add = (s, ms) => { if (!(ms > 0) || !S.statuses.includes(s) || S.statusCfg[s]?.done) return;
+    const x = per.get(s) ?? per.set(s, {ms: 0, n: 0}).get(s); x.ms += ms; x.n++; };
+  for (const t of leafTasks()){
+    const all = H.changes.get(t.id) || [], ch = all.filter(c => c.field === "status");
+    let at = H.created.get(t.id) ?? null;
+    for (const c of ch){
+      // it came into that column when the status_since this change replaced says
+      const ss = all.find(x => x.field === "status_since" && x.at === c.at)?.from, from = ss ? +new Date(ss) : at;
+      if (from != null) add(c.from, c.at - from);
+      at = c.at;
+    }
+    const since = t.status_since ? +new Date(t.status_since) : at;             // where it is now, so far
+    if (since != null) add(t.status, now - since);
+  }
+  return per;
+}
+
+/* ---- the skill assessor: effort against points ---- */
+function verdict(x){
+  if (x.n < CFG.metrics.judgeMin) return {text: "too few to say", cls: ""};
+  const a = x.w ? x.s / x.w : 0;
+  return a <= -CFG.metrics.verdictAt ? {text: "quicker than estimated", cls: "quick"}
+       : a >= CFG.metrics.verdictAt ? {text: "slower than estimated", cls: "slow"} : {text: "about as estimated", cls: "even"};
+}
+function skillTable(){
+  const f = S.fields.find(x => x.name === skillBy && x.kind === "select");
+  const judged = leafTasks().filter(t => LOE_SCORE[t.loe] != null && t.points > 0);
+  const cell = () => ({n: 0, s: 0, w: 0, light: 0, normal: 0, heavy: 0});
+  const rows = new Map();
+  for (const t of judged) for (const {name, f: share} of sharesOf(t)){
+    const r = rows.get(name) ?? rows.set(name, {all: cell(), by: new Map()}).get(name);
+    const put = x => { x.n++; x.s += LOE_SCORE[t.loe] * t.points * share; x.w += t.points * share; x[t.loe]++; };
+    put(r.all);
+    if (f){ const v = t.custom?.[f.name] || "—"; put(r.by.get(v) ?? r.by.set(v, cell()).get(v)); }
+  }
+  const picker = `<label class="bspr">Against <select id="mSkillBy" class="filt">
+      <option value="">each person</option>${S.fields.filter(x => x.kind === "select").map(x =>
+      `<option value="${esc(x.name)}"${x.name === skillBy ? " selected" : ""}>each person and ${esc(x.label)}</option>`).join("")}</select></label>`;
+  if (!rows.size) return picker + `<p class="hint">Nothing judged yet. When a task with points is done, a card asks whether it
+    was lighter than its points, as expected, or heavier; or set Effort in its task panel.</p>`;
+  const vals = f ? [...(f.options || []), "—"].filter(v => [...rows.values()].some(r => r.by.has(v))) : [];
+  const mix = x => `<span class="lmix" title="${x.light} lighter, ${x.normal} as expected, ${x.heavy} heavier">${
+    ["light", "normal", "heavy"].map(k => x[k] ? `<i class="${k}" style="flex:${x[k]}"></i>` : "").join("")}</span>`;
+  const vcell = x => { if (!x) return `<td class="mnone">—</td>`; const v = verdict(x);
+    return `<td class="mv ${v.cls}" title="${x.n} judged: ${x.light} lighter, ${x.normal} as expected, ${x.heavy} heavier">${esc(v.text)}</td>`; };
+  return picker + `<table class="mtab"><thead><tr><th>Person</th><th class="num">Judged</th><th>Lighter · as expected · heavier</th>
+      <th>Overall</th>${vals.map(v => `<th>${esc(v)}</th>`).join("")}</tr></thead><tbody>${[...rows].sort((a, b) => a[0].localeCompare(b[0])).map(([name, r]) =>
+      `<tr><th scope="row">${avatar(name)} ${esc(name)}</th><td class="num">${r.all.n}</td><td>${mix(r.all)}</td>${vcell(r.all)}${
+        vals.map(v => vcell(r.by.get(v))).join("")}</tr>`).join("")}</tbody></table>
+    <p class="hint">Weighed by points: a heavy 8-point task says more than a light 1-pointer. A verdict needs
+      ${CFG.metrics.judgeMin} judged tasks.</p>`;
+}
+
+/* ---- the view ---- */
+function renderMetricsView(){
+  el("pname").textContent = S.name || "Untitled project";
+  document.title = S.name || "Schedule";
+  el("nomatch").hidden = true;
+  el("empty").hidden = S.tasks.length > 0;
+  if (!S.tasks.length){ el("metrics").innerHTML = ""; el("stat").textContent = "empty project"; return syncUndoButtons(); }
+  if (!recompute()) return;
+  const H = taskHistory(), leaves = leafTasks(), open = leaves.filter(openLeaf), today = todayDate(), td = iso(today);
+  const done = completions(), pace = CFG.metrics.paceWeeks, recent = doneIn(done, iso(addD(today, -7 * pace + 1)), td);
+  const scopePts = leaves.reduce((a, t) => a + (t.points > 0 ? t.points : 0), 0), leftPts = open.reduce((a, t) => a + ptsLeft(t), 0);
+  const fin = open.map(t => bars.get(t.id)).filter(b => !b.unscheduled).map(b => +b.finish);
+  const planned = fin.length ? new Date(Math.max(...fin)) : null;
+  const perWeek = sumPts(recent) / pace;
+  const atPace = perWeek > PLAN_EPS && leftPts > PLAN_EPS ? addD(today, Math.ceil(leftPts / perWeek * 7)) : null;
+  const pops = recent.filter(c => c.t.popup), crit = open.filter(t => bars.get(t.id).critical).length;
+  const issues = healthIssues(), np = issues.filter(x => x.level === "problem").length, nw = issues.length - np;
+  const tile = (head, big, small, lvl = "", act = "") => `<div class="mtile"${lvl ? ` data-level="${lvl}"` : ""}${act ? ` data-act="${act}" role="button" tabindex="0"` : ""}>
+      <span class="mth">${head}</span><b>${big}</b><span class="mts">${small}</span></div>`;
+  const tiles = [
+    tile("Scope", esc(nPts(leaves.length, scopePts)), "every task, finished or not"),
+    tile("Done", esc(nPts(done.length, sumPts(done))), esc(`${nPts(recent.length, sumPts(recent))} in the last ${pace} weeks`)),
+    tile("Still to do", esc(nPts(open.length, leftPts)), esc(`${open.filter(t => !(t.points > 0)).length} without points`)),
+    tile("Finish", planned ? esc(fmtDate(planned)) : "—", esc(planned ? (atPace ? `as planned; ${fmtDate(atPace)} at the pace of the last ${pace} weeks`
+      : "as planned; no pace yet to forecast from") : "nothing left with dates")),
+    tile("Pop-ups", recent.length ? `${Math.round(pops.length / recent.length * 100)}%` : "—",
+      esc(recent.length ? `${pops.length} of the ${recent.length} tasks done in the last ${pace} weeks` : `nothing done in the last ${pace} weeks`)),
+    tile("Critical", String(crit), crit === 1 ? "task that can't slip" : "tasks that can't slip", crit ? "warn" : ""),
+    tile("Health", np || nw ? String(np + nw) : "✓", np || nw ? esc(`${[np && `${np} problem${np === 1 ? "" : "s"}`, nw && `${nw} warning${nw === 1 ? "" : "s"}`]
+      .filter(Boolean).join(" · ")}: click for the list`) : "nothing wrong", np ? "bad" : nw ? "warn" : "", "health"),
+  ].join("");
+
+  // burn-down
+  const targets = burnTargets();
+  if (!targets.some(x => x.k === burnPick)) burnPick = "all";
+  const sc = burnScope(burnPick), series = sc ? burnSeries(sc, H, burnUnit) : [];
+  const leftNow = series.at(-1)?.v ?? 0, wdLeft = sc ? cal.toOffset(iso(addD(sc.to, 1))) - cal.toOffset(td) : 0;
+  const unitName = burnUnit === "tasks" ? "tasks" : "pts";
+  const noPts = sc && burnUnit === "pts" ? sc.tasks.filter(t => openLeaf(t) && !(t.points > 0) && (!sc.sprint || t.sprint === sc.sprint)).length : 0;
+  const need = !sc ? "" : leftNow <= PLAN_EPS ? `Nothing left for ${sc.name}.`
+    : wdLeft <= 0 ? `${fmtLoad(leftNow)} ${unitName} left, and ${fmtDate(sc.to)} has passed.`
+    : `${fmtLoad(leftNow)} ${unitName} left: ${fmtLoad(leftNow / wdLeft)} ${unitName} a working day to finish by ${fmtDate(sc.to)}, `
+      + `${wdLeft} working day${wdLeft === 1 ? "" : "s"} away.`;
+  const burn = `<div class="mbar"><select id="mBurn" class="filt" aria-label="Burn down to">${targets.map(x =>
+      `<option value="${esc(x.k)}"${x.k === burnPick ? " selected" : ""}>${esc(x.label)}</option>`).join("")}</select>
+      <div class="grp" id="mUnit" role="group" aria-label="Count"><button type="button" data-u="pts" aria-pressed="${burnUnit === "pts"}">Points</button>
+      <button type="button" data-u="tasks" aria-pressed="${burnUnit === "tasks"}">Tasks</button></div></div>
+    <div class="mburn">${sc ? burnChart(series, sc) : ""}<div class="mside">
+      <p class="mneed">${esc(need)}</p>
+      <p class="mkey"><i class="k act"></i> left each day <i class="k ideal"></i> a straight line to the date
+        <i class="k tday"></i> today <i class="k tgt"></i> the date</p>
+      ${noPts ? `<p class="hint">${noPts} of its task${noPts === 1 ? "" : "s"} ha${noPts === 1 ? "s" : "ve"} no points, so the points line leaves ${noPts === 1 ? "it" : "them"} out: Tasks counts ${noPts === 1 ? "it" : "them"}.</p>` : ""}
+      <p class="hint">A sprint counts what was in it each day; anything else, what it holds now. Before the change log
+        began, a task counts as it is now, less what it has done.</p></div></div>`;
+
+  // weekly throughput
+  const mon = D(weekOf(today)), weeks = [];
+  for (let i = CFG.metrics.weeks - 1; i >= 0; i--){ const a = addD(mon, -7 * i), z = addD(a, 6), c = doneIn(done, iso(a), iso(z));
+    weeks.push({a, n: c.length, p: sumPts(c), pop: c.filter(x => x.t.popup).length}); }
+  const wmax = Math.max(1, ...weeks.map(w => w.n)), BW = 44, GAP = 12, WH = 90;
+  const thru = `<svg class="thru" viewBox="0 -18 ${weeks.length * (BW + GAP)} ${WH + 38}" role="img" aria-label="Tasks done each week">${weeks.map((w, i) => {
+    const x = i * (BW + GAP), h = w.n / wmax * WH;
+    return `<g><title>Week of ${esc(fmtDate(w.a))}: ${esc(nPts(w.n, w.p))}${w.pop ? `, ${w.pop} of them pop-ups` : ""}</title>
+      <rect x="${x}" y="${WH - h}" width="${BW}" height="${Math.max(0, h)}" rx="6"/>
+      <text x="${x + BW / 2}" y="${WH - h - 4}" class="tv">${w.n}${w.p > PLAN_EPS ? ` · ${fmtLoad(w.p)}` : ""}</text>
+      <text x="${x + BW / 2}" y="${WH + 14}" class="tl">${esc(fmtDate(w.a))}</text></g>`; }).join("")}</svg>
+    <p class="hint">Tasks done each week, with their points, over the last ${CFG.metrics.weeks} weeks; a repeating task counts each time.</p>`;
+
+  // time in each column
+  const per = statusTimes(H), cols = S.statuses.filter(s => !S.statusCfg[s]?.done);
+  const days = x => x.ms / x.n / DAY, tmax = Math.max(1, ...cols.map(s => per.get(s) ? days(per.get(s)) : 0));
+  const times = cols.map(s => { const x = per.get(s);
+    return `<div class="mrow"><span class="mlab">${esc(s)}</span><i class="lb"><i style="--f:${x ? days(x) / tmax : 0}"></i></i>
+      <span class="mval">${x ? `${fmtLoad(days(x))} d` : "—"}</span><span class="msub">${x ? `${x.n} stay${x.n === 1 ? "" : "s"}` : "none yet"}</span></div>`; }).join("")
+    + `<p class="hint">How long a task sits in each column, on average, from the history of moves: a task there now counts so far.</p>`;
+
+  // what is left, per person
+  const who = new Map();
+  for (const t of open){ const sh = sharesOf(t), list = sh.length ? sh : [{name: "", f: 1}];
+    for (const {name, f} of list){ const x = who.get(name) ?? who.set(name, {n: 0, p: 0}).get(name); x.n++; x.p += ptsLeft(t) * f; } }
+  const pmax = Math.max(1, ...[...who.values()].map(x => x.p));
+  const people = [...who].sort((a, b) => (a[0] === "") - (b[0] === "") || b[1].p - a[1].p || a[0].localeCompare(b[0])).map(([name, x]) =>
+    `<div class="mrow"><span class="mlab">${name ? `${avatar(name)} ${esc(name)}` : "<i>Nobody yet</i>"}</span><i class="lb"><i style="--f:${x.p / pmax}"></i></i>
+      <span class="mval">${esc(fmtLoad(x.p))} pts</span><span class="msub">${x.n} task${x.n === 1 ? "" : "s"}</span></div>`).join("")
+    || `<p class="hint">Nothing left to do.</p>`;
+
+  // milestones and key dates
+  const ms = leaves.filter(t => t.duration === 0).map(t => { const b = bars.get(t.id), bl = S.baseline?.bars?.[t.id];
+    const state = isDone(t) || b.finished ? ["done", "done"] : b.unscheduled ? ["no date yet", ""] : dueState(t) === "late" ? ["late", "bad"]
+      : b.slack < 0 ? [`misses its deadline by ${-b.slack} d`, "bad"] : [`${b.slack} d to spare`, b.slack === 0 ? "warn" : "ok"];
+    const slip = bl && !b.unscheduled ? slipDays(b.start, bl[1]) : 0;
+    return {date: b.unscheduled ? "9999" : iso(b.start), html: `<div class="mrow mms"><span class="mlab"><span class="key">${esc(num(t))}</span> ${esc(t.title)}</span>
+      <span class="mval">${b.unscheduled ? "—" : esc(fmtDate(b.start))}</span><span class="mst" data-s="${state[1]}">${esc(state[0])}</span>
+      <span class="msub">${slip ? `${slip > 0 ? "+" : "−"}${Math.abs(slip)} d on the baseline` : ""}</span></div>`}; });
+  const ex = schedExtra();
+  for (const k of S.keyDates || []){
+    const due = leaves.filter(t => ex.due.get(t.id) === k.date && openLeaf(t)), risk = due.filter(t => bars.get(t.id).slack < 0).length;
+    ms.push({date: k.date, html: `<div class="mrow mms"><span class="mlab"><span class="kdk">◆</span> ${esc(k.name)}</span>
+      <span class="mval">${esc(fmtDate(k.date))}</span><span class="mst" data-s="${risk ? "bad" : due.length ? "ok" : ""}">${risk ? `${risk} of ${due.length} won't make it`
+        : due.length ? `${due.length} due, on course` : "nothing due by it"}</span><span class="msub">key date</span></div>`});
+  }
+  ms.sort((a, b) => a.date.localeCompare(b.date));
+
+  el("metrics").innerHTML = `<div class="mtiles">${tiles}</div>
+    <div class="mgrid">
+      <section class="mpanel mwide"><h3>Burn-down</h3>${burn}</section>
+      <section class="mpanel"><h3>Done each week</h3>${thru}</section>
+      <section class="mpanel"><h3>Time in each column</h3>${times}</section>
+      <section class="mpanel"><h3>Left to do, per person</h3>${people}</section>
+      <section class="mpanel"><h3>Milestones and key dates</h3>${ms.map(x => x.html).join("") || `<p class="hint">No milestones (tasks of 0 days) or key dates.</p>`}</section>
+      <section class="mpanel mwide"><h3>Effort against points</h3>${skillTable()}</section>
+    </div>`;
+  el("stat").innerHTML = `${esc(nPts(open.length, leftPts))} left of ${esc(nPts(leaves.length, scopePts))}`;
+  syncUndoButtons();
+}
+el("metrics").addEventListener("change", e => {
+  if (e.target.id === "mBurn"){ burnPick = e.target.value; keep("pm.burn", burnPick); render(); }
+  if (e.target.id === "mSkillBy"){ skillBy = e.target.value; keep("pm.skillBy", skillBy); render(); }
+});
+el("metrics").addEventListener("click", e => {
+  const u = e.target.closest("[data-u]")?.dataset.u;
+  if (u){ burnUnit = u; keep("pm.burnUnit", u === "tasks" ? "tasks" : ""); return render(); }
+  if (e.target.closest('[data-act="health"]')) el("health").click();
+});
+el("metrics").addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches('[data-act="health"]')){ e.preventDefault(); el("health").click(); }
+});
+
+/* ---- asking how much work it was ---- */
+let loeQueue = [];
+// called by setStatus() for a task reaching a done column; one at a time is asked, several at once are not
+function loeAsk(t){
+  if (t.repeat || !(t.points > 0)) return;
+  loeQueue.push(t.id);
+  if (loeQueue.length === 1) queueMicrotask(() => { const q = loeQueue; loeQueue = []; if (q.length === 1) showLoeCard(q[0]); });
+}
+function showLoeCard(id){
+  const t = taskOf(id); if (!t) return;
+  const box = el("remind");
+  box.querySelector(".loec")?.remove();
+  const c = document.createElement("div");
+  c.className = "loec"; c.dataset.id = id;
+  c.innerHTML = `<div class="rmt">Done: ${esc(num(t))} ${esc(t.title)}</div>
+    <div class="rmn">How much work was it, for its ${esc(fmtPts(t.points))} points?</div>
+    <div class="rmb">${Object.entries(LOE).map(([k, l]) => `<button type="button" data-loe="${k}">${l}</button>`).join("")}
+      <button type="button" data-loe="" aria-label="Skip" title="Skip: its task panel can say later">✕</button></div>`;
+  box.appendChild(c); box.hidden = false;
+  clearTimeout(showLoeCard.t);
+  showLoeCard.t = setTimeout(() => { c.remove(); box.hidden = !box.children.length; }, CFG.metrics.askMs);
+}
+el("remind").addEventListener("click", e => {
+  const c = e.target.closest(".loec"), b = e.target.closest("button[data-loe]"); if (!c || !b) return;
+  const t = taskOf(c.dataset.id), v = b.dataset.loe;
+  c.remove(); el("remind").hidden = !el("remind").children.length;
+  if (!t || !LOE[v]) return;
+  commit(`Effort on ${t.key}: ${LOE[v].toLowerCase()}`, () => { t.loe = v; });
+  render(); drawer();
+});
 /* ------------------------------------------------------------------ *
  * Drag: move sets a not-before constraint, resize sets duration.
  * ------------------------------------------------------------------ */
@@ -6185,11 +7561,11 @@ function grab(node, t, mode){
         if (was.actual_start){
           // a finished task keeps its finish, so its start stops there
           t.actual_start = was.actual_finish && ns > was.actual_finish ? was.actual_finish : ns;
-          if (!was.actual_finish) t.duration = Math.max(1, ef0 - cal.toOffset(t.actual_start));
-        } else if (was.actual_finish) t.duration = Math.max(1, ef0 - cal.toOffset(ns));   // its start is implied, from its duration
+          if (!was.actual_finish) t.duration = days2(Math.max(1, ef0 - cal.toOffset(t.actual_start)));
+        } else if (was.actual_finish) t.duration = days2(Math.max(1, ef0 - cal.toOffset(ns)));   // its start is implied, from its duration
         else {
           t.not_before = ns;
-          t.duration = Math.max(1, ef0 - Math.max(free0, cal.toOffset(ns)));
+          t.duration = days2(Math.max(1, ef0 - Math.max(free0, cal.toOffset(ns))));
         }
       } else if (was.actual_finish) t.actual_finish = shift(was.actual_finish, dd);
       else t.duration = Math.max(0, was.duration + dd);
@@ -6271,6 +7647,64 @@ let folds = (() => { try { return {...FOLD_DEFAULT, ...JSON.parse(localStorage.g
 const isOpen = key => folds[key] ?? true;
 const setFold = (key, open) => { folds[key] = open;
   try { localStorage.setItem("pm.folds", JSON.stringify(folds)); } catch { /* storage blocked */ } };
+/* What one journalled change did, in words, as HTML with every value
+   escaped: a task's panel lists these for the task, and History
+   (history.js) for the whole project. "" for bookkeeping. */
+// with History open, by the keys it knows, deleted tasks' too (history.js)
+const keyOfId = id => { if (histKeys?.has(id)) return esc(histKeys.get(id)); const x = taskOf(id); return esc(x ? num(x) : "?"); };
+// only ever rendered into HTML, so it escapes: these are old/new values
+// of user-entered fields (titles, assignees, custom fields)
+const hfmt = v => v === null || v === undefined || v === ""
+  ? "—" : esc(typeof v === "object" ? JSON.stringify(v) : v);
+// Bookkeeping says nothing to a person: `pos` moves whenever a sibling is
+// re-ordered, `status_since` with every status change.
+const QUIET_FIELDS = new Set(["pos", "cpos", "spos", "status_since"]);
+const FIELD_WORDS = {actual_start:"started", actual_finish:"finished", pct:"% done", not_before:"not before", loe:"effort"};
+// A create or delete has no field, from or to -- it used to print as
+// ": — → —". Say what happened instead.
+function describeChange(c){
+  const op = cOp(c), e = cE(c);
+  // the project's own settings: a list of them changed says which, not two blobs of JSON
+  if (e === "project"){ const what = PROJECT_RULES[c.field]?.[0] ?? c.field;
+    return PROJ_JSON.includes(c.field) ? `settings: ${esc(what)} changed` : `settings: ${esc(what)}: ${hfmt(c.from)} → ${hfmt(c.to)}`; }
+  if (op === "upd" && QUIET_FIELDS.has(c.field)) return "";
+  // a parent is a task id -- 32 hex characters to a person; show its key
+  const where = id => id == null ? "top level" : keyOfId(id);
+  if (op === "upd" && c.field === "parent_id") return `parent: ${where(c.from)} → ${where(c.to)}`;
+  if (op === "upd" && c.field === "repeat") return `repeats: ${esc(repeatName(c.from) || "never")} → ${esc(repeatName(c.to) || "never")}`;
+  if (op === "upd" && c.field === "sprint") return `sprint: ${esc(sprintName(c.from))} → ${esc(sprintName(c.to))}`;
+  if (op === "upd" && c.field === "done_dates"){          // a repeating task finished, or that undone
+    const a = c.from || [], z = c.to || [];
+    return z.length >= a.length ? z.slice(a.length).map(d => `done on ${esc(fmtDate(d))}`).join("<br>") || "done dates changed"
+                                : a.slice(z.length).map(d => `done on ${esc(fmtDate(d))}, taken back`).join("<br>");
+  }
+  if (op === "upd" && c.field === "assignees"){
+    const many = l => Array.isArray(l) && l.length > 1;
+    const who = l => many(l) ? l.map(p => `${esc(p.name)} ${p.pct}%`).join(", ") : "one person";
+    return many(c.from) || many(c.to) ? `shares: ${who(c.from)} → ${who(c.to)}` : "";
+  }
+  if (op === "upd" && (c.field === "not_before" || c.field === "actual_start" || c.field === "actual_finish"))
+    return `${esc(FIELD_WORDS[c.field])}: ${c.from ? esc(fmtDate(c.from)) : "—"} → ${c.to ? esc(fmtDate(c.to)) : "—"}`;
+  // JSON fields read as what changed inside them, not as two blobs of JSON
+  if (op === "upd" && c.field === "attach"){
+    const had = new Set((c.from || []).map(a => a.url)), has = new Set((c.to || []).map(a => a.url));
+    return [...(c.to || []).filter(a => !had.has(a.url)).map(a => `attached “${esc(a.label)}”`),
+            ...(c.from || []).filter(a => !has.has(a.url)).map(a => `removed “${esc(a.label)}”`)].join("<br>")
+           || "attachments changed";
+  }
+  if (op === "upd" && c.field === "custom"){
+    const a = c.from || {}, z = c.to || {}, label = k => S.fields.find(f => f.name === k)?.label || k;
+    return [...new Set([...Object.keys(a), ...Object.keys(z)])]
+      .filter(k => JSON.stringify(a[k]) !== JSON.stringify(z[k]))
+      .map(k => `${esc(label(k))}: ${hfmt(a[k])} → ${hfmt(z[k])}`).join("<br>");
+  }
+  if (op === "upd") return `${esc(FIELD_WORDS[c.field] || c.field)}: ${hfmt(c.from)} → ${hfmt(c.to)}`;
+  const verb = op === "add" ? "added" : "removed";
+  if (e === "task") return op === "add" ? "created" : "deleted";
+  if (e === "comment") return `comment ${verb}: “${esc(c.row.body.length > 60 ? c.row.body.slice(0, 57) + "…" : c.row.body)}”`;
+  return `link ${keyOfId(c.row.pred)} → ${keyOfId(c.row.succ)} ${verb}`;
+}
+
 function drawer(){
   flushEdits();          // never tear a field out of the page mid-edit
   const d = el("drawer");
@@ -6290,57 +7724,8 @@ function drawer(){
   const mine = c => c.id === sel
     || (cE(c) === "comment" && c.row?.task_id === sel)
     || (cE(c) === "dep" && (c.row?.pred === sel || c.row?.succ === sel));
-  // only ever rendered into HTML, so it escapes: these are old/new values
-  // of user-entered fields (titles, assignees, custom fields)
-  const fmt = v => v === null || v === undefined || v === ""
-    ? "—" : esc(typeof v === "object" ? JSON.stringify(v) : v);
   const keyAt = id => { const x = taskOf(id); return esc(x ? num(x) : "?"); };
-  // Bookkeeping says nothing to a person: `pos` moves whenever a sibling is
-  // re-ordered, `status_since` with every status change.
-  const QUIET = new Set(["pos", "cpos", "spos", "status_since"]);
-  const LABEL = {actual_start:"started", actual_finish:"finished", pct:"% done", not_before:"not before"};
-  // A create or delete has no field, from or to -- it used to print as
-  // ": — → —". Say what happened instead.
-  const describe = c => {
-    const op = cOp(c), e = cE(c);
-    if (op === "upd" && QUIET.has(c.field)) return "";
-    // a parent is a task id -- 32 hex characters to a person; show its key
-    const where = id => id == null ? "top level" : keyAt(id);
-    if (op === "upd" && c.field === "parent_id") return `parent: ${where(c.from)} → ${where(c.to)}`;
-    if (op === "upd" && c.field === "repeat") return `repeats: ${esc(repeatName(c.from) || "never")} → ${esc(repeatName(c.to) || "never")}`;
-    if (op === "upd" && c.field === "sprint") return `sprint: ${esc(sprintName(c.from))} → ${esc(sprintName(c.to))}`;
-    if (op === "upd" && c.field === "done_dates"){          // a repeating task finished, or that undone
-      const a = c.from || [], z = c.to || [];
-      return z.length >= a.length ? z.slice(a.length).map(d => `done on ${esc(fmtDate(d))}`).join("<br>") || "done dates changed"
-                                  : a.slice(z.length).map(d => `done on ${esc(fmtDate(d))}, taken back`).join("<br>");
-    }
-    if (op === "upd" && c.field === "assignees"){
-      const many = l => Array.isArray(l) && l.length > 1;
-      const who = l => many(l) ? l.map(p => `${esc(p.name)} ${p.pct}%`).join(", ") : "one person";
-      return many(c.from) || many(c.to) ? `shares: ${who(c.from)} → ${who(c.to)}` : "";
-    }
-    if (op === "upd" && (c.field === "not_before" || c.field === "actual_start" || c.field === "actual_finish"))
-      return `${esc(LABEL[c.field])}: ${c.from ? esc(fmtDate(c.from)) : "—"} → ${c.to ? esc(fmtDate(c.to)) : "—"}`;
-    // JSON fields read as what changed inside them, not as two blobs of JSON
-    if (op === "upd" && c.field === "attach"){
-      const had = new Set((c.from || []).map(a => a.url)), has = new Set((c.to || []).map(a => a.url));
-      return [...(c.to || []).filter(a => !had.has(a.url)).map(a => `attached “${esc(a.label)}”`),
-              ...(c.from || []).filter(a => !has.has(a.url)).map(a => `removed “${esc(a.label)}”`)].join("<br>")
-             || "attachments changed";
-    }
-    if (op === "upd" && c.field === "custom"){
-      const a = c.from || {}, z = c.to || {}, label = k => S.fields.find(f => f.name === k)?.label || k;
-      return [...new Set([...Object.keys(a), ...Object.keys(z)])]
-        .filter(k => JSON.stringify(a[k]) !== JSON.stringify(z[k]))
-        .map(k => `${esc(label(k))}: ${fmt(a[k])} → ${fmt(z[k])}`).join("<br>");
-    }
-    if (op === "upd") return `${esc(LABEL[c.field] || c.field)}: ${fmt(c.from)} → ${fmt(c.to)}`;
-    const verb = op === "add" ? "added" : "removed";
-    if (e === "task") return op === "add" ? "created" : "deleted";
-    if (e === "comment") return `comment ${verb}: “${esc(c.row.body.length > 60 ? c.row.body.slice(0, 57) + "…" : c.row.body)}”`;
-    return `link ${keyAt(c.row.pred)} → ${keyAt(c.row.succ)} ${verb}`;
-  };
-  const hist = [...LOG].reverse().filter(h => !h.merge && h.changes.some(c => mine(c) && describe(c)));
+  const hist = [...LOG].reverse().filter(h => !h.merge && h.changes.some(c => mine(c) && describeChange(c)));
 
   const bl = S.baseline?.bars?.[sel], fslip = bl && !b.unscheduled ? slipDays(b.finish, bl[1]) : 0;
   // a key date to pick, for Starts after and Due by
@@ -6412,7 +7797,8 @@ function drawer(){
         ? `<p class="hint" style="margin:2px 0 0">The shares add up to ${shSum}%, so each counts as its part of that.</p>` : ""}</div></div>
       <datalist id="dlPeople">${allPeople().map(n => `<option value="${esc(n)}">`).join("")}</datalist>
       ${!isSum && S.sprints.length ? `<div class="fld"><label>Sprint</label><select id="fSp">${sprOpts}</select></div>` : ""}
-      <div class="fld"><label>Duration</label><input id="fDu" type="number" min="0" value="${esc(t.duration)}" ${isSum?"disabled":""}></div>
+      <div class="fld"><label>Duration</label><input id="fDu" type="number" min="0" step="any" value="${esc(t.duration)}" ${isSum?"disabled":""}
+        title="Working days. A part of a day is fine: 0.5, or 0.25"></div>
       <div class="fld"><label>Points</label><input id="fPt" type="number" min="0" step="1" placeholder="none" value="${esc(t.points)}" ${isSum?"disabled":""}
         title="About an hour of work each, in whole numbers"></div>
       ${isSum ? "" : `<div class="fld"><label>Importance</label><select id="fIm"
@@ -6463,6 +7849,9 @@ function drawer(){
         : `<div class="fld"><label>% done</label><input id="fPc" type="number" min="0" max="100" step="10" placeholder="0" value="${esc(t.pct)}"></div>
            <div class="fld"><label>Started</label><input id="fAS" type="date" value="${esc(t.actual_start)}"></div>
            <div class="fld"><label>Finished</label><input id="fAF" type="date" value="${esc(t.actual_finish)}"></div>
+           ${isDone(t) || t.loe ? `<div class="fld"><label>Effort</label><select id="fLoe" title="How much work it was, for its points: the skill assessor in Metrics reads it">
+             ${[["", "Not said"], ...Object.entries(LOE_LONG)].map(([v, l]) => `<option value="${v}"${(t.loe ?? "") === v ? " selected" : ""}>${l}</option>`).join("")}
+             </select></div>` : ""}
            <div class="fld"><label>Repeats</label><span class="rep"><span class="every"${rpt ? "" : " hidden"}>every</span><input id="fRpN"
              type="number" min="1" max="999" step="1" value="${rn}" aria-label="Every how many"${rpt ? "" : " hidden"}><select id="fRpU"
              aria-label="Repeats">${unitOpts}</select></span></div>
@@ -6507,7 +7896,7 @@ function drawer(){
         <div class="hist" data-kind="${esc(h.kind)}">
           <span class="when">${new Date(h.at).toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span>
           <span class="what"><b>${esc(h.actor)}</b> ${esc(h.label)}
-            <div class="delta">${h.changes.filter(mine).map(describe).filter(Boolean).join("<br>")}</div>
+            <div class="delta">${h.changes.filter(mine).map(c => describeChange(c)).filter(Boolean).join("<br>")}</div>
           </span>
         </div>`).join("")
         : `<p style="margin:0;color:var(--muted)">No changes recorded yet.</p>`}
@@ -6587,6 +7976,7 @@ function drawer(){
   bind("fPc", "% done",   v => EDITS.pct(t, v));
   bind("fAS", "Started",  v => EDITS.actual_start(t, v));
   bind("fAF", "Finished", v => EDITS.actual_finish(t, v));
+  bind("fLoe", "Effort",  v => { t.loe = LOE[v] ? v : null; });
   const repeatVal = () => { const u = el("fRpU").value, n = Math.max(1, Math.round(+el("fRpN").value || 1));
                             const days = u === "w" ? [...d.querySelectorAll("[data-rpd]:checked")].map(x => +x.dataset.rpd) : [];
                             return u ? `${n}${u}` + (days.length ? `@${days.join(",")}` : "") : null; };
@@ -6607,15 +7997,6 @@ function drawer(){
   // Re-parenting journals itself (reparent() checks for loops first); the
   // second drawer() puts the field back if it refused. Picked from the list,
   // or typed: then the one task whose number or name holds what was typed.
-  // what was typed into a task field: the one picked from its list, or else the
-  // one task whose number or name holds it; several, or none, is said
-  const pickTask = (v, map) => {
-    if (map.has(v)) return map.get(v);
-    const q = v.toLowerCase(), hits = [...map].filter(([k, id]) => id && k.toLowerCase().includes(q));
-    if (hits.length === 1) return hits[0][1];
-    note(hits.length ? `${hits.length} tasks match “${v}”: pick one from the list.` : `No task matches “${v}”.`, {warn:true});
-    return undefined;
-  };
   const pa = el("fPa");
   pa.onfocus = () => pa.select();                    // typing replaces it, and the list shows what matches
   pa.onchange = () => {
@@ -6661,6 +8042,263 @@ function drawer(){
   };
 }
 
+
+/* ------------------------------------------------------------------ *
+ * History: every change to the project, newest first -- what a task's
+ * panel lists for that task, for all of them, and settings too.
+ *
+ * It reads the journal (LOG) and changes nothing. Each entry is one
+ * transaction: when, whose (this device is "you"; merged changes carry
+ * their device's name), what it was called, and each change in words
+ * (describeChange(), shared with the task panel). A merge restates the
+ * other device's changes, which are listed as their own entries, so it is
+ * said in a line, not repeated. Tasks are named by their number, which
+ * opens the task; one deleted since is still named, from the log.
+ *
+ * Filters: a search over the entries' names and the tasks they touch, whose
+ * they are, and what kind. A long history is drawn a page at a time.
+ * ------------------------------------------------------------------ */
+let histKeys = null;                   // while History is open: every task's key, deleted ones too
+let histShown = 0;
+
+// every key a task id has had in the log, then the ones there are now
+function allKeys(){
+  const m = new Map();
+  for (const t of LOG) for (const c of t.changes) if (cE(c) === "task" && c.row?.key) m.set(c.id, c.row.key);
+  for (const t of S.tasks) m.set(t.id, t.key);
+  return m;
+}
+// entries matching the filters, newest first: by their time, then as logged
+function historyRows(){
+  const q = el("hsQ").value.trim().toLowerCase(), who = el("hsWho").value, kind = el("hsKind").value;
+  const out = [];
+  LOG.forEach((t, i) => {
+    if (who && t.actor !== who) return;
+    if (kind === "edits" && (t.kind !== "do" || t.merge)) return;
+    if (kind === "undo" && t.kind === "do") return;
+    if (kind === "merges" && !t.merge) return;
+    if (q && !(t.label + " " + t.changes.map(c => histKeys.get(c.id) || "").join(" ")).toLowerCase().includes(q)) return;
+    out.push({t, i, at: +new Date(t.at)});
+  });
+  return out.sort((a, b) => b.at - a.at || b.i - a.i).map(x => x.t);
+}
+function paintHistory(){
+  const rows = historyRows(), cap = CFG.show.historyLines;
+  const when = d => new Date(d).toLocaleString([], {year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"});
+  const line = c => {
+    const d = describeChange(c); if (!d) return "";
+    // a task's own change leads with its number, which opens it
+    return cE(c) === "task" ? `<button type="button" class="hkey" data-task="${esc(c.id)}">${esc(histKeys.get(c.id) || "?")}</button> ${d}` : d;
+  };
+  el("hsList").innerHTML = rows.slice(0, histShown).map(t => {
+    const lines = t.merge ? [`${t.changes.length} change${t.changes.length === 1 ? "" : "s"} brought in: the other device's own entries say what they were`]
+                          : t.changes.map(line).filter(Boolean);
+    return `<div class="hsrow" data-kind="${esc(t.kind)}"><span class="hswhen">${esc(when(t.at))}</span><span class="hswho">${esc(t.actor)}</span>
+      <div class="hswhat"><b>${esc(t.label)}</b>
+        <div class="delta">${lines.slice(0, cap).join("<br>")}${lines.length > cap ? `<br><i>and ${lines.length - cap} more</i>` : ""}</div></div></div>`;
+  }).join("") || `<p class="hint">${LOG.length ? "Nothing matches." : "No changes recorded yet."}</p>`;
+  // a loop, not Math.min(...LOG): spreading a long log overflows the stack
+  let first = Infinity; for (const t of LOG){ const a = +new Date(t.at); if (a < first) first = a; }
+  first = first < Infinity ? new Date(first) : null;
+  el("hsInfo").textContent = !LOG.length ? "" : `${rows.length === LOG.length ? `${LOG.length} entries` : `${rows.length} of ${LOG.length} entries`}`
+    + (first ? `, from ${when(first)}` : "") + `. Ctrl+Z steps back through your own, from the newest.`;
+  el("hsMore").hidden = rows.length <= histShown;
+  el("hsMore").textContent = `Show ${Math.min(CFG.show.historyPage, rows.length - histShown)} more`;
+  return rows;
+}
+function openHistory(){
+  histKeys = allKeys(); histShown = CFG.show.historyPage;
+  const actors = [...new Set(LOG.map(t => t.actor))].sort((a, b) => (a !== ME) - (b !== ME) || a.localeCompare(b));
+  el("hsWho").innerHTML = `<option value="">Everyone</option>` + actors.map(a => `<option value="${esc(a)}">${esc(a === ME ? "you (this device)" : a)}</option>`).join("");
+  el("hsQ").value = ""; el("hsKind").value = "";
+  paintHistory();
+  el("dhistory").showModal();
+}
+el("bHist").onclick = openHistory;
+let hsTimer = 0;
+el("hsQ").addEventListener("input", () => { clearTimeout(hsTimer); hsTimer = setTimeout(() => { histShown = CFG.show.historyPage; paintHistory(); }, 150); });
+el("hsWho").onchange = el("hsKind").onchange = () => { histShown = CFG.show.historyPage; paintHistory(); };
+el("hsMore").onclick = () => { histShown += CFG.show.historyPage; paintHistory(); };
+el("dhistory").addEventListener("close", () => { histKeys = null; });
+el("hsList").addEventListener("click", e => {
+  const b = e.target.closest(".hkey"); if (!b) return;
+  const t = taskOf(b.dataset.task);
+  if (!t) return note(`${b.textContent} has been deleted since.`, {warn:true});
+  el("dhistory").close();
+  sel = t.id; render(); drawer();
+});
+/* What History shows, as a spreadsheet: a row per change. */
+el("hsCsv").onclick = () => {
+  const rows = [["time", "who", "kind", "entry", "what", "task", "field", "from", "to"]];
+  const txt = v => v == null ? "" : typeof v === "object" ? JSON.stringify(v) : v;
+  for (const t of historyRows()) for (const c of t.changes){
+    const e = cE(c), op = cOp(c);
+    rows.push([new Date(t.at).toISOString(), t.actor, t.merge ? "merge" : t.kind, t.label, `${e} ${op === "upd" ? "change" : op === "add" ? "added" : "removed"}`,
+      e === "task" ? histKeys.get(c.id) || "" : e === "dep" ? `${histKeys.get(c.row?.pred) || ""} → ${histKeys.get(c.row?.succ) || ""}` : e === "comment" ? histKeys.get(c.row?.task_id) || "" : "",
+      op === "upd" ? c.field : "", op === "upd" ? txt(c.from) : "", op === "upd" ? txt(c.to) : ""]);
+  }
+  dl(`history-${stampName(new Date())}.csv`, rows.map(r => r.map(csvCell).join(",")).join("\n"));
+};
+
+/* ------------------------------------------------------------------ *
+ * Help: how the app works, in the app. A topic per part of it, opened on
+ * the one for the view on screen, and a search across all of them. The
+ * words are this file's own, written for the people using the app; the
+ * README says the same at more length. ? opens it, as the button does.
+ * ------------------------------------------------------------------ */
+const HELP = [
+  {id: "start", title: "Getting around", views: [], html: `
+    <p>The tabs along the top are views of the same tasks: <b>Gantt</b> (a timeline), <b>Board</b> (cards in columns),
+    <b>Priorities</b> (each person's day), <b>Sprints</b>, <b>Load</b> (who has what on which day), <b>Table</b>
+    (a spreadsheet), <b>Templates</b> and <b>Metrics</b>. A change made in one shows in all of them.</p>
+    <ul><li><b>+ Task</b> adds a task; click any task to open its panel on the right, where everything about it is changed.</li>
+    <li>Every change is saved as you make it, on this device. <b>Undo</b> and <b>Redo</b> (or <kbd>Ctrl</kbd>+<kbd>Z</kbd>)
+      step back and forward, and the clock beside them opens <b>History</b>: every change ever made.</li>
+    <li>The status bar at the foot adds up what is on screen, and on the right says whether anything is wrong
+      (the <b>Health check</b>) and when this device last saved.</li></ul>`},
+  {id: "tasks", title: "Tasks and groups", views: [], html: `
+    <ul><li><b>+ Task</b> adds one beside the selected task; <b>+ Sub</b> adds one under it. A task with others under it
+      is a <b>group</b>: its dates, points and progress come from what is in it.</li>
+    <li><b>Drag a task onto another</b>, in any view, and choose where you let go: <b>put it under</b> the other, or
+      make one <b>wait for</b> the other to finish. Dropped between two tasks, it is placed there.</li>
+    <li>In the task panel, <b>Parent</b> finds a task by typing part of its number or name; <b>Move out</b> takes it
+      out of its group. <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>←</kbd>/<kbd>→</kbd> do the same from the keyboard.</li>
+    <li><b>Delete</b> removes a task with its links and comments; the pop-up's <b>Undo</b> brings them back.</li>
+    <li>Settings → <b>New keys start</b> sets what new task numbers begin with (HOME-1); tasks you have keep theirs.</li></ul>`},
+  {id: "dates", title: "Dates and the schedule", views: [], html: `
+    <ul><li><b>Duration</b> is how many working days a task spans, and can be part of one (0.5). <b>Points</b> are the
+      effort, about an hour each; they never move dates.</li>
+    <li>A task starts when what it <b>waits for</b> is done, not before its <b>Not before</b> date, and after a
+      <b>key date</b> it starts after. A <b>due date</b> or a key date it is due by never moves it: missing it shows as
+      negative float and a problem in the Health check.</li>
+    <li>With nothing to start it, a task is a <b>suggestion</b> from today (drawn dashed); with nothing at either end
+      it has <b>no dates yet</b>. Drag it, link it, or give it a date or a sprint to pin it.</li>
+    <li>Moving a card into a column ticked Started fills in when it started; into Done, when it finished.</li>
+    <li><b>Red</b> is the critical path: a day late there is a day late at the end. <b>Float</b> is how far a task can
+      slip without moving the finish.</li></ul>`},
+  {id: "gantt", title: "The Gantt", views: ["gantt"], html: `
+    <ul><li><b>Drag a bar</b> to move it, its <b>right end</b> to change how long it takes, its <b>left end</b> to move its
+      start and keep its finish. Drag the <b>dot</b> at its end onto another bar to link them; click an arrow to change
+      or delete a link.</li>
+    <li>In the task list, <b>click a value</b> (days, points, who, start, finish) to change it there. Click a name to
+      open the task. <b>Show → Columns</b> picks the columns.</li>
+    <li><b>Fit</b> puts the whole plan across the screen; <b>Day … Quarter</b> are fixed scales; <b>Today</b> scrolls to
+      today. <b>Expand all</b>, <b>Collapse all</b> and <b>Levels…</b> fold the list.</li>
+    <li><b>Show</b> turns float, links, labels, the critical path, the workload band and the baseline on and off, and
+      saves a <b>baseline</b> to measure slippage against.</li></ul>`},
+  {id: "board", title: "The Board", views: ["board"], html: `
+    <ul><li><b>Drag a card</b> to another column to change its status, or up and down to order it. <b>+ Add task</b> at the
+      foot of a column adds one there.</li>
+    <li><b>Group by</b> makes the columns people, weeks, or a pick-list field instead; dragging between them changes
+      that. <b>Card</b> chooses what a card shows.</li>
+    <li>Settings → Columns sets each column's colour, a <b>WIP limit</b>, and after how many days a card is flagged
+      <b>stale</b>. A done column shows the last two weeks; older cards fold away.</li>
+    <li>Starting a card that leaves someone with more than their week holds is allowed, with a warning.</li></ul>`},
+  {id: "sprints", title: "Sprints", views: ["sprints"], html: `
+    <ul><li>A <b>sprint</b> is a stretch of days and the tasks meant for it; the <b>backlog</b> is everything unfinished not
+      in one. Being in a sprint never moves a task's dates.</li>
+    <li>Drag a task between a sprint and the backlog by its number, or use its <b>⋯</b> menu (a right-click, or a long
+      press on a tablet) to move it without dragging.</li>
+    <li>Lists are in <b>score order</b>; drag a task up or down to set your own, and <b>Sort by score</b> goes back.
+      Once anything has a When, a sprint splits into <b>Day</b>, <b>Any time</b> and <b>Night</b>, tonight's first in
+      the evening.</li>
+    <li><b>Fill…</b> offers the backlog's top work that fits everyone's room. Tasks with <b>no pts</b> are flagged:
+      a sprint's room can't count them. Settings → Sprints makes sprints by themselves on set days.</li></ul>`},
+  {id: "plan", title: "People, points and each day's plan", views: ["load", "prio"], html: `
+    <ul><li>A <b>point</b> is about an hour of work. Settings → People sets each person's room for every day of the week,
+      daytime and evening, and their time off.</li>
+    <li><b>Load</b> shows the work planned into each person's days, most pressing first, inside each task's dates; a
+      day over its room is marked, and work that won't fit its dates is listed.</li>
+    <li><b>Priorities</b> is each person's day, highest <b>score</b> first. The score (1–100) weighs importance, how
+      soon it is due, what waits on it, and whether it has started; hover it for its parts.</li>
+    <li>A task's <b>When</b> (Day or Night) keeps it to that part of the day.</li>
+    <li><b>Present</b>, on Priorities, shows today's lists big and full screen, with a ✓ to mark each done: for a
+      tablet on the wall. It moves on by itself as the day does; <kbd>Esc</kbd> or Close ends it.</li></ul>`},
+  {id: "table", title: "The Table", views: ["table"], html: `
+    <ul><li>Every task is a row and every field a cell: type into it, and it saves as you leave it. <kbd>Enter</kbd> goes
+      down a row, <kbd>Esc</kbd> puts the cell back.</li>
+    <li>Click a heading to sort by it; again for the other way; a third time for tree order. <b>Columns</b> picks them.</li>
+    <li>Tick rows to set one field on all of them at once, or to delete them. <kbd>Shift</kbd>+click ticks a range.</li></ul>`},
+  {id: "templates", title: "Templates", views: ["templates"], html: `
+    <ul><li>A <b>template</b> is a set of tasks you do again and again, with roles, offsets in working days, and what
+      each waits for (<code>2</code>, or <code>2FS+1</code> for a day's gap).</li>
+    <li><b>Use this template…</b> asks the start day and who each role is, and makes all its tasks at once.
+      <b>Capture from tasks…</b> makes one from a group you already have.</li>
+    <li>Templates travel in the project's file; <b>Export all</b> and <b>Import…</b> move them to another project.</li></ul>`},
+  {id: "metrics", title: "Metrics", views: ["metrics"], html: `
+    <ul><li>Tiles for scope, done, still to do, the finish as planned and at the recent pace, pop-ups, critical work and
+      health; tasks are counted beside points.</li>
+    <li>The <b>burn-down</b> draws what was left each day against a straight line to a date: a sprint, a key date, a
+      milestone, or everything.</li>
+    <li>When a task with points is done, a card asks whether it was <b>lighter</b>, <b>as expected</b>, or
+      <b>heavier</b> than its points. Metrics shows who runs quicker or slower than estimated.</li></ul>`},
+  {id: "find", title: "Finding things", views: [], html: `
+    <ul><li>The <b>search</b> box (<kbd>/</kbd>) matches numbers, titles, people and fields. <b>Everyone</b> picks whose
+      tasks, <b>Any date</b> the late or due soon.</li>
+    <li><b>Filters</b> narrows to a column, critical work, or a pick-list field's value. <b>Clear filters</b> turns it
+      all off.</li></ul>`},
+  {id: "repeat", title: "Repeats, reminders and pop-ups", views: [], html: `
+    <ul><li>A task can <b>repeat</b> (every week on Tue and Fri, say): done, it comes straight back for next time, the
+      same task.</li>
+    <li><b>Remind me</b> sets a time on its day. While the app is open it reminds once; <b>File → Export to
+      calendar</b> hands reminders to your phone's calendar for when it is closed.</li>
+    <li><b>⚡ Pop-up</b> logs unplanned work and says first what doing it now would push out.</li>
+    <li>The <b>Health check</b> in the status bar lists what is wrong: missed deadlines, late work, work that won't
+      fit, sprint tasks without points.</li></ul>`},
+  {id: "data", title: "Where your data lives", views: [], html: `
+    <ul><li>The project is kept <b>in this browser, on this device</b>. Nothing leaves it unless you export it, and the
+      tablet and the desktop each keep their own copy.</li>
+    <li>Clearing the browser's site data, or resetting the device, <b>deletes it</b>. So: a <b>weekly backup</b> file
+      goes to Downloads (File menu), or to a folder you pick, such as your Google Drive folder, on a desktop.</li>
+    <li>To move work between devices: <b>File → Export project</b> on one, <b>File → Import project</b> on the other,
+      and choose <b>Merge</b>. It shows first what merging would change; both devices' work is kept, and where both
+      changed the same thing, the later change wins.</li>
+    <li><b>Save as app</b> writes a copy of the app with the project inside it: one file that carries the work anywhere.</li>
+    <li>Copies of <b>Schedule.html</b> opened from different folders on one computer share one project.</li>
+    <li>Settings → <b>Start over…</b> clears the tasks and keeps the set-up, starts an empty project, or loads the
+      sample one. A backup downloads first, and one <kbd>Ctrl</kbd>+<kbd>Z</kbd> takes it back.</li></ul>`},
+  {id: "keys", title: "Keyboard shortcuts", views: [], html: `
+    <table class="hkeys">
+      <tr><td><kbd>?</kbd></td><td>this help</td></tr>
+      <tr><td><kbd>/</kbd></td><td>jump to the search box</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> · <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td><td>undo · redo (outside a text box)</td></tr>
+      <tr><td><kbd>Insert</kbd> · <kbd>Delete</kbd></td><td>add a task · delete the open one</td></tr>
+      <tr><td><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>←</kbd> / <kbd>→</kbd></td><td>move the open task out of its group / under the one above</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>close a menu, put back a cell, or close the task panel</td></tr>
+      <tr><td><kbd>Enter</kbd> · <kbd>Shift</kbd>+<kbd>Enter</kbd></td><td>in the Table: down a row · up a row</td></tr>
+    </table>`},
+];
+let helpAt = null;
+
+function openHelp(topic){
+  // the topic for the view on screen, unless one is asked for
+  helpAt = topic || HELP.find(h => h.views.includes(view))?.id || "start";
+  el("hpQ").value = "";
+  paintHelp();
+  el("dhelp").showModal();
+}
+function paintHelp(){
+  const q = el("hpQ").value.trim().toLowerCase();
+  const text = h => (h.title + " " + h.html.replace(/<[^>]+>/g, " ")).toLowerCase();
+  const list = q ? HELP.filter(h => text(h).includes(q)) : HELP;
+  if (!list.some(h => h.id === helpAt)) helpAt = list[0]?.id ?? null;
+  el("hpTopics").innerHTML = list.map(h => `<button type="button" data-help="${h.id}"${h.id === helpAt ? ' aria-current="true"' : ""}>${h.title}</button>`).join("")
+    || `<p class="hint">Nothing about “${esc(q)}”.</p>`;
+  const h = HELP.find(x => x.id === helpAt);
+  el("hpBody").innerHTML = h ? `<h3>${h.title}</h3>${h.html}` : "";
+}
+el("bHelp").onclick = () => openHelp();
+el("hpQ").addEventListener("input", paintHelp);
+el("hpTopics").addEventListener("click", e => {
+  const b = e.target.closest("[data-help]"); if (!b) return;
+  helpAt = b.dataset.help; paintHelp();
+});
+// ? anywhere but in a text box
+document.addEventListener("keydown", e => {
+  if (e.key !== "?" || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable || document.querySelector("dialog[open]")) return;
+  e.preventDefault(); openHelp();
+});
 /* ------------------------------------------------------------------ *
  * CSV: the graph has to survive the export, so parent_key and
  * depends_on ride along as columns. Comments go in a second file.
@@ -6669,11 +8307,7 @@ function csv(){
   // RFC4180 quoting, plus a guard against spreadsheet formula injection:
   // Excel executes a cell that opens with = + - @, so a task titled
   // "=cmd|..." would run on open. Prefixing with ' makes it inert text.
-  const q = v => {
-    v = v==null ? "" : String(v);
-    if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;
-    return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v;
-  };
+  const q = csvCell;
   const keyOf = id => taskOf(id).key;
   const cols = ["key","title","parent_key","status","assignee","duration_days","points","not_before",
                 "early_start","early_finish","late_finish","total_float","critical","depends_on",
@@ -6699,6 +8333,12 @@ function csv(){
       ...S.comments.map(c => [keyOf(c.task_id), c.author, c.created, c.body])]
       .map(r => r.map(q).join(",")).join("\n"));
 }
+/* One CSV cell: RFC4180 quoting, and inert if it would be a formula (see csv()). */
+const csvCell = v => {
+  v = v == null ? "" : String(v);
+  if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;
+  return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+};
 function dl(name, text, type = "text/csv"){
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([text], {type}));
@@ -7031,6 +8671,61 @@ function mergeInto(plan, from){
   return {W, applied, bad, dupKeys, conflicts: [...conflicts.values()], from};
 }
 
+/* What a merge would do to this device's project, before it is done: the
+   draft mergeInto() makes (B), set against the project as it is (A) --
+   tasks new, gone and changed, links, comments, settings -- and where both
+   devices changed one thing, which change stays. Lines for a person; the
+   bookkeeping fields (places in a list, the time in a column) are left out,
+   as a task's history leaves them out. */
+function mergePreview(A, B, conflicts){
+  const QUIET = new Set(["pos", "cpos", "spos", "status_since", "assignee", "assignees"]);
+  const byA = new Map(A.tasks.map(t => [t.id, t])), byB = new Map(B.tasks.map(t => [t.id, t]));
+  const nm = t => `${t.key} ${t.title}`, keyIn = id => (byB.get(id) || byA.get(id))?.key ?? "?";
+  const LBL = {not_before: "not before", actual_start: "started", actual_finish: "finished", pct: "% done", parent_id: "parent",
+               due_date: "due date", repeat_to: "comes back to", remind_at: "reminder", remind_lead: "reminder, how early", loe: "effort"};
+  const sv = (f, v) => v == null || v === "" ? "nothing" : f === "parent_id" ? keyIn(v) : f === "sprint" ? sprintName(v)
+    : typeof v === "number" ? String(v) : typeof v === "boolean" ? (v ? "yes" : "no") : typeof v === "object" ? "a different set"
+    : (s => `“${s.length > 40 ? s.slice(0, 39) + "…" : s}”`)(String(v));
+  const who = t => peopleOf(t).map(p => peopleOf(t).length > 1 ? `${p.name} ${p.pct}%` : p.name).join(", ");
+  const out = {added: [], removed: [], changed: [], links: [], comments: [], project: [], conflicts};
+  for (const t of B.tasks) if (!byA.has(t.id)) out.added.push(nm(t));
+  for (const t of A.tasks) if (!byB.has(t.id)) out.removed.push(nm(t));
+  for (const b of B.tasks){
+    const a = byA.get(b.id); if (!a) continue;
+    const ch = [];
+    if (who(a) !== who(b)) ch.push(`who ${sv("", who(a))} → ${sv("", who(b))}`);
+    for (const f of [...FIELDS.task, ...JSONF.task]){
+      if (QUIET.has(f) || same(a[f], b[f])) continue;
+      if (f === "custom"){
+        for (const k of new Set([...Object.keys(a.custom || {}), ...Object.keys(b.custom || {})]))
+          if (!same(a.custom?.[k], b.custom?.[k]))
+            ch.push(`${B.fields.find(x => x.name === k)?.label ?? k} ${sv("", a.custom?.[k])} → ${sv("", b.custom?.[k])}`);
+        continue;
+      }
+      ch.push(`${LBL[f] ?? f.replace(/_/g, " ")} ${sv(f, a[f])} → ${sv(f, b[f])}`);
+    }
+    if (ch.length) out.changed.push(`${nm(a)}: ${ch.join("; ")}`);
+  }
+  const dA = new Set(A.deps.map(d => d.id)), dB = new Set(B.deps.map(d => d.id));
+  for (const d of B.deps) if (!dA.has(d.id)) out.links.push(`new: ${keyIn(d.pred)} → ${keyIn(d.succ)}`);
+  for (const d of A.deps) if (!dB.has(d.id)) out.links.push(`gone: ${keyIn(d.pred)} → ${keyIn(d.succ)}`);
+  const cA = new Set(A.comments.map(c => c.id)), cB = new Set(B.comments.map(c => c.id));
+  const nC = B.comments.filter(c => !cA.has(c.id)).length, gC = A.comments.filter(c => !cB.has(c.id)).length;
+  if (nC) out.comments.push(`${nC} new`);
+  if (gC) out.comments.push(`${gC} gone`);
+  for (const f of [...PROJF, ...PROJ_JSON]) if (!same(A[f], B[f])) out.project.push(PROJECT_RULES[f]?.[0] ?? f);
+  return out;
+}
+function paintPreview(pv){
+  const cap = CFG.show.mergePreview;
+  const sec = (h, list) => !list.length ? "" : `<h3>${esc(h)} <span>${list.length}</span></h3><ul>${list.slice(0, cap).map(x =>
+    `<li>${esc(x)}</li>`).join("")}${list.length > cap ? `<li class="more">and ${list.length - cap} more</li>` : ""}</ul>`;
+  const body = sec("New tasks", pv.added) + sec("Deleted", pv.removed) + sec("Changed", pv.changed) + sec("Links", pv.links)
+    + sec("Comments", pv.comments) + sec("Settings", pv.project) + sec("Both changed it: the later change stays", pv.conflicts);
+  el("impDiff").innerHTML = `<p class="hint"><b>What merging changes here:</b></p>`
+    + (body || `<p class="hint">Nothing on this device would change: it has all of it already.</p>`);
+}
+
 /* The merge itself, with no dialog or download: their log joins this one,
    and the merged project lands as one transaction of this device's.
    Returns mergeInto()'s result, plus that transaction when there was one;
@@ -7103,6 +8798,16 @@ async function importProject(file){
     + (mine && theirs && theirs < mine ? " The file is OLDER than this device, so newer work here would go." : "")
     + " A backup of this device's project downloads first, either way.";
   el("impMerge").hidden = !(plan.shared && n);
+  // Compare: what merging would do here, worked out on a draft before anything is touched
+  el("impDiff").innerHTML = "";
+  if (plan.shared && n){
+    flushEdits();                   // a half-typed field lands before the draft is taken
+    const probe = mergeInto(plan, doc.device || "other device");
+    if (probe.bad.length){
+      el("impMerge").hidden = true;
+      el("impDiff").innerHTML = `<p class="hint">Merging it is refused: ${esc(refusal(probe.bad))}. Replace instead, or fix it on one device and export again.</p>`;
+    } else paintPreview(mergePreview(S, probe.W, probe.conflicts));
+  }
   el("impMerge").onclick = () => { el("dimp").close(); doMerge(doc, plan); };
   el("impReplace").onclick = () => { el("dimp").close(); replaceWith(doc); };
   el("dimp").showModal();
@@ -7221,16 +8926,75 @@ function syncWho(){
   el("q").classList.toggle("on", !!filt.q.trim());
   s.classList.toggle("on", !!filt.who);
   el("due").classList.toggle("on", !!filt.due);
+  syncFilters();
 }
+/* Filters: the column pick and a pick per pick-list field, redrawn only when
+   the columns or fields change; a filter on something gone lets go. */
+function syncFilters(){
+  const sel = S.fields.filter(f => f.kind === "select");
+  if (filt.status && !S.statuses.includes(filt.status)) filt.status = "";
+  for (const k of Object.keys(filt.fields)){ const f = sel.find(x => x.name === k);
+    if (!f || (filt.fields[k] !== NOBODY && !(f.options || []).includes(filt.fields[k]))) delete filt.fields[k]; }
+  const want = JSON.stringify([S.statuses, sel.map(f => [f.name, f.label, f.options])]);
+  if (el("mFilt").dataset.opts !== want){
+    el("fStatus").innerHTML = `<option value="">Any column</option>` + S.statuses.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
+    el("fFields").innerHTML = sel.map(f => `<div class="fld"><label for="ff-${esc(f.name)}">${esc(f.label)}</label>
+      <select id="ff-${esc(f.name)}" data-ff="${esc(f.name)}"><option value="">Any</option><option value="${NOBODY}">Not set</option>${
+      (f.options || []).map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join("")}</select></div>`).join("");
+    el("mFilt").dataset.opts = want;
+  }
+  el("fStatus").value = filt.status;
+  el("fCrit").checked = filt.crit;
+  for (const n of el("fFields").querySelectorAll("[data-ff]")) n.value = filt.fields[n.dataset.ff] ?? "";
+  const n = moreFilters();
+  el("fSum").textContent = n ? `Filters · ${n}` : "Filters";
+  el("fSum").classList.toggle("on", n > 0);
+  el("bClearAll").hidden = !filtering();
+  // the levels there are to fold to
+  let deep = 0; const km = childMap(), walk = (p, d) => { for (const t of km.get(p) || []){ deep = Math.max(deep, d); walk(t.id, d + 1); } };
+  walk(null, 1);
+  const lv = String(deep);
+  if (el("fLevel").dataset.deep !== lv){
+    el("fLevel").innerHTML = `<option value="">Levels…</option>` + Array.from({length: Math.max(0, deep - 1)}, (_, i) =>
+      `<option value="${i + 1}">${i ? `Levels 1–${i + 1}` : "Level 1 only"}</option>`).join("");
+    el("fLevel").dataset.deep = lv;
+  }
+  el("fLevel").hidden = deep < 2;
+}
+el("fStatus").onchange = e => { filt.status = e.target.value; render(); };
+el("fCrit").onchange = e => { filt.crit = e.target.checked; render(); };
+el("fFields").addEventListener("change", e => {
+  const k = e.target.dataset.ff; if (!k) return;
+  if (e.target.value) filt.fields = {...filt.fields, [k]: e.target.value};
+  else { const {[k]: _, ...rest} = filt.fields; filt.fields = rest; }
+  render();
+});
+/* Fold to a level: every group at it or deeper closes, and the rest open --
+   Expand all and Collapse all in between. An action, not a filter: the
+   chevrons still open and close what they fold. */
+el("fLevel").onchange = e => {
+  const n = +e.target.value; e.target.value = "";
+  if (!n) return;
+  const km = childMap(), shut = new Set();
+  const walk = (p, d) => { for (const t of km.get(p) || []){ if ((km.get(t.id) || []).length && d >= n) shut.add(t.id); walk(t.id, d + 1); } };
+  walk(null, 1);
+  collapsed = shut; render();
+};
+/* Every filter off at once: the search, whose, when due, and all under Filters. */
+function clearFilters(){
+  filt.q = filt.who = filt.due = filt.status = ""; filt.crit = false; filt.fields = {};
+  el("q").value = ""; el("due").value = "";
+  try { localStorage.removeItem("pm.who"); } catch { /* blocked */ }
+  el("mFilt").open = false;
+  render();
+}
+el("fClear").onclick = clearFilters;
+el("bClearAll").onclick = clearFilters;
 let qTimer = 0;
 el("q").addEventListener("input", () => { filt.q = el("q").value; clearTimeout(qTimer); qTimer = setTimeout(render, 120); });
 el("who").onchange = () => { filt.who = el("who").value; try { localStorage.setItem("pm.who", filt.who); } catch { /* blocked */ } render(); };
 el("due").onchange = () => { filt.due = el("due").value; render(); };
-el("bClear").onclick = () => {
-  filt.q = filt.who = filt.due = ""; el("q").value = ""; el("due").value = "";
-  try { localStorage.removeItem("pm.who"); } catch { /* blocked */ }
-  render();
-};
+el("bClear").onclick = clearFilters;
 
 /* ---- toolbar menus: one open at a time, closed by a click elsewhere ---- */
 const menus = () => document.querySelectorAll("details.menu");
@@ -7552,6 +9316,8 @@ el("bSet").onclick = () => {
   el("sBoardFrom").value = String(S.boardFrom || 1);
   el("sDoneDays").value = S.doneDays ?? "";
   el("sNum").value = S.numbering || "";
+  el("sPrefix").value = S.keyPrefix || "";
+  el("sPrefix").placeholder = `${keyPrefixNow()}, as now`;
   const ww = S.workWeek?.length ? S.workWeek : WORK_WEEK_DEFAULT;
   el("sWeek").innerHTML = DOW.map((d, i) => `<label class="tog"><input type="checkbox" data-wd="${i}"${ww.includes(i) ? " checked" : ""}> ${d}</label>`).join("");
   el("sWarn").hidden  = true;
@@ -7805,6 +9571,10 @@ el("sOk").onclick = () => {
     ahead: Math.min(26, Math.max(1, parseInt(el("spAhead").value, 10) || 4)),
     from: old?.from || iso(todayDate()), ...(old?.skip?.length ? {skip: old.skip} : {})} : null;
 
+  // ---- the prefix of new keys: letters and digits, starting with a letter
+  const prefix = el("sPrefix").value.trim().toUpperCase();
+  if (prefix && !KEY_PREFIX.test(prefix)) return warnSet("New keys start with letters and digits, a letter first: HOME, say.");
+
   // ---- key dates ----
   // a row left empty is an "Add key date" nobody filled in
   const keys = dKeys.filter(k => k.name || k.date);
@@ -7815,6 +9585,7 @@ el("sOk").onclick = () => {
   commit("Project settings", () => {
     S.name = name; S.origin = origin; S.holidays = hol; S.workWeek = workWeek;
     S.numbering = el("sNum").value === "wbs" ? "wbs" : null;
+    S.keyPrefix = prefix || null;
     S.statuses = names;
     const cfg = {};
     for (const c of dCols)
@@ -7858,18 +9629,29 @@ el("sOk").onclick = () => {
 };
 const warnSet = m => { el("sWarn").hidden = false; el("sWarn").textContent = m; };
 
-el("sNew").onclick = () => {
-  if (!confirm("Start an empty project?\n\nEverything here is replaced. "
-             + "A backup of the current project will be downloaded first.")) return;
-  exportProject("backup-before-new");
-  commit("Start empty project", () => {
-    S.tasks = []; S.deps = []; S.comments = [];
-    S.name = "Untitled project";
-  });
-  sel = null; collapsed.clear();
-  el("dset").close();
+/* Start over: one button, three ways, each said in the dialog -- rather
+   than three buttons that delete things side by side, as Work Planner has.
+   Each downloads a backup first and is one commit, so one Ctrl+Z takes it
+   back; the journal keeps the history either way (invariant 4). */
+el("sStart").onclick = () => el("dstart").showModal();
+function startOver(label, mutate, said){
+  exportProject("backup-before-start-over");
+  commit(label, mutate);
+  sel = null; collapsed.clear(); ticked.clear();
+  el("dstart").close(); el("dset").close();
   render(); drawer();
-};
+  note(`${said} A backup of the project as it was is in your Downloads.`, {undo:true});
+}
+// a project with nothing in it but the usual columns
+const emptyProject = () => normalize({name: "Untitled project", origin: weekOf(todayDate()), holidays: [],
+  statuses: [...DEFAULT_STATUSES], statusCfg: {Backlog: {started: false, done: false}, "In Progress": {started: true, done: false},
+  Done: {started: false, done: true}}, fields: [], people: [], baseline: null, sprints: [], keyDates: [], sprintPattern: null,
+  workWeek: null, templates: [], numbering: null, keyPrefix: null, boardFrom: 1, doneDays: 14, tasks: [], deps: [], comments: []});
+el("soClear").onclick = () => startOver("Clear the tasks", () => { S.tasks = []; S.deps = []; S.comments = []; S.baseline = null; },
+  "The tasks are gone; the settings stay.");
+el("soEmpty").onclick = () => startOver("Start an empty project", () => { S = emptyProject(); }, "A new, empty project.");
+el("soSample").onclick = () => startOver("Load the sample project", () => { S = normalize(structuredClone(DEMO)); },
+  "The sample project is loaded.");
 
 /* ------------------------------------------------------------------ *
  * What a project file must be before it is let in.
@@ -7908,7 +9690,7 @@ const TASK_RULES = {
   parent_id:     [opt(isStr), "must be a task id"],
   assignee:      [opt(isStr), "must be a name"],
   assignees:     [opt(listOf(p => isObj(p) && isStr(p.name) && isNum(p.pct))), "must be names with shares"],
-  duration:      [isWhole, "must be a whole number of days"],
+  duration:      [v => isNum(v) && v >= 0, "must be a number of days"],
   points:        [opt(v => isNum(v) && v >= 0), "must be a number"],
   pct:           [opt(v => isNum(v) && v >= 0 && v <= 100), "must be a percentage"],
   not_before:    [opt(isDay), "must be a date"],
@@ -7920,6 +9702,7 @@ const TASK_RULES = {
   pos:           [opt(isNum), "must be a number"],
   cpos:          [opt(isNum), "must be a number"],
   spos:          [opt(isNum), "must be a number"],
+  loe:           [opt(v => ["light", "normal", "heavy"].includes(v)), "must be light, normal or heavy"],
   custom:        [opt(isObj), "must be a set of fields"],
   attach:        [opt(listOf(a => isObj(a) && isStr(a.url) && opt(isStr)(a.label))), "must be a list of links"],
   done_dates:    [opt(listOf(isDay)), "must be a list of dates"],
@@ -7956,11 +9739,13 @@ const PROJECT_RULES = {
   keyDates:  ["key dates", opt(listOf(k => isObj(k) && isStr(k.id) && !!k.id && isStr(k.name) && isDay(k.date))),
               "must each have a name and a date"],
   numbering: ["task numbers", opt(v => v === "wbs"), "must be WBS, or nothing for the keys"],
+  keyPrefix: ["new keys' start", opt(v => isStr(v) && /^[A-Za-z][A-Za-z0-9]{0,9}$/.test(v)), "must be letters and digits, a letter first"],
   workWeek:  ["work week", opt(v => listOf(i => Number.isInteger(i) && i >= 0 && i <= 6)(v) && v.length > 0 && new Set(v).size === v.length),
               "must be one to seven different days of the week"],
   sprintPattern: ["sprint pattern", opt(p => isObj(p) && listOf(i => Number.isInteger(i) && i >= 0 && i <= 6)(p.days)
                 && opt(v => Number.isInteger(v) && v >= 1)(p.every) && opt(v => Number.isInteger(v) && v >= 1 && v <= 26)(p.ahead)
                 && opt(isDay)(p.from) && opt(listOf(isDay))(p.skip)), "must be days of the week, how often and how far ahead"],
+  templates: ["templates", opt(Array.isArray), "must be a list (checkTemplates says more)"],
   boardFrom: ["hidden levels", opt(v => Number.isInteger(v) && v >= 1), "must be a level"],
   doneDays:  ["days Done shows", opt(v => Number.isInteger(v) && v >= 1), "must be a whole number of days"],
   baseline:  ["baseline", opt(b => isObj(b) && isWhen(b.saved) && isObj(b.bars)
@@ -7984,6 +9769,7 @@ function checkProject(doc, missing = "not in the file"){
 
   for (const [f, [label, test, what]] of Object.entries(PROJECT_RULES))
     if (!test(st[f])) say(`the project's ${label} ${what}, not ${show(st[f])}`);
+  if (Array.isArray(st.templates)) for (const m of checkTemplates(st.templates)) say(m);
   const statuses = Array.isArray(st.statuses) ? st.statuses : DEFAULT_STATUSES;
 
   // tasks: each on its own, then how they hang together
@@ -8043,6 +9829,33 @@ function checkProject(doc, missing = "not in the file"){
     catch (e) { say(e.message.replace(/^Dependency cycle/, "its links go round in a loop")); }
   return bad;
 }
+/* Templates, from a project file or a file of their own: each row as the
+   app writes it, its links to rows that are there, none to itself, and no
+   loop -- the checks the editor makes as a link is typed. */
+function checkTemplates(list){
+  const bad = [], ok = x => isObj(x) && isStr(x.id) && !!x.id && isStr(x.title) && opt(isStr)(x.role)
+    && Number.isInteger(x.offset) && x.offset >= 0 && isNum(x.dur) && x.dur >= 0 && opt(v => isNum(v) && v >= 0)(x.pts)
+    && opt(v => v === "day" || v === "night")(x.when) && opt(v => IMPORTANCE.includes(v))(x.importance)
+    && opt(v => typeof v === "boolean")(x.ms)
+    && opt(listOf(d => isObj(d) && isStr(d.on) && LINK_KINDS.includes(d.kind) && Number.isInteger(d.lag)))(x.deps);
+  if (!Array.isArray(list)) return ["its templates are not a list"];
+  list.forEach((tp, i) => {
+    const who = isObj(tp) && isStr(tp.name) ? `the template “${tp.name}”` : `template ${i + 1}`;
+    if (!isObj(tp) || !isStr(tp.id) || !tp.id || !isStr(tp.name) || !opt(isStr)(tp.desc) || !Array.isArray(tp.items))
+      return bad.push(`${who} is damaged`);
+    const ids = new Set();
+    for (const [j, x] of tp.items.entries()){
+      if (!ok(x) || ids.has(x.id)) return bad.push(`${who}: row ${j + 1} is damaged`);
+      ids.add(x.id);
+    }
+    tp.items.forEach((x, j) => { for (const d of x.deps || []){
+      if (d.on === x.id) bad.push(`${who}: row ${j + 1} waits for itself`);
+      else if (!ids.has(d.on)) bad.push(`${who}: row ${j + 1} waits for a row that is not there`); } });
+    const loop = tplLoop(tp.items);
+    if (loop) bad.push(`${who}: its links go round in a loop, rows ${loop.join(" → ")}`);
+  });
+  return bad;
+}
 const refusal = bad => bad.slice(0, 3).join("; ") + (bad.length > 3 ? `; and ${bad.length - 3} more` : "");
 
 /* ------------------------------------------------------------------ *
@@ -8075,9 +9888,11 @@ function normalize(st){
   st.fields    = st.fields   || [];
   st.people    = st.people   || [];
   st.keyDates  = st.keyDates || [];      // named dates tasks start after or are due by; see keydates.js
+  st.templates = st.templates || [];     // sets of tasks made again and again; see templates.js
   st.sprintPattern = st.sprintPattern ?? null;   // sprints made by themselves; see sprintauto.js
   st.workWeek  = st.workWeek ?? null;    // working days, Monday 0; null is Monday to Friday
-  st.numbering = st.numbering ?? null;  // "wbs" shows WBS numbers in place of keys; see wbsAll()      // points-per-week limits; see workload()
+  st.numbering = st.numbering ?? null;  // "wbs" shows WBS numbers in place of keys; see wbsAll()
+  st.keyPrefix = st.keyPrefix ?? null;  // what new keys start with; null: what the tasks have (nextKey)      // points-per-week limits; see workload()
   st.boardFrom = st.boardFrom || 1;      // first level of the tree that gets cards
   if (st.doneDays === undefined) st.doneDays = 14;   // days of finished cards a done column shows; null: all
   st.baseline  = st.baseline  || null;   // never undefined: undo JSON.parses it back
@@ -8107,7 +9922,7 @@ function normalize(st){
     if (!t.custom) t.custom = {};        // the card and the drawer read fields out of it
     // Part of a day, typed into Duration by a build that allowed it, stopped
     // the chart drawing on every open. Whole days, as the schedule counts.
-    if (!Number.isInteger(t.duration)) t.duration = Math.max(0, Math.round(+t.duration) || 0);
+    if (typeof t.duration !== "number" || t.duration !== Math.round(t.duration * 100) / 100) t.duration = days2(t.duration);
   }
   return st;
 }
