@@ -8,7 +8,7 @@
 /* Bump this to ship an update to an installed copy served from static/.
    The Android/ build replaces it with a hash of the files, so that copy
    never needs bumping by hand -- see make_single.py. */
-const CACHE = "pmcore-25ca052c26";
+const CACHE = "pmcore-40274e46b9";
 const ASSETS = [
   "./",
   "./index.html",
@@ -50,8 +50,14 @@ self.addEventListener("fetch", e => {
     caches.match(e.request).then(hit => {
       const net = fetch(e.request)
         .then(res => {
-          if (res && res.ok && res.type === "basic")
-            caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+          // Copy it NOW. The page starts reading `res` as soon as it is
+          // returned, and a body already read cannot be cloned: cloning
+          // inside the caches.open() callback failed every time for a file
+          // not in ASSETS, so nothing fetched later was ever kept offline.
+          if (res && res.ok && res.type === "basic"){
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put(e.request, copy));
+          }
           return res;
         })
         .catch(() => hit);        // offline: whatever we already have
