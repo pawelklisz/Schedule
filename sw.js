@@ -8,7 +8,7 @@
 /* Bump this to ship an update to an installed copy served from static/.
    The Android/ build replaces it with a hash of the files, so that copy
    never needs bumping by hand -- see make_single.py. */
-const CACHE = "pmcore-a8ff705158";
+const CACHE = "pmcore-bb076bf971";
 const ASSETS = [
   "./",
   "./index.html",

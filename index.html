@@ -469,6 +469,10 @@ table.cfg input[type=color]{width:34px;height:24px;padding:1px 2px;cursor:pointe
 .srow:hover{border-color:var(--muted)}
 .srow[data-sel="1"]{outline:2px solid var(--focus);outline-offset:-1px}
 .srow.dragging{opacity:.35}
+/* dragged onto another task, anywhere: to put it under that one, or link them (tree.js ontoOf) */
+.card.droponto,.srow.droponto,.pri.droponto{outline:2px solid var(--focus);outline-offset:-1px;background:var(--drop)}
+.pri.dragging{opacity:.4}
+.pri .prt .key{touch-action:none}
 /* ⋯: the row's menu */
 .smore{border:0;background:none;padding:0 2px;border-radius:var(--r-sm);cursor:pointer;color:var(--muted);font:inherit;
   font-weight:var(--fwb);line-height:1.2}
@@ -537,6 +541,12 @@ table.cfg input[type=color]{width:34px;height:24px;padding:1px 2px;cursor:pointe
 .spvelc{color:var(--muted)}
 .sproom{color:var(--muted)}
 .sproom.low{color:var(--warn-ink);font-weight:var(--fwb)}
+/* work in a sprint with no points: its row, its card, and a count on the sprint's heading */
+.srow .spts.nopts,.chip.nopts{color:var(--warn-ink);font-weight:var(--fwb)}
+.chip.nopts{background:var(--crit-soft)}
+.spnopts{border:0;background:var(--crit-soft);color:var(--warn-ink);font:inherit;font-weight:var(--fwb);border-radius:var(--r-pill);
+  padding:0 8px;cursor:pointer}
+.spnopts:hover{text-decoration:underline}
 /* Fill: the backlog by score, ticked while it fits */
 .filist{display:flex;flex-direction:column;gap:2px;max-height:50vh;overflow:auto;margin:0 0 8px}
 .fil{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:var(--r-sm);cursor:pointer}
@@ -659,6 +669,10 @@ table.cfg input[type=color]{width:34px;height:24px;padding:1px 2px;cursor:pointe
 .tck input{margin:0;accent-color:var(--accent);vertical-align:middle}
 .tkey .key{border:0;background:none;padding:0;cursor:pointer;color:var(--key);font:inherit}
 .tkey .key:hover{text-decoration:underline}
+/* the key is the handle for dragging a row onto another, by touch too */
+.tkey .key{touch-action:none}
+.tt tr.dragging td{opacity:.45}
+.tt tr.droponto td{background:var(--drop);box-shadow:inset 0 2px 0 var(--focus),inset 0 -2px 0 var(--focus)}
 /* the name, indented by its depth in the tree, with the fold button */
 .tname{display:flex;align-items:center;gap:3px;padding-left:calc(var(--fs)*1.1*var(--d, 0))}
 .tname .chev{flex:none}
@@ -1801,6 +1815,7 @@ const CFG = {
     ghostOffset:      8,  // cursor -> dragged card ghost
     dragEdge:        36,  // px from the list's top/bottom where a row drag scrolls it
     nameMinW:        10,  // the task list's names keep this many text-heights of width, whatever columns are on
+    onto:          0.25,  // a drag over the middle of a card or row is onto it; this much at its top and bottom is not
     dragScroll:      10,  // ...by this many px per frame
     // A bar narrower than this (px) has no start handle: the two handles
     // would cover it, leaving nothing to grab it by to move it. A finger's
@@ -2356,6 +2371,12 @@ const openSprints = () => S.sprints.filter(s => s.state !== "closed")
 const notInSprint = t => (sprintOf(t)?.state ?? "closed") === "closed";
 // the backlog: unfinished, and not in a sprint that is still open
 const inBacklog = t => !isDone(t) && notInSprint(t);
+/* Unfinished work in an open sprint with no points set: flagged on its row,
+   its card and in the Health check, since a sprint's room, everyone's load
+   and velocity all leave it out (invariant 12 -- it is never given points
+   by default). Points of 0 are set: work that takes none is not nagged. */
+const noPoints = t => t.points == null && !isDone(t) && !notInSprint(t);
+const NO_POINTS = "No points yet, so its sprint's room, the load and velocity leave it out. Give it points, or 0 if it takes no work.";
 /* Dates as a person reads them: "Sep 28", with the year only when it is not
    this one -- or ISO, if Appearance says so. Display only: the data, the CSV
    and the calendar file stay ISO. */
@@ -2881,6 +2902,15 @@ function addDep(pred, succ){
   const d = {id:newId(), pred, succ, kind:"FS", lag:0};
   commit(`Link ${pk} → ${sk}`, () => S.deps.push(d));
   render(); drawer();
+}
+/* A link asked for by name -- from a drop, or typed in the task panel --
+   made, and said, with Undo: nothing on screen may show it otherwise. */
+function linkTasks(pred, succ){
+  const n = LOG.length;
+  addDep(pred, succ);
+  if (LOG.length === n) return false;
+  note(`${taskOf(succ).key} now waits for ${taskOf(pred).key} to finish.`, {undo:true});
+  return true;
 }
 
 /* No "are you sure?", as with deleting a task: the pop-up's Undo is the net. */
@@ -3640,21 +3670,92 @@ function indent(id){
    way: the one dropped waiting for the other to finish (its successor, FS),
    or the other waiting for it. addDep() refuses a loop and says why. A task
    cannot link to its own group: the link would reach it through the group's
-   tasks (invariant 2), a loop. Esc or a tap elsewhere does nothing. */
-function dropMenu(t, p, at){
+   tasks (invariant 2), a loop. Esc or a tap elsewhere does nothing. Every
+   view where tasks are dragged opens it (ontoOf); `first` is that view's own
+   meaning of the drop, when it has one -- the board's move to the other
+   card's column, say. A task dropped on its own group, or its group on it,
+   can only be that. */
+function dropMenu(t, p, at, first = []){
   const linked = (a, b) => S.deps.some(d => d.pred === a && d.succ === b);
-  const link = (pred, succ) => {
-    const n = LOG.length; addDep(pred, succ);
-    if (LOG.length > n) note(`${taskOf(succ).key} now waits for ${taskOf(pred).key} to finish.`, {undo:true});
-  };
-  const tk = num(t), pk = num(p), under = (t.parent_id ?? null) === p.id, inside = isUnder(t.id, p.id);
+  const tk = num(t), pk = num(p), under = (t.parent_id ?? null) === p.id;
+  const inside = isUnder(t.id, p.id) || isUnder(p.id, t.id);
   const choice = (a, b) => linked(a.id, b.id) ? {label: `${num(b)} already waits for ${num(a)}`, disabled: true}
-    : {label: `${num(b)} waits for ${num(a)} to finish`, act: () => link(a.id, b.id)};
+    : {label: `${num(b)} waits for ${num(a)} to finish`, act: () => linkTasks(a.id, b.id)};
   popMenu(at, [
     {head: `${tk} onto ${pk} ${p.title.length > 40 ? p.title.slice(0, 39) + "…" : p.title}`},
-    under ? {label: `Already under ${pk}`, disabled: true} : {label: `Put it under ${pk}`, act: () => reparent(t.id, p.id)},
-    ...(inside ? [{label: "It can't wait for its own group", disabled: true}] : [choice(p, t), choice(t, p)]),
+    ...first,
+    under ? {label: `Already under ${pk}`, disabled: true}
+      : isUnder(p.id, t.id) ? {label: `${pk} is inside ${tk}`, disabled: true}
+      : {label: `Put it under ${pk}`, act: () => reparent(t.id, p.id)},
+    ...(inside ? [{label: "A task can't wait for its own group", disabled: true}] : [choice(p, t), choice(t, p)]),
   ]);
+}
+
+/* The task a drag is over, if the pointer is well inside it: the middle of
+   another row or card means onto it, and its top and bottom (CFG.ui.onto)
+   are left for placing above or below, where a view does that. */
+function ontoOf(x, y, self, sel){
+  const n = document.elementFromPoint(x, y)?.closest?.(sel);
+  if (!n || n === self || !n.dataset.id) return null;
+  const r = n.getBoundingClientRect(), f = (y - r.top) / r.height;
+  return f > CFG.ui.onto && f < 1 - CFG.ui.onto ? n : null;
+}
+/* Drag a task onto another where a view has no drag of its own -- the
+   Table, Priorities -- for dropMenu(). By touch only `grip` starts one, so a
+   swipe elsewhere scrolls; with a mouse any part does but a field or a
+   button (the grip may be a button). Near the top or bottom of `scroller`
+   it scrolls, so a far row can be reached. */
+function ontoGrab(node, t, {grip, sel, scroller}){
+  node.addEventListener("pointerdown", ev => {
+    if (!ev.isPrimary || ev.button > 0 || ev.target.closest("input,select,textarea,a")) return;
+    if (ev.target.closest("button") && !ev.target.closest(grip)) return;
+    if (ev.pointerType !== "mouse" && !ev.target.closest(grip)) return;
+    const pid = ev.pointerId, sx = ev.clientX, sy = ev.clientY;
+    const SLOP = ev.pointerType === "mouse" ? CFG.ui.slopMouse : CFG.ui.slopTouch;
+    let moved = false, ghost = null, onto = null, cx = sx, cy = sy, raf = 0;
+    const paint = () => {
+      onto?.classList.remove("droponto");
+      onto = ontoOf(cx, cy, node, sel);
+      onto?.classList.add("droponto");
+      const p = onto && taskOf(onto.dataset.id);
+      ghost.textContent = p ? `${num(t)} onto ${num(p)}: under it, or linked` : num(t);
+    };
+    const edgeScroll = () => {
+      const r = scroller.getBoundingClientRect();
+      const dy = cy < r.top + CFG.ui.dragEdge ? -CFG.ui.dragScroll : cy > r.bottom - CFG.ui.dragEdge ? CFG.ui.dragScroll : 0;
+      if (dy){ scroller.scrollTop += dy; paint(); }
+      raf = requestAnimationFrame(edgeScroll);
+    };
+    const move = e => {
+      if (e.pointerId !== pid) return;
+      if (!moved && Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) < SLOP) return;
+      if (!moved){
+        moved = true; node.classList.add("dragging");
+        ghost = document.createElement("div"); ghost.className = "rowghost";
+        document.body.appendChild(ghost);
+        if (scroller) raf = requestAnimationFrame(edgeScroll);
+      }
+      cx = e.clientX; cy = e.clientY;
+      ghost.style.left = cx + CFG.ui.ghostOffset + "px";
+      ghost.style.top  = cy + CFG.ui.ghostOffset + "px";
+      paint();
+    };
+    const up = e => {
+      if (e.pointerId !== pid) return;
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", up);
+      document.removeEventListener("pointercancel", up);
+      cancelAnimationFrame(raf);
+      if (!moved) return;
+      ghost.remove(); node.classList.remove("dragging"); onto?.classList.remove("droponto");
+      noClickUntil = performance.now() + 300;
+      const p = onto && taskOf(onto.dataset.id);
+      if (e.type !== "pointercancel" && p) dropMenu(t, p, {x: e.clientX, y: e.clientY});
+    };
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
+    document.addEventListener("pointercancel", up);
+  });
 }
 
 function rowGrab(node, t, rows){
@@ -4235,7 +4336,7 @@ function card(t){
      <div class="ctitle">${esc(t.title)}${t.repeat ? ` <span class="crep" title="Repeats ${esc(repeatName(t.repeat))}">↻</span>` : ""}</div>
      <div class="cmeta">
        ${cardWhen(t, b)}
-       ${t.points != null ? `<span class="chip">${fmtPts(t.points)} pts</span>` : ""}
+       ${t.points != null ? `<span class="chip">${fmtPts(t.points)} pts</span>` : noPoints(t) ? `<span class="chip nopts" title="${esc(NO_POINTS)}">no pts</span>` : ""}
        ${t.when ? `<span class="chip whn" title="${WHEN_NAME[t.when]} work only">${whenMark(t)} ${WHEN_NAME[t.when]}</span>` : ""}
        ${t.popup ? `<span class="chip pop" title="Unplanned work, logged as a pop-up${t.rush ? ", done first" : ""}">⚡ Pop-up</span>` : ""}
        ${b && !b.summary && !b.unscheduled && !isDone(t) && b.slack > 0
@@ -4277,8 +4378,9 @@ function cardGrab(node, t){
     if (!ev.isPrimary || ev.button > 0) return;
     const pid = ev.pointerId;
     const sx = ev.clientX, sy = ev.clientY;
-    let moved = false, ghost = null, col = null, at = null;
-    const unmark = () => { at?.classList.remove("dropbefore"); col?.querySelector(".colbody")?.classList.remove("dropend"); };
+    let moved = false, ghost = null, col = null, at = null, onto = null, lx = sx, ly = sy;
+    const unmark = () => { at?.classList.remove("dropbefore"); col?.querySelector(".colbody")?.classList.remove("dropend");
+                           onto?.classList.remove("droponto"); };
 
     const move = e => {
       if (e.pointerId !== pid) return;
@@ -4292,11 +4394,15 @@ function cardGrab(node, t){
       }
       ghost.style.left = (e.clientX + CFG.ui.ghostOffset) + "px";
       ghost.style.top  = (e.clientY + CFG.ui.ghostOffset) + "px";
+      lx = e.clientX; ly = e.clientY;
       const over = document.elementFromPoint(e.clientX, e.clientY)?.closest?.(".col");
       unmark();
       if (col && col !== over) col.classList.remove("dropinto");
       col = over;
       if (col) col.classList.add("dropinto");
+      // over the middle of another card: onto it, to put it under or link it
+      onto = col ? ontoOf(e.clientX, e.clientY, node, ".colbody .card") : null;
+      if (onto){ onto.classList.add("droponto"); at = null; return; }
       at = !col ? null : [...col.querySelectorAll(".colbody .card")].find(c => {
         if (c === node) return false;
         const r = c.getBoundingClientRect(); return e.clientY < r.top + r.height / 2; }) || null;
@@ -4315,6 +4421,10 @@ function cardGrab(node, t){
       if (!moved || !col) return;
       noClickUntil = performance.now() + 300;          // the drop is not also a click
       const to = col.dataset.status, before = at?.dataset.id ?? null;
+      const p = onto && taskOf(onto.dataset.id);
+      if (p) return dropMenu(t, p, {x: lx, y: ly}, to === t.status ? [] : [{label: `Move it to ${to}`, act: () => {
+        commit(`${t.key} → ${to}`, () => { setStatus(t, to); cardOrder(t, p.id).forEach((x, k) => { x.cpos = (k + 1) * 10; }); });
+        render(); drawer(); }}]);
       if (to === t.status){
         // up or down its own column: nothing to do if the order stays as it is
         const now = boardTasks().filter(x => x.status === to).sort(cardCmp).map(x => x.id);
@@ -4634,20 +4744,25 @@ function sprintSection(s, all, rows, by){
       return `<span class="pchip${over ? " over" : ""}" title="${esc(tip)}">${avatar(name, tip)}<b>${esc(name)}</b> ${fmtPts(p)}${lim != null ? ` / ${fmtLoad(lim)}` : ""} pts</span>`;
     }).join("");
     const low = s.state !== "closed" && underPlanned(s, R);
+    const unpointed = all.filter(noPoints);
     const roomTxt = R.total > PLAN_EPS ? `<span class="sproom${low ? " low" : ""}" title="${esc(`${fmtLoad(R.used)} pts left to do, against ${
-      fmtLoad(R.total)} pts of everyone's room on its days${low ? `: under ${Math.round(CFG.sprint.fullShare * 100)}% planned` : ""}`)}">${
+      fmtLoad(R.total)} pts of everyone's room on its days${low ? `: under ${Math.round(CFG.sprint.fullShare * 100)}% planned` : ""}${
+      unpointed.length ? `, not counting ${unpointed.length} task${unpointed.length === 1 ? "" : "s"} without points` : ""}`)}">${
       Math.round(R.used / R.total * 100)}% planned</span>` : "";
+    const noPts = unpointed.length ? `<button type="button" class="spnopts" title="${esc(`Without points, so this sprint's room and everyone's load leave them out:\n${
+      unpointed.map(t => `${num(t)} ${t.title}`).join("\n")}\nClick to open the first.`)}">${unpointed.length} without points</button>` : "";
     const act = s.state === "active" ? "complete" : "start";
     const resort = all.some(t => t.spos != null) ? `<button type="button" class="ghost" data-rescore title="Let go of the order set by hand">Sort by score</button>` : "";
     sec.innerHTML = `<div class="sphd"><button type="button" class="spname" title="Rename, change the dates, or delete">${esc(s.name)}</button>
         <span class="spdates">${fmtDay(s.start)} – ${fmtDay(s.end)}</span>
-        ${s.state === "active" ? '<span class="spstate">Active</span>' : ""}${sum}${roomTxt}${velc}${chips}<span class="spacer"></span>
+        ${s.state === "active" ? '<span class="spstate">Active</span>' : ""}${sum}${noPts}${roomTxt}${velc}${chips}<span class="spacer"></span>
         ${resort}<button type="button" class="ghost" data-fill title="Add the backlog's highest scores that fit everyone's room">Fill…</button>
         <button type="button" class="ghost" data-act="${act}">${act === "complete" ? "Complete sprint" : "Start sprint"}</button></div>
       <div class="spbody"></div>`;
     sec.querySelector(".spname").onclick = () => editSprint(s.id);
     sec.querySelector("[data-act]").onclick = () => act === "start" ? startSprint(s.id) : completeSprint(s.id);
     sec.querySelector("[data-fill]").onclick = () => fillSprint(s.id);
+    sec.querySelector(".spnopts")?.addEventListener("click", () => { sel = unpointed[0].id; render(); drawer(); });
   } else {
     sec.innerHTML = `<div class="sphd"><b class="spname">Backlog</b>${sum}<span class="spacer"></span>${all.some(t => t.spos != null)
       ? `<button type="button" class="ghost" data-rescore title="Let go of the order set by hand">Sort by score</button>` : ""}</div><div class="spbody"></div>`;
@@ -4684,7 +4799,8 @@ function sprintRow(t, s, by){
       after ? ` <span class="safter" title="Planned to finish ${fmtDate(b.finish)}, after ${esc(s.name)} ends on ${fmtDate(s.end)}">after sprint</span>` : ""}</span>
     <span class="chip sst">${esc(t.status)}</span>
     <span class="swho" title="${esc(shareText(t))}">${avatars(t)}<span>${esc(whoShort(t))}</span></span>
-    <span class="spts">${t.points != null ? `${fmtPts(t.points)} pts` : ""}</span>
+    ${s && noPoints(t) ? `<span class="spts nopts" title="${esc(NO_POINTS)}">no pts</span>`
+      : `<span class="spts">${t.points != null ? `${fmtPts(t.points)} pts` : ""}</span>`}
     <span class="sdue${due === "late" ? " late" : ""}" title="Planned finish">${b && !b.unscheduled ? (due === "late" ? "late · " : "") + fmtDay(iso(b.finish)) : b ? "—" : ""}</span>
     <button type="button" class="smore" aria-label="More for ${esc(num(t))}" title="Move it to a sprint, or to the top or foot of its list">⋯</button>`;
   r.onclick = () => { if (performance.now() < noClickUntil) return; sel = t.id; render(); drawer(); };
@@ -4708,8 +4824,8 @@ function sprintGrab(node, t){
     const pid = ev.pointerId, sx = ev.clientX, sy = ev.clientY;
     const SLOP = ev.pointerType === "mouse" ? CFG.ui.slopMouse : CFG.ui.slopTouch;
     const from = node.closest(".spr")?.dataset.sprint ?? "";
-    let moved = false, ghost = null, over = null, cx = sx, cy = sy, raf = 0, at = null, part = null;
-    const unmark = () => { at?.classList.remove("dropbefore");
+    let moved = false, ghost = null, over = null, cx = sx, cy = sy, raf = 0, at = null, part = null, onto = null;
+    const unmark = () => { at?.classList.remove("dropbefore"); onto?.classList.remove("droponto");
                            for (const n of document.querySelectorAll("#sprints .spend")) n.classList.remove("spend"); };
     const paint = () => {
       const hit = document.elementFromPoint(cx, cy);
@@ -4718,6 +4834,13 @@ function sprintGrab(node, t){
       if (over !== s){ over?.classList.remove("dropinto"); over = s; over?.classList.add("dropinto"); }
       const to = over?.dataset.sprint;
       at = null; part = null;
+      // over the middle of another row, in any list: onto it
+      onto = to != null ? ontoOf(cx, cy, node, "#sprints .srow") : null;
+      if (onto){
+        onto.classList.add("droponto");
+        ghost.textContent = `${t.key} onto ${taskOf(onto.dataset.id)?.key}: under it, or linked`;
+        return;
+      }
       if (to != null && to === from){
         // its own list: before the first row whose middle is below the pointer, in the part pointed at
         const box = hit.closest(".sppart") || over.querySelector(".spbody");
@@ -4760,6 +4883,9 @@ function sprintGrab(node, t){
       noClickUntil = performance.now() + 300;
       const to = over?.dataset.sprint;
       if (e.type === "pointercancel" || to == null) return;
+      const p = onto && taskOf(onto.dataset.id);
+      if (p) return dropMenu(t, p, {x: e.clientX, y: e.clientY},
+        to === from ? [] : [{label: `Move it to ${listName(to || null)}`, act: () => moveToSprint(t.id, to || null)}]);
       if (to !== from) return moveToSprint(t.id, to || null);
       reorderInList(t, to || null, at?.dataset.id ?? null, part);
     };
@@ -5136,7 +5262,8 @@ el("dpop").addEventListener("keydown", e => {
  * deadline missed (negative float), work past its planned finish. Warnings
  * are things heading that way: work that will not fit its person's room in
  * its dates, a sprint under way or about to start that is under-planned,
- * points nobody is on, and work others depend on whose start nothing pins.
+ * points nobody is on, work others depend on whose start nothing pins, and
+ * work in a sprint with no points, which its room and the load leave out.
  * Few lines, each worth acting on -- a list people learn to ignore is worse
  * than none. So no line for a person's overbooked days: the planner only
  * overbooks a day with work that won't fit its dates, and that work has its
@@ -5180,6 +5307,13 @@ function healthIssues(){
     if (underPlanned(sp, R))
       out.push({level:"warning", sprint:sp, text:`${sp.name} is ${Math.round(R.used / R.total * 100)}% planned: ${fmtLoad(R.used)} of ${fmtLoad(R.total)} pts of room`});
   }
+  // work in a sprint not over yet with no points: one line a sprint, which opens the first
+  for (const sp of S.sprints.filter(x => x.state !== "closed" && x.end >= today)){
+    const ts = S.tasks.filter(t => t.sprint === sp.id && !parents.has(t.id) && noPoints(t));
+    if (ts.length) out.push({level:"warning", text:`${sp.name}: ${ts.length} task${s(ts.length)} without points (${ts.slice(0, 3).map(t => t.key).join(", ")
+      }${ts.length > 3 ? " …" : ""}), so its room and everyone's load leave ${ts.length === 1 ? "it" : "them"} out`,
+      act: () => { setView("sprints"); sel = ts[0].id; render(); drawer(); }});
+  }
   return out;
 }
 
@@ -5214,7 +5348,8 @@ el("hlList").addEventListener("click", e => {
   const r = e.target.closest(".hlrow"); if (!r) return;
   const x = lastHealth[+r.dataset.i]; if (!x) return;
   el("dhealth").close();
-  if (x.t){ if (view === "load" || view === "prio") setView("gantt"); sel = x.t.id; render(); drawer(); }
+  if (x.act) x.act();
+  else if (x.t){ if (view === "load" || view === "prio") setView("gantt"); sel = x.t.id; render(); drawer(); }
   else if (x.sprint){ fillSprint(x.sprint.id); }
 });
 
@@ -5520,6 +5655,10 @@ function renderPrioView(){
   });
   el("prio").innerHTML = cols.join("") || `<p class="hint">${S.tasks.length ? "Nobody to show: add people in Settings → People, or give tasks a person."
                                                                           : "Nothing planned yet."}</p>`;
+  // drag one onto another: under it, or linked (dropMenu); by touch, by its number
+  const byId = new Map(S.tasks.map(t => [t.id, t]));
+  for (const n of el("prio").querySelectorAll(".pri[data-id]"))
+    ontoGrab(n, byId.get(n.dataset.id), {grip: ".prt .key", sel: "#prio .pri[data-id]", scroller: el("priowrap")});
   el("stat").innerHTML = `${listed} task${listed === 1 ? "" : "s"} for ${esc(+day === +today ? "today" : fmtDate(day))}`
     + ` · ${rows.length} ${rows.length === 1 ? "person" : "people"}`
     + (overPeople ? ` · <b title="People with more planned for the day than they have room for">${overPeople}</b> over capacity` : "");
@@ -5529,7 +5668,7 @@ function renderPrioView(){
 const firstDone = () => S.statuses.find(s => S.statusCfg[s]?.done) || null;
 
 el("prio").addEventListener("click", e => {
-  const row = e.target.closest(".pri[data-id]"); if (!row) return;
+  const row = e.target.closest(".pri[data-id]"); if (!row || performance.now() < noClickUntil) return;
   const t = taskOf(row.dataset.id); if (!t) return;
   const act = e.target.closest("button[data-act]")?.dataset.act;
   if (act === "more"){
@@ -5809,6 +5948,9 @@ function renderTableView(){
     + th(TKEY, "tkey") + th(TTITLE, "tttl") + shown.map(c => th(c)).join("") + `</tr></thead>`
     + `<tbody>${rows.map(row).join("")}</tbody>`;
   el("tlPeople").innerHTML = allPeople().map(p => `<option value="${esc(p)}">`).join("");
+  // drag a row by its key onto another: under it, or linked (dropMenu)
+  for (const r of el("tbl").tBodies[0].rows){ const t = byId.get(r.dataset.id);
+    if (t) ontoGrab(r, t, {grip: ".tkey .key", sel: "#tbl tbody tr[data-id]", scroller: el("tscroll")}); }
 
   if (keep){
     const m = el("tbl").querySelector(`tr[data-id="${CSS.escape(keep.id)}"] .ted[data-k="${CSS.escape(keep.k)}"]`);
@@ -5969,7 +6111,7 @@ tbl.addEventListener("click", e => {
   }
   const id = e.target.closest("tr[data-id]")?.dataset.id; if (!id) return;
   if (e.target.closest("[data-fold]")){ collapsed.has(id) ? collapsed.delete(id) : collapsed.add(id); return render(); }
-  if (e.target.closest("[data-open]")){ sel = id; render(); drawer(); }
+  if (e.target.closest("[data-open]") && performance.now() >= noClickUntil){ sel = id; render(); drawer(); }
 });
 
 el("tColPick").addEventListener("change", e => {
@@ -6216,14 +6358,20 @@ function drawer(){
   // Skipping its own row skips its subtree too, so nothing inside it is offered.
   const km = childMap(), byId = new Map(S.tasks.map(x => [x.id, x])), pmap = new Map([[TOP_LEVEL, null]]);
   const pname = x => `${num(x)} ${x.title}`;
-  const popts = [`<option value="${esc(TOP_LEVEL)}"></option>`];
+  const cands = [];
   const walkP = p => { for (const x of km.get(p) || []){
     if (x.id === sel) continue;
     const v = pname(x), up = x.parent_id != null ? byId.get(x.parent_id) : null;
     if (!pmap.has(v)) pmap.set(v, x.id);
-    popts.push(`<option value="${esc(v)}"${up ? ` label="in ${esc(pname(up))}"` : ""}></option>`);
+    cands.push({id: x.id, html: `<option value="${esc(v)}"${up ? ` label="in ${esc(pname(up))}"` : ""}></option>`});
     walkP(x.id); } };
   walkP(null);
+  const popts = [`<option value="${esc(TOP_LEVEL)}"></option>`, ...cands.map(c => c.html)];
+  // Links typed in: any task but its own group and what is inside it -- a link
+  // either way there would reach it through the group's tasks, a loop
+  const ups = new Set(); for (let u = t.parent_id; u != null; u = byId.get(u)?.parent_id) ups.add(u);
+  const lmap = new Map([...pmap].filter(([, id]) => id && !ups.has(id)));
+  const lopts = cands.filter(c => !ups.has(c.id)).map(c => c.html);
   const parentNow = t.parent_id != null && byId.get(t.parent_id) ? pname(byId.get(t.parent_id)) : "";
   // Sprint: the open ones, plus a completed one it is still filed under
   const mySpr = sprintOf(t);
@@ -6332,7 +6480,13 @@ function drawer(){
     ${fold("links", `Links`, (n => n ? `${n} link${n === 1 ? "" : "s"}` : "none")(preds.length + succs.length))}
       ${preds.length || succs.length
         ? [...preds.map(x => linkRow(x, "waits for", x.pred)), ...succs.map(x => linkRow(x, "then", x.succ))].join("")
-        : `<p style="margin:0;color:var(--muted)">None. Drag the dot at the end of a bar onto another bar to add one.</p>`}
+        : `<p style="margin:0 0 7px;color:var(--muted)">None yet.</p>`}
+      <div class="fld lkadd"><label for="fLkP">Waits for</label><input id="fLkP" list="dlLink" autocomplete="off"
+        placeholder="Type to find a task" title="A task this one waits for: it starts once that one finishes"></div>
+      <div class="fld lkadd"><label for="fLkS">Followed by</label><input id="fLkS" list="dlLink" autocomplete="off"
+        placeholder="Type to find a task" title="A task that waits for this one to finish"></div>
+      <datalist id="dlLink">${lopts.join("")}</datalist>
+      <p class="hint" style="margin:2px 0 0">Or drag one task onto another, in any view, or the dot at the end of a bar onto another bar.</p>
     </details>
     ${fold("attachments", `Attachments${att.length ? ` (${att.length})` : ""}`, "")}
       ${att.map((a, i) => `<div class="att">${CLIP}<a href="${esc(safeUrl(a.url) || "#")}" target="_blank" rel="noopener noreferrer"
@@ -6453,22 +6607,27 @@ function drawer(){
   // Re-parenting journals itself (reparent() checks for loops first); the
   // second drawer() puts the field back if it refused. Picked from the list,
   // or typed: then the one task whose number or name holds what was typed.
+  // what was typed into a task field: the one picked from its list, or else the
+  // one task whose number or name holds it; several, or none, is said
+  const pickTask = (v, map) => {
+    if (map.has(v)) return map.get(v);
+    const q = v.toLowerCase(), hits = [...map].filter(([k, id]) => id && k.toLowerCase().includes(q));
+    if (hits.length === 1) return hits[0][1];
+    note(hits.length ? `${hits.length} tasks match “${v}”: pick one from the list.` : `No task matches “${v}”.`, {warn:true});
+    return undefined;
+  };
   const pa = el("fPa");
   pa.onfocus = () => pa.select();                    // typing replaces it, and the list shows what matches
   pa.onchange = () => {
-    const v = pa.value.trim();
-    let to;
-    if (!v || pmap.has(v)) to = v ? pmap.get(v) : null;
-    else {
-      const q = v.toLowerCase(), hits = [...pmap].filter(([k, id]) => id && k.toLowerCase().includes(q));
-      if (hits.length !== 1){
-        note(hits.length ? `${hits.length} tasks match “${v}”: pick one from the list.` : `No task matches “${v}”.`, {warn:true});
-        return drawer();
-      }
-      to = hits[0][1];
-    }
-    if (to === (t.parent_id ?? null)) return drawer();
+    const v = pa.value.trim(), to = v ? pickTask(v, pmap) : null;
+    if (to === undefined || to === (t.parent_id ?? null)) return drawer();
     reparent(t.id, to); drawer();
+  };
+  // a link typed in: this one waiting for that one, or that one for this
+  for (const [id, after] of [["fLkP", false], ["fLkS", true]]) el(id).onchange = e => {
+    const v = e.target.value.trim(); if (!v) return;
+    const other = pickTask(v, lmap);
+    if (other === undefined || !linkTasks(after ? t.id : other, after ? other : t.id)) drawer();
   };
   if (el("fOut")) el("fOut").onclick = () => outdent(t.id);
   d.querySelectorAll("[data-link]").forEach(n => n.onclick = () => openLink(n.dataset.link));
