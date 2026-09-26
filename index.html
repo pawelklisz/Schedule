@@ -192,7 +192,8 @@ details.menu.right .menupop{left:auto;right:0}
 #inner{display:flex;align-items:flex-start;min-width:100%;width:max-content}
 
 /* ---- left grid ---- */
-#grid{width:var(--grid-w);flex:none;position:sticky;left:0;z-index:6;
+/* never so narrow that the columns picked squeeze the names out (--gmin: gridcols.js) */
+#grid{width:max(var(--grid-w), var(--gmin, 0px));flex:none;position:sticky;left:0;z-index:6;
   background:var(--paper);border-right:1px solid var(--rule)}
 .ghd,.grow{display:grid;
   /* the columns picked under Show -> Columns (gridcols.js sets --gcols) */
@@ -220,6 +221,14 @@ details.menu.right .menupop{left:auto;right:0}
 .grow .key{cursor:grab;touch-action:none}
 @media (pointer:coarse){ .grow .key{padding:8px 5px;margin:-8px -5px} }
 .grow.droptarget{background:var(--drop);box-shadow:inset 0 0 0 2px var(--focus)}
+/* a value in the task list that a tap edits (gridcols.js), and its editor over the cell */
+.grow .gced{cursor:text;position:relative}
+.grow .gced:hover{text-decoration:underline dotted var(--muted);text-underline-offset:3px}
+.grow .gced.editing{overflow:visible}
+.gedit.ted{position:absolute;right:2px;top:50%;transform:translateY(-50%);height:calc(var(--row-h) - 6px);
+  width:max(calc(100% - 4px),calc(var(--fs)*4.5));z-index:3;background:var(--paper);border-color:var(--focus);text-align:right}
+.gc .gedit.ted{left:2px;right:auto;text-align:left;width:max(calc(100% - 4px),calc(var(--fs)*9))}
+.gedit.ted[type=date]{width:calc(var(--fs)*10);text-align:left}
 .grow.dropbad{background:var(--crit-soft)}
 .ghd.droptarget{background:var(--drop);color:var(--ink)}
 .rowghost{position:fixed;z-index:99;pointer-events:none;padding:4px 12px;border-radius:var(--r-pill);
@@ -454,12 +463,27 @@ table.cfg input[type=color]{width:34px;height:24px;padding:1px 2px;cursor:pointe
 .spempty{margin:0;padding:6px 4px;color:var(--muted)}
 .sphint{margin:0;padding:0 10px 8px}
 .srow{display:grid;align-items:center;gap:10px;min-height:var(--row-h);padding:0 10px;
-  grid-template-columns:calc(var(--fs)*4.6) minmax(0,1fr) calc(var(--fs)*7.2) calc(var(--fs)*7) calc(var(--fs)*4) calc(var(--fs)*7.4);
+  grid-template-columns:calc(var(--fs)*4.6) minmax(0,1fr) calc(var(--fs)*7.2) calc(var(--fs)*7) calc(var(--fs)*4) calc(var(--fs)*7.4) calc(var(--fs)*1.8);
   background:var(--paper);border:1px solid var(--rule-soft);border-radius:var(--r-md);cursor:pointer;
   user-select:none;-webkit-user-select:none;transition:border-color .12s,box-shadow .15s}
 .srow:hover{border-color:var(--muted)}
 .srow[data-sel="1"]{outline:2px solid var(--focus);outline-offset:-1px}
 .srow.dragging{opacity:.35}
+/* ⋯: the row's menu */
+.smore{border:0;background:none;padding:0 2px;border-radius:var(--r-sm);cursor:pointer;color:var(--muted);font:inherit;
+  font-weight:var(--fwb);line-height:1.2}
+.smore:hover,.smore:focus-visible{background:var(--panel);color:var(--ink)}
+@media (pointer:coarse){ .smore{padding:8px 4px;margin:-8px -4px} }
+/* where a row dragged up or down its list lands */
+.srow.dropbefore{box-shadow:0 -3px 0 var(--focus)}
+.spbody.spend::after,.sppart.spend::after{content:"";display:block;height:3px;border-radius:var(--r-pill);background:var(--focus)}
+/* a sprint split by the part of the day */
+.sppart{display:flex;flex-direction:column;gap:calc(4px*var(--dens))}
+.sppart + .sppart{margin-top:6px}
+.spsub{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:calc(var(--fs)*.85);font-weight:var(--fwb);
+  text-transform:uppercase;letter-spacing:.04em;padding:2px 2px 0}
+.spsub span{font-weight:normal;text-transform:none;letter-spacing:0}
+.spsub::after{content:"";flex:1;border-top:1px solid var(--rule)}
 /* the key is the drag handle on touch, as on the Gantt: a swipe elsewhere scrolls */
 .srow .skey{color:var(--key);cursor:grab;touch-action:none;white-space:nowrap}
 @media (pointer:coarse){ .srow .skey{padding:10px 6px;margin:-10px -6px} }
@@ -482,6 +506,7 @@ table.cfg input[type=color]{width:34px;height:24px;padding:1px 2px;cursor:pointe
 .fld .rep input{width:calc(var(--fs)*4.4);flex:none}
 .rep select{flex:1;min-width:0}
 .rep .every{color:var(--muted)}
+.rpdays{gap:2px 8px}
 /* people as initials in circles; a stack of them when a task is shared */
 .av{display:inline-grid;place-items:center;flex:none;width:calc(var(--fs)*1.55);height:calc(var(--fs)*1.55);
   border-radius:50%;font-size:calc(var(--fs)*.68);font-weight:var(--fwb);letter-spacing:.02em;line-height:1;
@@ -602,6 +627,75 @@ table.cfg input[type=color]{width:34px;height:24px;padding:1px 2px;cursor:pointe
 .prdiv::after{content:"";flex:1;border-top:1px dashed currentColor;opacity:.6}
 .prdiv.soft{color:var(--muted)}
 .prnone{margin:4px 0}
+
+/* ---- table: every task a row, every field a cell (table.js) ---- */
+#tablewrap{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--shell)}
+#tablewrap[hidden]{display:none}
+#tablebar{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;padding:10px 12px;flex:none}
+.thint{margin:0;flex:1 1 20em}
+.tcrl{color:var(--crit);font-weight:var(--fwb)}
+.tcpick{display:flex;flex-direction:column;gap:5px;max-height:55vh;overflow:auto}
+.tcempty{color:var(--muted);font-size:calc(var(--fs)*.85);font-style:italic}
+#tscroll{flex:1;min-height:0;overflow:auto;margin:0 12px 12px;background:var(--paper);
+  border:1px solid var(--rule);border-radius:var(--r-lg)}
+/* fixed layout: the columns are as wide as their <col> says, whatever is in them */
+.tt{border-collapse:separate;border-spacing:0;table-layout:fixed}
+.tt th,.tt td{height:var(--row-h);padding:0 6px;border-bottom:1px solid var(--rule-soft);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--paper)}
+.tt td.ed{padding:0 2px}
+.tt .num{text-align:right}
+.tt thead th{position:sticky;top:0;z-index:3;padding:0;background:var(--panel);border-bottom:1px solid var(--rule);
+  color:var(--muted);font-weight:var(--fwb);font-size:calc(var(--fs)*.92);text-align:left}
+.tt thead th.num{text-align:right}
+.tsrt{display:block;width:100%;height:100%;border:0;background:none;padding:0 6px;cursor:pointer;color:inherit;
+  font:inherit;text-align:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tsrt:hover{color:var(--ink)}
+.tt th[aria-sort="ascending"],.tt th[aria-sort="descending"]{color:var(--accent-ink)}
+/* the tick, the key and the name stay put while the rest scrolls sideways */
+.tt .tck{position:sticky;left:0;z-index:2;text-align:center;padding:0}
+.tt .tkey{position:sticky;left:calc(var(--fs)*2.2);z-index:2}
+.tt .tttl{position:sticky;left:calc(var(--fs)*7.8);z-index:2;border-right:1px solid var(--rule)}
+.tt thead .tck,.tt thead .tkey,.tt thead .tttl{z-index:4}
+.tck input{margin:0;accent-color:var(--accent);vertical-align:middle}
+.tkey .key{border:0;background:none;padding:0;cursor:pointer;color:var(--key);font:inherit}
+.tkey .key:hover{text-decoration:underline}
+/* the name, indented by its depth in the tree, with the fold button */
+.tname{display:flex;align-items:center;gap:3px;padding-left:calc(var(--fs)*1.1*var(--d, 0))}
+.tname .chev{flex:none}
+/* a cell's editor looks like the cell until it is pointed at */
+.ted{display:block;width:100%;min-width:0;height:calc(var(--row-h) - 6px);padding:1px 4px;border:1px solid transparent;
+  border-radius:var(--r-sm);background:transparent;color:var(--ink);font:inherit}
+.ted:hover{border-color:var(--rule)}
+.ted:focus{border-color:var(--focus);background:var(--paper);outline:none}
+select.ted{cursor:pointer}
+.num .ted{text-align:right}
+/* no spinners: they took a number's room, and a keyboard's arrows still step it */
+.ted::-webkit-inner-spin-button,.ted::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number].ted{-moz-appearance:textfield;appearance:textfield}
+/* rows: a group, the one open in the task panel, ticked, on the critical path,
+   or shown only because something under it matches the filter */
+.tt tbody tr:hover td{background:var(--panel)}
+.tt tr.tsel td{background:var(--sel)}
+.tt tr.ttk td{background:var(--accent-soft)}
+.tt tr.tsum .tttl .ted{font-weight:var(--fwb)}
+.tt tr.tcr .tttl .ted{color:var(--crit)}
+.tt tr.tctx td>*,.tt tr.tctx td{color:var(--muted)}
+.tt td.sugg{color:var(--muted);font-style:italic}
+.tt td.zero{color:var(--crit);font-weight:var(--fwb)}
+/* bulk edit: shown while rows are ticked */
+.tbulk{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:4px 8px;background:var(--accent-soft);
+  border-radius:var(--r-md)}
+.tbulk[hidden]{display:none}
+.tbulk select,.tbulk input{padding:3px 6px;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--paper)}
+.tbulk .ghost{padding:3px 10px}
+.tbulk .primary{padding:4px 12px}
+.tks{color:var(--accent-ink);font-weight:var(--fwb)}
+/* a phone: the name scrolls with the rest, or it would be all there is */
+@media (max-width:640px){
+  .tt .tttl{position:static}
+  #tscroll{margin:0 6px 6px}
+  .thint{display:none}
+}
 /* messages: a pop-up at the foot of the screen; the red bar is for trouble */
 #toast{position:fixed;left:50%;bottom:calc(var(--fs)*2.4 + 22px);transform:translateX(-50%);z-index:60;
   display:flex;align-items:center;gap:10px;max-width:min(640px,calc(100vw - 32px));
@@ -614,12 +708,42 @@ table.cfg input[type=color]{width:34px;height:24px;padding:1px 2px;cursor:pointe
   background:var(--on-ink);color:var(--ink)}
 #tx{border:0;background:none;color:inherit;opacity:.7;cursor:pointer;padding:2px 6px;border-radius:var(--r-sm)}
 #tx:hover{opacity:1}
+/* a small menu of actions: a row's ⋯, or a right-click (popmenu.js) */
+.popmenu{position:fixed;z-index:70;display:flex;flex-direction:column;gap:2px;min-width:calc(var(--fs)*14);
+  max-width:min(calc(var(--fs)*28),calc(100vw - 8px));max-height:70vh;overflow:auto;padding:6px;background:var(--paper);
+  border:1px solid var(--rule);border-radius:var(--r-lg);box-shadow:var(--shadow-md)}
+.popmenu button{border:0;background:none;padding:6px 10px;border-radius:var(--r-sm);cursor:pointer;text-align:left;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.popmenu button:hover,.popmenu button:focus-visible{background:var(--panel);outline:none}
+.popmenu button:disabled{opacity:.4;cursor:default;background:none}
+.popmenu hr{border:0;border-top:1px solid var(--rule-soft);margin:3px 0}
+.pmh{margin:2px 10px 2px;color:var(--muted);font-size:calc(var(--fs)*.85)}
+@media (pointer:coarse){ .popmenu button{padding:10px 12px} }
+/* reminders: a card each, bottom right, above the status bar */
+#remind{position:fixed;right:16px;bottom:calc(var(--fs)*2.4 + 16px);z-index:61;display:flex;flex-direction:column;gap:8px;
+  max-width:min(340px,calc(100vw - 32px))}
+#remind[hidden]{display:none}
+.rmc{background:var(--paper);border:1px solid var(--rule);border-left:4px solid var(--accent);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-lg);padding:10px 12px;cursor:pointer;animation:toastin .18s ease-out}
+.rmt{color:var(--muted);font-size:calc(var(--fs)*.9)}
+.rmn{margin:2px 0 8px;font-weight:var(--fwb)}
+.rmn .key{color:var(--key);font-weight:normal}
+.rmb{display:flex;gap:6px}
+.rmb button{border:1px solid var(--rule);background:var(--paper);border-radius:var(--r-sm);padding:3px 9px;cursor:pointer;color:var(--ink)}
+.rmb button:hover{background:var(--panel)}
+.rmb button[data-act="x"]{margin-left:auto;border:0;color:var(--muted)}
+/* the drawer's reminder row: the time at its size, the choice taking the rest */
+.rmset #fRmT{width:calc(var(--fs)*7.6);flex:none}
+.rmset select{flex:1;min-width:0}
+.rmset .rmx{flex:none;border:0;background:none;color:var(--muted);cursor:pointer;padding:0 4px}
 @keyframes toastin{from{opacity:0;transform:translate(-50%,8px)}}
 
 /* ---- detail drawer ---- */
 #drawer{width:var(--drawer-w);flex:none;background:var(--paper);border-left:1px solid var(--rule);
   display:flex;flex-direction:column;overflow:auto}
 #drawer[hidden]{display:none}
+/* with WBS numbering, the key beside the number */
+.dhd .key .kk{color:var(--muted);font-weight:normal;margin-left:6px}
 .dhd{padding:13px 44px 13px 15px;border-bottom:1px solid var(--rule);position:relative}
 /* closing the drawer: Escape did, and nothing else -- a tablet has no Escape */
 .dx{position:absolute;top:9px;right:9px;width:28px;height:28px;display:grid;place-items:center;border:0;
@@ -772,14 +896,15 @@ dialog h2+.hint{margin-top:-6px}
   :root:not(.printing){--grid-w:calc(var(--fs)*12)}
   .hrow{gap:6px 8px;padding:6px 8px}
   h1{flex-basis:100%}
-  .tabs{margin-left:0}
+  .tabs{margin-left:0;flex-wrap:wrap}          /* six views: a second line rather than off the edge */
+  .tabs button{padding:6px 10px}
   #q{flex:1 1 auto;min-width:0}
   #statusbar{padding:4px 8px}
   .rrow{grid-template-columns:1fr auto}      /* the limit column takes only what it needs */
   #drawer{width:100%}
   #boardwrap{scroll-snap-type:x mandatory}
   .col{min-width:calc(100vw - 40px);scroll-snap-align:start}
-  .srow{grid-template-columns:auto minmax(0,1fr) auto}
+  .srow{grid-template-columns:auto minmax(0,1fr) auto auto}
   .srow .swho,.srow .spts,.srow .sdue{display:none}
   dialog form{min-width:0}
 }
@@ -811,6 +936,7 @@ dialog h2+.hint{margin-top:-6px}
       <button data-v="prio" title="What each person does today, most important first">Priorities</button>
       <button data-v="sprints" title="Plan sprints: drag tasks between a sprint and the backlog">Sprints</button>
       <button data-v="load" title="Who has what on which day: the work planned into each person's week">Load</button>
+      <button data-v="table" title="Every task as a row: edit in place, sort by any column, change many at once">Table</button>
     </nav>
     <div class="spacer"></div>
     <div class="grp">
@@ -896,6 +1022,8 @@ dialog h2+.hint{margin-top:-6px}
 <div id="rhprobe" aria-hidden="true"></div>
 <p class="warn" id="warn" hidden><span id="warnMsg"></span><button type="button" class="ghost"
   id="warnGo" hidden>Reload</button></p>
+<!-- reminders due while the app is open: one card each, Done or Snooze -->
+<div id="remind" aria-live="polite" hidden></div>
 <div id="toast" role="status" aria-live="polite" hidden><span id="tmsg"></span><button type="button"
   id="tundo" hidden>Undo</button><button type="button" id="tx" aria-label="Dismiss">✕</button></div>
 
@@ -986,8 +1114,17 @@ dialog h2+.hint{margin-top:-6px}
       <input id="sOrigin" type="date"></div>
     <div class="fld"><label for="sHol">Holidays</label>
       <textarea id="sHol" rows="4" placeholder="2026-11-26&#10;2026-12-25"></textarea></div>
-    <p class="hint">One ISO date per line. These are skipped along with weekends
+    <p class="hint">One ISO date per line. These are skipped along with the days off
       when the schedule counts working days.</p>
+    <div class="fld"><label>Work week</label><span id="sWeek" class="spdays"></span></div>
+    <div class="fld"><label for="sNum">Task numbers</label><select id="sNum">
+      <option value="">Keys, like ENG-12: fixed for good</option>
+      <option value="wbs">WBS, like 1.2.3: their place in the tree</option></select></div>
+    <p class="hint">WBS numbers renumber themselves as tasks move. The key stays underneath, for links
+      and history; search finds either, and a task's drawer shows both.</p>
+    <p class="hint">The days the schedule counts as working days. Tick all seven for work
+      that goes on at weekends: a task then takes its days straight through. Changing it
+      moves dates.</p>
     <p class="hint" id="sWarn" hidden></p>
 
     <h2>Columns</h2>
@@ -1236,6 +1373,25 @@ dialog h2+.hint{margin-top:-6px}
 <div id="loadwrap" hidden>
   <div id="loadbar"></div>
   <div id="loadgrid"></div>
+</div>
+
+<div id="tablewrap" hidden>
+  <div id="tablebar">
+    <details class="menu" id="mTCols">
+      <summary class="ghost" title="Which columns the table shows, on this device">Columns</summary>
+      <div class="menupop">
+        <p class="hint">A column with nothing in it stays hidden until it is ticked.</p>
+        <div id="tColPick" class="tcpick"></div>
+        <hr>
+        <button type="button" id="tColReset">Back to the usual columns</button>
+      </div>
+    </details>
+    <div id="tBulk" class="tbulk" hidden></div>
+    <span class="hint thint">Click a heading to sort by it. A cell saves as you leave it: Enter goes down a row,
+      Esc puts it back. Tick rows to change them all at once. <span class="tcrl">Red</span>: on the critical path.</span>
+  </div>
+  <div id="tscroll"><table id="tbl" class="tt"></table></div>
+  <datalist id="tlPeople"></datalist>
 </div>
 
 <!-- beside whichever view is up: inside #wrap it went when the Gantt did -->
@@ -1502,6 +1658,8 @@ const DEMO = {
   ],
   keyDates:[],        // named dates tasks start after or are due by (keydates.js)
   sprintPattern:null, // sprints made by themselves on set days (sprintauto.js)
+  workWeek:null,      // the working days, Monday 0 .. Sunday 6; null is Monday to Friday
+  numbering:null,     // "wbs": tasks shown by their place in the tree (1.2.3) rather than their key
   tasks:[
     {id:"demo-01",key:"ENG-1",title:"Thruster qualification",parent_id:null,status:"In Progress",assignee:null,duration:0,not_before:null,custom:{priority:"P0"}},
     {id:"demo-02",key:"ENG-2",title:"Design",               parent_id:"demo-01",   status:"In Progress",assignee:null,duration:0,not_before:null,custom:{priority:"P1"}},
@@ -1578,6 +1736,9 @@ const CFG = {
     // of its room, gets a word on opening; Fill lists up to fillList tasks
     warnDays:3, fullShare:0.75, fillList:30},
   backup: {days:7},                   // a backup file this often, if anything changed
+  // the hours the evening starts and the morning comes back: a sprint lists
+  // its Night work first from `evening` until `morning` (sprints.js)
+  dayParts: {evening:17, morning:5},
 
   timeline: {
     headerH:   52,  // month + tick bands -> --tlhd-h
@@ -1619,6 +1780,11 @@ const CFG = {
      already late may be placed -- it still has to be done, as room allows. */
   plan: {weeks:[2, 1, 4], lateDays:56},
 
+  /* Reminders (reminders.js): how often an open app checks; how late one
+     may be and still come as an alert rather than in the "went by" line; how
+     far back that line looks; and how long Snooze waits. */
+  remind: {checkMs:30000, lateMin:5, missedDays:2, snoozeMin:10},
+
   /* The priority score (score.js): what each part is worth, out of 100; how
      many working days before its latest start a task begins to be urgent;
      and what each importance counts for -- blank sits between Low and Medium. */
@@ -1634,6 +1800,7 @@ const CFG = {
     slopTouch:        8,  // more, because fingers wobble
     ghostOffset:      8,  // cursor -> dragged card ghost
     dragEdge:        36,  // px from the list's top/bottom where a row drag scrolls it
+    nameMinW:        10,  // the task list's names keep this many text-heights of width, whatever columns are on
     dragScroll:      10,  // ...by this many px per frame
     // A bar narrower than this (px) has no start handle: the two handles
     // would cover it, leaving nothing to grab it by to move it. A finger's
@@ -1678,13 +1845,21 @@ const el = id => document.getElementById(id);
 const kidsOf = id => S.tasks.filter(t => t.parent_id === id);
 const taskOf = id => S.tasks.find(t => t.id === id);
 
+/* The work week: S.workWeek lists the working days, Monday 0 to Sunday 6
+   (null is Monday to Friday). Cal takes the other way round -- the days off,
+   as getUTCDay() numbers, Sunday 0 -- so this turns one into the other. */
+const WORK_WEEK_DEFAULT = [0, 1, 2, 3, 4];
+const weekendOf = ww => { const on = new Set(Array.isArray(ww) && ww.length ? ww : WORK_WEEK_DEFAULT);
+  return [0, 1, 2, 3, 4, 5, 6].filter(i => !on.has(i)).map(i => (i + 1) % 7); };
+
 function recompute(){
-  cal = new Cal(S.origin, S.holidays);
+  cal = new Cal(S.origin, S.holidays, weekendOf(S.workWeek));
   try { bars = cpm(S.tasks, S.deps, cal, schedExtra()); bar(lockMsg || storeMsg); SCHED_ERR = null; }
   catch (e) { SCHED_ERR = e.message; bar(e.message + " — fix the link before the schedule can be computed."); return false; }
   LOAD = workload();          // reads the schedule; never feeds it
   SCORES = scoreAll();        // likewise
   ROLL = rollups();
+  WBS = wbsAll();             // the tree's numbering, for num() and the WBS column
   return true;
 }
 
@@ -1986,6 +2161,22 @@ function childMap(){
   return m;
 }
 const siblings = parent => childMap().get(parent ?? null) || [];
+
+/* WBS numbers: 1, 1.1, 1.2, 2 ... from where each task sits in the tree, in
+   tree order, so they renumber themselves as tasks move -- worked out on each
+   recompute, never stored. With Settings -> Task numbers on WBS, num(t)
+   shows them wherever a task is shown; the key underneath (ENG-12) stays
+   what links, history, merges and the journal's labels hold on to, since a
+   WBS number changes whenever the tree does. */
+let WBS = new Map();
+function wbsAll(){
+  const m = new Map(), km = childMap();
+  const walk = (pid, pre) => (km.get(pid) || []).forEach((t, i) => {
+    const n = pre ? `${pre}.${i + 1}` : String(i + 1); m.set(t.id, n); walk(t.id, n); });
+  walk(null, "");
+  return m;
+}
+const num = t => S.numbering === "wbs" ? (WBS.get(t.id) || t.key) : t.key;
 const parentSet = () => new Set(S.tasks.map(t => t.parent_id).filter(p => p != null));
 
 
@@ -2182,7 +2373,7 @@ const fmtDate = d => {
 };
 const fmtDay = fmtDate;
 
-const textOf = t => [t.key, t.title, whoText(t), t.status, sprintOf(t)?.name, ...Object.values(t.custom || {}),
+const textOf = t => [t.key, WBS.get(t.id), t.title, whoText(t), t.status, sprintOf(t)?.name, ...Object.values(t.custom || {}),
                      ...(t.attach || []).map(a => a.label)].join(" ").toLowerCase();
 
 /* Which tasks match (self), and which are shown because something under
@@ -2262,7 +2453,7 @@ const FIELDS = {
   task: ["key","title","parent_id","status","assignee","duration","points","pct","not_before",
          "actual_start","actual_finish","repeat","sprint","pos","cpos","status_since","when",
          "start_key","start_days","due_key","importance",
-         "due_date","popup","rush"],
+         "due_date","popup","rush","repeat_to","remind_at","remind_lead","spos"],
   dep:  ["pred","succ","kind","lag"],
   comment: [],                       // a comment is immutable once made
 };
@@ -2274,8 +2465,8 @@ const rowOfChange = c => rowsOf(cE(c)).find(r => r.id === c.id);
 // Project-level settings, diffed as a single pseudo-row so that renaming
 // the project, adding a column and editing a custom field are all undoable
 // through exactly the same path as editing a task.
-const PROJF = ["name", "origin", "boardFrom", "doneDays"];
-const PROJ_JSON = ["holidays", "statuses", "statusCfg", "fields", "people", "baseline", "sprints", "keyDates", "sprintPattern"];
+const PROJF = ["name", "origin", "boardFrom", "doneDays", "numbering"];
+const PROJ_JSON = ["holidays", "statuses", "statusCfg", "fields", "people", "baseline", "sprints", "keyDates", "sprintPattern", "workWeek"];
 const projSnap = () => {
   const o = {};
   for (const f of PROJF) o[f] = S[f];
@@ -2292,7 +2483,11 @@ const projSnap = () => {
 let flushing = false;
 function flushEdits(){
   const a = document.activeElement;
-  if (flushing || !a || !el("drawer").contains(a)) return;
+  if (flushing || !a) return;
+  // A table cell (table.js) the same, but only with something typed into it:
+  // one merely holding the cursor keeps it, as the cursor moves along a row.
+  const typed = a.tagName === "INPUT" && a.classList.contains("ted") && a.value !== a.defaultValue;
+  if (!el("drawer").contains(a) && !typed) return;
   flushing = true;
   try { a.blur(); } finally { flushing = false; }
 }
@@ -2512,12 +2707,27 @@ function setStatus(t, v){
   }
 }
 
-/* "1d" "2w" "3m" "1y": every n days, weeks, months or years, for any n */
-const parseRepeat = s => { const m = /^(\d+)([dwmy])$/.exec(s || ""); return m && +m[1] > 0 ? {n:+m[1], unit:m[2]} : null; };
+/* "1d" "2w" "3m" "1y": every n days, weeks, months or years, for any n.
+   Weeks may name their days: "1w@1,4" is every week on Tuesday and Friday
+   (Monday 0), so one task covers a chore done twice a week. A build from
+   before the days knows no "@" and sees no repeat at all. */
+const parseRepeat = s => {
+  const m = /^(\d+)([dwmy])(?:@([0-6](?:,[0-6])*))?$/.exec(s || "");
+  if (!m || !(+m[1] > 0) || (m[3] && m[2] !== "w")) return null;
+  const days = m[3] ? [...new Set(m[3].split(",").map(Number))].sort((a, b) => a - b) : null;
+  return {n:+m[1], unit:m[2], days};
+};
 const UNITS = {d:"day", w:"week", m:"month", y:"year"};
 const repeatName = s => { const r = parseRepeat(s);
-  return !r ? "" : r.n === 1 ? `every ${UNITS[r.unit]}` : `every ${r.n} ${UNITS[r.unit]}s`; };
-function stepDate(d, {n, unit}){
+  if (!r) return "";
+  const every = r.n === 1 ? `every ${UNITS[r.unit]}` : `every ${r.n} ${UNITS[r.unit]}s`;
+  return r.days ? `${every} on ${r.days.map(i => DOW[i]).join(", ")}` : every; };
+function stepDate(d, {n, unit, days}){
+  if (unit === "w" && days){
+    // the next of its days after d: later this week, else the first of them n weeks on
+    const w = (d.getUTCDay() + 6) % 7, later = days.find(i => i > w);
+    return later !== undefined ? addD(d, later - w) : addD(d, 7 * n - w + days[0]);
+  }
   if (unit === "d") return addD(d, n);
   if (unit === "w") return addD(d, 7 * n);
   const months = unit === "y" ? 12 * n : n;
@@ -2540,12 +2750,61 @@ function recur(t){
   let next = stepDate(t.not_before ? D(t.not_before) : (bars?.get(t.id)?.start ?? today), r);
   while (next <= today) next = stepDate(next, r);
   t.done_dates = [...(t.done_dates || []), t.actual_finish || iso(today)];
-  t.status = S.statuses[0];
+  // back to the column chosen for it, if that is still a column and not a done one
+  t.status = S.statuses.includes(t.repeat_to) && !S.statusCfg[t.repeat_to]?.done ? t.repeat_to : S.statuses[0];
   t.actual_start = null; t.actual_finish = null; t.pct = null;
   t.not_before = iso(next);
   return t.not_before;
 }
 
+
+/* ------------------------------------------------------------------ *
+ * What editing a task's field does -- one definition, used by the drawer,
+ * the table's cells and its bulk edit, so the three cannot disagree about
+ * rounding a duration or what Finished means. Each runs inside the
+ * caller's commit() and takes the value as a form control gives it: text,
+ * "" for nothing.
+ * ------------------------------------------------------------------ */
+const EDITS = {
+  title:      (t, v) => { t.title = String(v).trim() || t.title; },
+  status:     (t, v) => { if (S.statuses.includes(v)) setStatus(t, v); },       // invariant 10c
+  // one person, in place of whoever was on it; several, with shares, are the drawer's
+  who:        (t, v) => setPeople(t, String(v).trim() ? [{name: v, pct: 100}] : []),
+  sprint:     (t, v) => setSprint(t, v),
+  // whole days: the schedule counts in them (invariant 3), and 1.5 took the chart down
+  duration:   (t, v) => { t.duration = Math.max(0, Math.round(+v) || 0); push(t); },
+  // whole numbers, about an hour each; anything above nothing is at least one
+  points:     (t, v) => { const n = parseFloat(v); t.points = Number.isFinite(n) ? (n > 0 ? Math.max(1, Math.round(n)) : 0) : null; },
+  pct:        (t, v) => { const n = parseFloat(v); t.pct = Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : null; },
+  when:       (t, v) => { t.when = v === "day" || v === "night" ? v : null; },
+  importance: (t, v) => { t.importance = IMPORTANCE.includes(v) ? v : null; },
+  not_before: (t, v) => { t.not_before = v || null; push(t); },
+  due_date:   (t, v) => { t.due_date = v || null; },
+  actual_start: (t, v) => { t.actual_start = v || null; },
+  actual_finish: (t, v) => {
+    t.actual_finish = v || null;
+    // finished means done: take the card to a done column as well, through
+    // setStatus, so a repeating task still leaves its next one behind
+    if (v && !S.statusCfg[t.status]?.done){ const dn = S.statuses.find(s => S.statusCfg[s]?.done); if (dn) setStatus(t, dn); }
+  },
+};
+/* A task changes sprint, or goes to the backlog, through here: its place in
+   the old list (spos) means nothing in the new one, as a card's place
+   (cpos) goes with its column in setStatus(). */
+function setSprint(t, to){
+  to = to || null;
+  if ((t.sprint ?? null) === to) return;
+  t.sprint = to;
+  if (t.spos != null) t.spos = null;
+}
+/* A custom field: the object replaced, never changed in place, or the
+   journal would not see it (invariant 9). A number field keeps a number. */
+function setCustom(t, f, v){
+  const c = {...t.custom};
+  if (v === "" || v == null) delete c[f.name];
+  else c[f.name] = f.kind === "number" ? +v : v;
+  t.custom = c;
+}
 /* ------------------------------------------------------------------ *
  * Creating and deleting rows.
  * ------------------------------------------------------------------ */
@@ -2645,7 +2904,7 @@ let linkEditing = null;
 function openLink(id){
   const d = S.deps.find(x => x.id === id); if (!d) return;
   linkEditing = id;
-  const name = tid => { const t = taskOf(tid); return t ? `${t.key} ${t.title}` : "?"; };
+  const name = tid => { const t = taskOf(tid); return t ? `${num(t)} ${t.title}` : "?"; };
   el("lkTitle").textContent = `${name(d.pred)}  →  ${name(d.succ)}`;
   el("lkKind").value = d.kind || "FS";
   el("lkLag").value = d.lag || 0;
@@ -2859,7 +3118,7 @@ matchMedia("(pointer:coarse)")
 /* Which projection you last had open is a per-device UI preference, not
    part of the project, so it lives in localStorage and never touches the
    journal or the exported file. Wrapped because storage can be blocked. */
-const VIEWS = ["gantt", "board", "prio", "sprints", "load"];
+const VIEWS = ["gantt", "board", "prio", "sprints", "load", "table"];
 let view = (() => { try { const v = localStorage.getItem("pm.view"); return VIEWS.includes(v) ? v : "gantt"; }
                     catch { return "gantt"; } })();
 
@@ -2872,9 +3131,10 @@ function render(){
   el("sprintwrap").hidden = view !== "sprints";
   el("loadwrap").hidden = view !== "load";
   el("priowrap").hidden = view !== "prio";
-  (view === "board" ? renderBoardView : view === "sprints" ? renderSprintView
-    : view === "load" ? renderLoadView : view === "prio" ? renderPrioView : renderGantt)();
-  paintHealth();                 // on every view, from what that render worked out
+  el("tablewrap").hidden = view !== "table";
+  (view === "board" ? renderBoardView : view === "sprints" ? renderSprintView : view === "load" ? renderLoadView
+    : view === "prio" ? renderPrioView : view === "table" ? renderTableView : renderGantt)();
+  soonHealth();                  // on every view: just after, so the chart is not kept waiting
 }
 
 function renderBoardView(){
@@ -2988,7 +3248,7 @@ const SUGGESTED = "Suggested: nothing sets its start, so it goes from today. Dra
 function statGantt(all){
   const sch = all.filter(b => !b.unscheduled);
   const nod = S.tasks.filter(t => { const b = bars.get(t.id); return b && !b.summary && b.unscheduled; });
-  const nodTxt = nod.length ? ` · <span title="${esc(nod.map(t => `${t.key} ${t.title}`).join("\n"))}">${nod.length} without dates</span>` : "";
+  const nodTxt = nod.length ? ` · <span title="${esc(nod.map(t => `${num(t)} ${t.title}`).join("\n"))}">${nod.length} without dates</span>` : "";
   if (!sch.length){
     el("stat").innerHTML = `${nod.length} task${nod.length === 1 ? "" : "s"}, none with dates yet` + nodTxt.replace(/^ · /, " · ");
     return;
@@ -3150,7 +3410,7 @@ function drawGrid(rows){
       n.appendChild(cv);
     } else n.insertAdjacentHTML("beforeend",'<span style="width:14px;flex:none"></span>');
     n.insertAdjacentHTML("beforeend",
-      `<span class="key" title="Drag onto another task to move it under that one">${esc(t.key)}</span><span class="ttl" title="${esc(t.title)}">${esc(t.title)}</span>`);
+      `<span class="key" title="Drag onto another task to move it under that one">${esc(num(t))}</span><span class="ttl" title="${esc(t.title)}">${esc(t.title)}</span>`);
 
     r.append(n, ...gridCells(cols, t, b));
     r.onclick = () => { if (performance.now() < noClickUntil) return; sel = t.id; render(); drawer(); };
@@ -3171,17 +3431,41 @@ function drawGrid(rows){
  * them in place by position. Anything a column shows that a drag can change
  * is refreshed there without further work.
  * ------------------------------------------------------------------ */
+/* A column with `ed` is edited where it is shown: a tap on the cell opens
+   its editor, and leaving it (or Enter) is one journal entry, through EDITS
+   as the drawer's field is. `raw` is the value the editor starts from, `can`
+   whether this row may (a group's are derived, invariant 2), `check` a
+   reason to refuse, and `name` what the journal calls it. Start and Finish
+   are the dates as planned, so editing them moves the plan the way dragging
+   the bar does: a start pins it (Not before), or moves its actual start once
+   started; a finish sets how many days it takes, or its actual finish once
+   finished. */
+// working days from a bar's start to the close of `v`: a Saturday finish means Friday's
+const daysTo = (v, b) => cal.toOffset(iso(addD(D(v), 1))) - cal.toOffset(iso(b.start));
 const GCOLS = [
-  {k:"start",  label:"Start",  w:"var(--col-date)",  val:(t, b) => b.unscheduled ? "—" : fmtDate(b.start)},
-  {k:"finish", label:"Finish", w:"var(--col-date)",  val:(t, b) => b.unscheduled ? "—" : fmtDate(b.finish)},
+  {k:"wbs",    label:"WBS",    w:"var(--col-float)", narrow:true, left:true, tip:"Its place in the tree: 1, 1.1, 1.2 ... renumbered as tasks move",
+               val:t => WBS.get(t.id) || ""},
+  {k:"start",  label:"Start",  w:"var(--col-date)",  val:(t, b) => b.unscheduled ? "—" : fmtDate(b.start),
+               ed:"date", can:(t, b) => !b.summary, raw:(t, b) => t.actual_start || (b.unscheduled ? "" : iso(b.start)),
+               set:(t, v) => t.actual_start ? EDITS.actual_start(t, v) : EDITS.not_before(t, v),
+               name:t => t.actual_start ? "Started" : "Date"},
+  {k:"finish", label:"Finish", w:"var(--col-date)",  val:(t, b) => b.unscheduled ? "—" : fmtDate(b.finish),
+               ed:"date", can:(t, b) => !b.summary && !b.unscheduled, raw:(t, b) => t.actual_finish || iso(b.finish),
+               check:(t, v, b) => t.actual_finish ? null : !v ? "A task needs a finish: clear its dates in the task panel."
+                 : daysTo(v, b) < 1 ? `${t.key} starts ${fmtDate(b.start)}, so it can't finish before that.` : null,
+               set:(t, v, b) => t.actual_finish ? EDITS.actual_finish(t, v) : EDITS.duration(t, daysTo(v, b)),
+               name:t => t.actual_finish ? "Finished" : "Duration"},
   {k:"dur",    label:"Days",   w:"var(--col-float)", tip:"Duration, in working days",
-               val:(t, b) => b.summary ? "" : String(t.duration)},
+               val:(t, b) => b.summary ? "" : String(t.duration),
+               ed:"num", can:(t, b) => !b.summary, raw:t => String(t.duration ?? ""), set:EDITS.duration, name:"Duration"},
   {k:"float",  label:"Float",  w:"var(--col-float)", narrow:true, tip:"Working days it can slip without moving the finish",
                val:(t, b) => b.summary || b.unscheduled ? "" : String(b.slack),
                zero:(t, b) => !b.summary && !b.unscheduled && b.slack <= 0},
   {k:"pts",    label:"Points", w:"var(--col-float)", tip:"About an hour of work each",
-               val:t => t.points != null ? fmtPts(t.points) : ""},
-  {k:"who",    label:"Who",    w:"var(--col-who)",   left:true, val:t => whoShort(t)},
+               val:t => t.points != null ? fmtPts(t.points) : "",
+               ed:"num", can:(t, b) => !b.summary, raw:t => t.points == null ? "" : String(t.points), set:EDITS.points},
+  {k:"who",    label:"Who",    w:"var(--col-who)",   left:true, val:t => whoShort(t),
+               ed:"text", can:(t, b) => !b.summary && peopleOf(t).length < 2, raw:t => t.assignee || "", set:EDITS.who, name:"People"},
   {k:"score",  label:"Score",  w:"var(--col-float)", narrow:true, tip:"Priority, 1-100: importance, urgency, what waits on it, started",
                val:t => String(SCORES.get(t.id)?.total ?? ""), rowTip:t => scoreTip(SCORES.get(t.id))},
 ];
@@ -3202,18 +3486,64 @@ function shownCols(){
 function layGridCols(){
   const cols = shownCols();
   el("grid").style.setProperty("--gcols", ["1fr", ...cols.map(c => c.w)].join(" "));
+  // room for the names beside the columns: the list widens rather than squeeze them to nothing
+  el("grid").style.setProperty("--gmin", `calc(var(--fs) * ${CFG.ui.nameMinW} + ${cols.map(c => c.w).join(" + ") || "0px"})`);
   el("grid").querySelector(".ghd").innerHTML = `<span>Task</span>` + cols.map(c =>
     `<span class="${c.left ? "gc" : "num"}"${c.tip ? ` title="${esc(c.tip)}"` : ""}>${esc(c.label)}</span>`).join("");
   return cols;
 }
-// a row's cells, one per column drawn
+// a row's cells, one per column drawn; one that can be edited says so
 const gridCells = (cols, t, b) => cols.map(c => {
   const s = document.createElement("span");
   s.className = (c.left ? "gc" : "num") + (c.zero?.(t, b) ? " zero" : "");
   s.textContent = c.val(t, b);
   if (c.rowTip) s.title = c.rowTip(t, b);
+  if (c.ed && c.can(t, b)){ s.classList.add("gced"); s.dataset.k = c.k; if (!c.rowTip) s.title = "Click to change it"; }
   return s;
 });
+
+/* The editor over a cell. Leaving it or Enter lands the edit, Esc drops it;
+   it has the Table's class (.ted), so flushEdits() pushes a half-typed one
+   through before anything else is journalled (7b). The redraw after waits
+   a tick (soonRedraw): the edit lands as the pointer goes down on something
+   else, which a redraw then would tear out from under the click. */
+function editGridCell(cell){
+  const id = cell.closest(".grow")?.dataset.id, t = id && taskOf(id), b = t && bars.get(id);
+  const c = GCOLS.find(x => x.k === cell.dataset.k);
+  if (!t || !b || !c || cell.querySelector("input")) return;
+  const inp = document.createElement("input");
+  inp.className = "ted gedit"; inp.dataset.k = c.k;
+  inp.type = c.ed === "num" ? "number" : c.ed === "date" ? "date" : "text";
+  if (c.ed === "num"){ inp.min = "0"; inp.step = "1"; }
+  if (c.k === "who"){ el("tlPeople").innerHTML = allPeople().map(p => `<option value="${esc(p)}">`).join(""); inp.setAttribute("list", "tlPeople"); }
+  inp.value = inp.defaultValue = c.raw(t, b);
+  inp.setAttribute("aria-label", `${c.label}, ${t.key}`);
+  cell.classList.add("editing"); cell.appendChild(inp);
+  inp.focus(); try { inp.select(); } catch { /* a date has no selection */ }
+  let done = false;
+  const finish = keep => {
+    if (done) return; done = true;
+    const v = inp.value;
+    if (!keep || v === inp.defaultValue){ inp.remove(); cell.classList.remove("editing"); return; }
+    inp.defaultValue = v;                              // landed: nothing pending for flushEdits
+    const why = c.check?.(t, v, b);
+    if (why){ note(why, {warn:true}); return soonRedraw(); }
+    commit(`${typeof c.name === "function" ? c.name(t) : c.name || c.label} on ${t.key}`, () => c.set(t, v, b));
+    soonRedraw();
+  };
+  inp.addEventListener("keydown", e => {
+    if (e.key === "Enter"){ e.preventDefault(); inp.blur(); }
+    else if (e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); finish(false); }
+  });
+  inp.addEventListener("blur", () => finish(true));
+  inp.addEventListener("click", e => e.stopPropagation());
+}
+// before the row's own click, which opens the task: a tap on an editable cell edits it
+el("rows").addEventListener("click", e => {
+  const cell = e.target.closest(".gced"); if (!cell || performance.now() < noClickUntil) return;
+  e.stopPropagation();
+  editGridCell(cell);
+}, true);
 // Show -> Columns: a tick per column
 function paintColPick(){
   el("colPick").innerHTML = GCOLS.map(c => `<label class="tog"${c.tip ? ` title="${esc(c.tip)}"` : ""}>`
@@ -3236,7 +3566,8 @@ for (const m of [NARROW, PHONE]) m.addEventListener("change", () => render());
  * key has touch-action:none. Nothing is written while the pointer moves
  * (invariant 7) -- the drop commits one parent_id change.
  * ------------------------------------------------------------------ */
-let noClickUntil = 0;           // a drop must not also count as a click on the row
+let noClickUntil = 0;
+const TOP_LEVEL = "Top level: no parent";      // the drawer's Parent, for none           // a drop must not also count as a click on the row
 
 /* is `id` somewhere inside `anc`'s subtree? */
 function isUnder(id, anc){
@@ -3304,6 +3635,28 @@ function indent(id){
   reparent(id, sibs[i - 1].id);
 }
 
+/* A row dropped onto the middle of another: that could mean under it, or
+   after it, so the drop asks, where it landed -- under it, or a link either
+   way: the one dropped waiting for the other to finish (its successor, FS),
+   or the other waiting for it. addDep() refuses a loop and says why. A task
+   cannot link to its own group: the link would reach it through the group's
+   tasks (invariant 2), a loop. Esc or a tap elsewhere does nothing. */
+function dropMenu(t, p, at){
+  const linked = (a, b) => S.deps.some(d => d.pred === a && d.succ === b);
+  const link = (pred, succ) => {
+    const n = LOG.length; addDep(pred, succ);
+    if (LOG.length > n) note(`${taskOf(succ).key} now waits for ${taskOf(pred).key} to finish.`, {undo:true});
+  };
+  const tk = num(t), pk = num(p), under = (t.parent_id ?? null) === p.id, inside = isUnder(t.id, p.id);
+  const choice = (a, b) => linked(a.id, b.id) ? {label: `${num(b)} already waits for ${num(a)}`, disabled: true}
+    : {label: `${num(b)} waits for ${num(a)} to finish`, act: () => link(a.id, b.id)};
+  popMenu(at, [
+    {head: `${tk} onto ${pk} ${p.title.length > 40 ? p.title.slice(0, 39) + "…" : p.title}`},
+    under ? {label: `Already under ${pk}`, disabled: true} : {label: `Put it under ${pk}`, act: () => reparent(t.id, p.id)},
+    ...(inside ? [{label: "It can't wait for its own group", disabled: true}] : [choice(p, t), choice(t, p)]),
+  ]);
+}
+
 function rowGrab(node, t, rows){
   node.addEventListener("pointerdown", ev => {
     if (!ev.isPrimary || ev.button > 0 || ev.target.closest(".chev")) return;
@@ -3326,9 +3679,9 @@ function rowGrab(node, t, rows){
       if (i < 0 || i >= rows.length) return null;
       const p = rows[i].t;
       // the top and bottom quarter of a row mean above or below it, as its
-      // sibling; the middle means under it
+      // sibling; the middle means onto it, which asks what (dropMenu)
       const where = at - i < 0.25 ? "before" : at - i > 0.75 ? "after" : "into";
-      if (p.id === t.id && where !== "into") return null;
+      if (p.id === t.id) return null;
       const parent = where === "into" ? p.id : (p.parent_id ?? null);
       if (parent === t.id || (parent != null && isUnder(parent, t.id))) return {bad:true, parent, row:i, where};
       return {parent, ref: where === "into" ? null : p.id, row:i, where};
@@ -3343,9 +3696,9 @@ function rowGrab(node, t, rows){
       ghost.textContent = !target ? t.key
         : target.bad ? `${t.key} can't go inside itself`
         : ref ? `${t.key} → ${target.where === "before" ? "above" : "below"} ${ref.key}`
+        : target.where === "into" ? `${t.key} onto ${taskOf(target.parent).key}: under it, or linked`
         : target.parent === (t.parent_id ?? null) ? `${t.key} is already here`
-        : target.parent == null ? `${t.key} → top level`
-        : `${t.key} → under ${taskOf(target.parent).key}`;
+        : `${t.key} → top level`;
     };
     // near the top or bottom of the list, scroll it, so a far-away parent
     // can be reached on a long plan
@@ -3384,6 +3737,7 @@ function rowGrab(node, t, rows){
       lit?.classList.remove("droptarget", "dropbad", "dropbefore", "dropafter");
       noClickUntil = performance.now() + 300;
       if (e.type === "pointercancel" || !target) return;
+      if (target.where === "into" && !target.bad) return dropMenu(t, rows[target.row].t, {x: e.clientX, y: e.clientY});
       reparent(t.id, target.parent, target.ref, target.where);   // a refused target still says why
     };
     document.addEventListener("pointermove", move);
@@ -3396,8 +3750,7 @@ function drawBg(n){
   const g = el("bg"); g.innerHTML = "";
   let d = new Date(T0);
   if (DW >= CFG.timeline.denseDW) for (; d < T1; d = addD(d,1)){
-    const wd = d.getUTCDay();
-    if (wd === 0 || wd === 6 || S.holidays.includes(iso(d))){
+    if (!cal.work(d)){                                       // a day off: the work week's, or a holiday
       const s = document.createElement("div"); s.className = "wknd";
       s.style.left = x(d)+"px"; s.style.width = DW+"px"; g.appendChild(s);
     }
@@ -3434,7 +3787,7 @@ function drawBars(rows, delta = false){
     const ov0 = LOAD.overTask.get(t.id);
     const sig = [i, RH, +T0, DW, zoom, COARSE, showF, showC, showR, showL, el("tBase").checked, sel === t.id, ctx,
       +b.start, +b.finish, +b.lateFin, b.slack, b.critical, b.finished, ROLL.get(t.id),
-      t.key, t.title, t.status, phaseOf(t.status), t.duration, t.pct, t.repeat, t.points, shareText(t), t.not_before, appear.dates,
+      t.key, num(t), t.title, t.status, phaseOf(t.status), t.duration, t.pct, t.repeat, t.points, shareText(t), t.not_before, appear.dates,
       t.actual_start, t.actual_finish, dueState(t), ov0 ? ov0.map(o => o.wk + ":" + o.pts).join() : "",
       S.baseline?.bars?.[t.id]?.join(), b.hold ? `${b.hold.binding}:${+b.hold.freeStart}:${+b.hold.atDate}` : "",
       b.unscheduled, b.suggested, t.when].join("|");
@@ -3454,7 +3807,7 @@ function drawBars(rows, delta = false){
       s.dataset.id = t.id;
       s.style.cssText = `left:${x0}px;width:${Math.max(CFG.bar.minSumW,x1-x0)}px;top:${top+midY(CFG.bar.sumH)}px`;
       const rp = rollPct(t.id);
-      s.title = `${t.key} ${t.title}\n${fmtDate(b.start)} → ${fmtDate(b.finish)}` + (rp != null ? ` · ${rp}% done` : "");
+      s.title = `${num(t)} ${t.title}\n${fmtDate(b.start)} → ${fmtDate(b.finish)}` + (rp != null ? ` · ${rp}% done` : "");
       linkGrab(s, t);                 // a link onto a summary expands to its leaves
       c.appendChild(s); return;
     }
@@ -3466,8 +3819,8 @@ function drawBars(rows, delta = false){
       m.style.cssText = `left:${x0-CFG.bar.msH/2}px;top:${top+midY(CFG.bar.msH)}px`;
       const mov = showR && LOAD.overTask.get(t.id);
       if (mov) m.dataset.over = 1;
-      m.title = b.unscheduled ? `${t.key} milestone · ${NO_DATES}`
-              : `${t.key} milestone · ${fmtDate(b.start)}` + (b.suggested ? `\n${SUGGESTED}` : "") + (mov ? "\n" + overTip(t, mov) : "");
+      m.title = b.unscheduled ? `${num(t)} milestone · ${NO_DATES}`
+              : `${num(t)} milestone · ${fmtDate(b.start)}` + (b.suggested ? `\n${SUGGESTED}` : "") + (mov ? "\n" + overTip(t, mov) : "");
       grab(m, t, "move"); linkGrab(m, t); c.appendChild(m); return;
     }
 
@@ -3496,8 +3849,8 @@ function drawBars(rows, delta = false){
     if (pct){ const pg = document.createElement("i"); pg.className = pct >= 100 ? "prog full" : "prog"; pg.style.width = pct + "%"; el2.appendChild(pg); }
     const ov = showR && LOAD.overTask.get(t.id), late = dueState(t) === "late";
     if (ov) el2.dataset.over = 1;
-    el2.title = (b.unscheduled ? `${t.key} ${t.title}\n${NO_DATES}`
-                               : `${t.key} ${t.title}\n${fmtDate(b.start)} → ${fmtDate(b.finish)} · ${t.duration}d · float ${b.slack}`
+    el2.title = (b.unscheduled ? `${num(t)} ${t.title}\n${NO_DATES}`
+                               : `${num(t)} ${t.title}\n${fmtDate(b.start)} → ${fmtDate(b.finish)} · ${t.duration}d · float ${b.slack}`
                                  + (b.suggested ? `\n${SUGGESTED}` : ""))
               + (t.points != null ? ` · ${fmtPts(t.points)} pts` : "")
               + (pct ? ` · ${pct}% done` : "")
@@ -3510,7 +3863,7 @@ function drawBars(rows, delta = false){
     if (showL && (DW >= CFG.timeline.denseDW || tickMode() === "day")){
       const l = document.createElement("span"); l.className = "lbl";
       l.style.left = labelAt + "px";
-      const txt = [whoShort(t) || t.key, t.points != null ? `${fmtPts(t.points)} pts` : ""]
+      const txt = [whoShort(t) || num(t), t.points != null ? `${fmtPts(t.points)} pts` : ""]
                   .filter(Boolean).join(" · ");
       l.innerHTML = (ov ? '<b class="ovm">!</b>' : "") + (late ? '<b class="late">late</b> · ' : "")
                   + (b.unscheduled ? '<span class="nod">no dates yet</span> · ' : "")
@@ -3613,12 +3966,12 @@ function drawLoad(){
       const over = p.cap != null && w.pts > p.cap + OVER_EPS;
       const tip = `${p.name} · week of ${wk}: ${fmtPts(w.pts)}${p.cap != null ? ` of ${fmtPts(p.cap)}` : ""} pts`
         + (over ? ` — over by ${fmtPts(w.pts - p.cap)}` : "")
-        + [...w.items].map(([t, n]) => `\n  ${t.key} ${t.title}: ${fmtPts(n)}`).join("");
+        + [...w.items].map(([t, n]) => `\n  ${num(t)} ${t.title}: ${fmtPts(n)}`).join("");
       // the number only where it fits; the tooltip always carries it
-      const num = wd >= CFG.load.numW ? fmtPts(w.pts) : wd >= CFG.load.intW ? String(Math.round(w.pts)) : "";
+      const shown = wd >= CFG.load.numW ? fmtPts(w.pts) : wd >= CFG.load.intW ? String(Math.round(w.pts)) : "";
       const util = p.cap ? Math.min(1, w.pts / p.cap) : 0;
       h += `<div class="rcell" data-over="${over ? 1 : 0}" data-free="${p.cap == null ? 1 : 0}" title="${esc(tip)}"
-              style="left:${x0}px;top:${(i + 1) * RH}px;width:${wd}px;height:${RH - 1}px">${num}${
+              style="left:${x0}px;top:${(i + 1) * RH}px;width:${wd}px;height:${RH - 1}px">${shown}${
               p.cap ? `<i class="util" style="width:${Math.max(0, (wd - 6) * util)}px"></i>` : ""}</div>`;
     }
   });
@@ -3686,7 +4039,7 @@ function renderWeekStrip(){
   s.innerHTML = `<span class="wlbl">This week</span>` + ppl.map(p => {
     const w = p.weeks.get(wk), pts = w ? w.pts : 0;
     const over = p.cap != null && pts > p.cap + OVER_EPS;
-    const tip = w ? [...w.items].map(([t, n]) => `${t.key} ${t.title}: ${fmtPts(n)}`).join("\n")
+    const tip = w ? [...w.items].map(([t, n]) => `${num(t)} ${t.title}: ${fmtPts(n)}`).join("\n")
                   : "Nothing with points this week";
     return `<span class="pchip${over ? " over" : ""}" title="${esc(tip)}">${avatar(p.name, tip)}<b>${esc(p.name)}</b> `
          + `${fmtPts(pts)}${p.cap != null ? ` / ${fmtPts(p.cap)}` : ""} pts</span>`;
@@ -3874,7 +4227,7 @@ function card(t){
   const ov = LOAD.overTask.get(t.id), due = dueState(t);
   const pct = t.pct > 0 && t.pct < 100 ? t.pct : 0, nAtt = (t.attach || []).length;
   c.innerHTML =
-    `<div class="ckey">${esc(t.key)}${b && b.critical ? '<span class="cc" title="on the critical path">critical</span>' : ""}${
+    `<div class="ckey">${esc(num(t))}${b && b.critical ? '<span class="cc" title="on the critical path">critical</span>' : ""}${
        ov ? `<span class="co" title="${esc(overTip(t, ov))}">overloaded</span>` : ""}${
        due === "late" ? `<span class="clate" title="Planned to finish ${fmtDate(b.finish)}">late</span>`
        : due === "soon" ? `<span class="csoon" title="Planned to finish ${fmtDate(b.finish)}">due ${esc(shortDay(b.finish))}</span>` : ""}${
@@ -4091,7 +4444,7 @@ function closeSprint(id, to, ids){
     const s = S.sprints.find(x => x.id === id);
     // recorded before the unfinished move on: a repeating task's finishes go with them
     s.state = "closed"; s.done = sprintDone(s); s.closed = iso(todayDate());
-    for (const t of S.tasks) if (move.has(t.id)) t.sprint = target;
+    for (const t of S.tasks) if (move.has(t.id)) setSprint(t, target);
   });
   render();
   const got = S.sprints.find(x => x.id === id)?.done?.pts || 0;
@@ -4123,7 +4476,7 @@ el("seDel").onclick = () => {
     S.sprints = S.sprints.filter(x => x.id !== s.id);
     // one the pattern made stays deleted, rather than being made again on the next opening
     if (s.auto && S.sprintPattern) S.sprintPattern = {...S.sprintPattern, skip: [...(S.sprintPattern.skip || []), s.start]};
-    for (const t of S.tasks) if (t.sprint === s.id) t.sprint = null;
+    for (const t of S.tasks) if (t.sprint === s.id) setSprint(t, null);
   });
   el("dsprEdit").close(); render(); drawer();
   note(`Deleted ${s.name}.` + (n ? ` Its ${n} task${n > 1 ? "s are" : " is"} back in the backlog.` : ""), {undo:true});
@@ -4135,9 +4488,74 @@ el("dsprEdit").addEventListener("keydown", e => {
 
 function moveToSprint(id, to){
   const t = taskOf(id); if (!t || (t.sprint ?? null) === to) return;
-  commit(`Move ${t.key} to ${sprintName(to)}`, () => { t.sprint = to; });
+  commit(`Move ${t.key} to ${sprintName(to)}`, () => setSprint(t, to));
   render(); drawer();
   if (!to && isDone(t)) note(`${t.key} is finished, so the backlog does not list it.`, {undo:true});
+}
+
+/* ---- the order of a sprint's list, and the backlog's ----
+   Highest score first (score.js), what is due first breaking a tie, done
+   work last -- until something is put in place by hand: dragged up or
+   down its list, or sent to its top or foot from its menu. Then the whole
+   list is numbered 10, 20, 30... (spos, journalled, as cards are, 13b) and
+   keeps that order; what arrives later comes after it, by score. Sort by
+   score, on the list's heading, lets go of the order again.
+   A sprint is split by the part of the day each task is for (its When), in
+   the order that suits the hour: in the evening tonight's work comes
+   first. Only when something in it has a When; the backlog never is. */
+const PARTS = {day: "☀ Day", "": "Any time", night: "☾ Night"};
+const partOf = t => t.when === "day" || t.when === "night" ? t.when : "";
+function partOrder(now = new Date()){
+  const h = now.getHours();
+  return h >= CFG.dayParts.evening || h < CFG.dayParts.morning ? ["night", "", "day"] : ["day", "", "night"];
+}
+const sprScore = t => SCORES.get(t.id)?.total ?? 0;
+const sprFin = t => { const b = bars?.get(t.id); return b && !b.unscheduled ? +b.finish : Infinity; };
+const sprCmp = (a, b) => isDone(a) - isDone(b) || (a.spos ?? Infinity) - (b.spos ?? Infinity)
+  || sprScore(b) - sprScore(a) || sprFin(a) - sprFin(b) || a.key.localeCompare(b.key, undefined, {numeric: true});
+const listTasks = to => boardTasks().filter(x => to ? x.sprint === to : inBacklog(x));
+const splitsDay = (to, list) => !!to && list.some(x => partOf(x));
+// a list as shown: by part of the day if it is split so, then sprCmp
+function shownOrder(list, to){
+  const pr = splitsDay(to, list) ? new Map(partOrder().map((p, i) => [p, i])) : null;
+  return list.slice().sort((a, b) => (pr ? pr.get(partOf(a)) - pr.get(partOf(b)) : 0) || sprCmp(a, b));
+}
+/* Inside the caller's commit: t into its list (sprint `to`, or the backlog
+   for null) before `before`, or at the foot of its part of the day, and
+   the whole list numbered in that order. */
+function placeInList(t, to, before){
+  const list = shownOrder(listTasks(to).filter(x => x !== t), to);
+  const i = before ? list.findIndex(x => x.id === before) : -1;
+  list.splice(i < 0 ? list.length : i, 0, t);
+  list.forEach((x, k) => { x.spos = (k + 1) * 10; });
+}
+const listName = to => to ? sprintName(to) : "the backlog";
+/* To the top or the foot of its list (of its part of the day, if split). */
+function sendInList(t, top){
+  const to = t.sprint && !notInSprint(t) ? t.sprint : null;
+  const mine = shownOrder(listTasks(to), to).filter(x => x !== t && !isDone(x) && (!splitsDay(to, listTasks(to)) || partOf(x) === partOf(t)));
+  reorderInList(t, to, top ? mine[0]?.id ?? null : null, null);
+}
+function sortByScore(to){
+  const list = listTasks(to);
+  commit(`Sort ${listName(to)} by score`, () => { for (const x of list) if (x.spos != null) x.spos = null; });
+  render();
+}
+/* A row's menu: its ⋯, or a right-click (a long press, on a tablet). The
+   way to move one far down the backlog without dragging it all the way. */
+function sprintMenu(t, at){
+  const cur = t.sprint && !notInSprint(t) ? t.sprint : null;
+  const to = openSprints().filter(s => s.id !== cur).map(s => ({
+    label: `${s.name}${s.state === "active" ? " (active)" : ""} · ${fmtDay(s.start)} – ${fmtDay(s.end)}`,
+    act: () => moveToSprint(t.id, s.id)}));
+  if (cur) to.push({label: "The backlog", act: () => moveToSprint(t.id, null)});
+  popMenu(at, [
+    ...(to.length ? [{head: `Move ${t.key} to`}, ...to, {sep: true}] : []),
+    {label: `To the top of ${listName(cur)}`, act: () => sendInList(t, true), disabled: isDone(t)},
+    {label: `To the foot of ${listName(cur)}`, act: () => sendInList(t, false), disabled: isDone(t)},
+    {sep: true},
+    {label: "Open in the task panel", act: () => { sel = t.id; render(); drawer(); }},
+  ]);
 }
 
 function renderSprintView(){
@@ -4159,15 +4577,11 @@ let sprPlan = null;              // the day planner's view, once per render of t
 function renderSprints(){
   const wrap = el("sprints"), f = filterSets(), leaves = boardTasks();
   sprPlan = plan();
-  const by = new Map(S.tasks.map(t => [t.id, t])), rank = new Map(S.statuses.map((s, i) => [s, i]));
-  const fin = t => +(bars?.get(t.id)?.finish ?? 0);
-  // by column, then by planned finish: what is due first, first
-  const order = (a, b) => (rank.get(a.status) ?? 99) - (rank.get(b.status) ?? 99) || fin(a) - fin(b)
-                        || a.key.localeCompare(b.key, undefined, {numeric:true});
+  const by = new Map(S.tasks.map(t => [t.id, t]));
   let matched = 0;
   wrap.innerHTML = `<div class="sptop"><button type="button" class="ghost" id="spNew">+ New sprint</button>
-    <span class="hint" style="margin:0">Drag a task by its number between a sprint and the backlog, or set
-    its Sprint in the drawer. Sprint, above the board, shows one sprint's cards.</span></div>`;
+    <span class="hint" style="margin:0">Highest score first. Drag a task by its number to another list, or up or
+    down its own to put it in your order. ⋯, a right-click or a long press moves it without dragging.</span></div>`;
   el("spNew").onclick = newSprint;
   const vel = velocity();
   if (vel) wrap.appendChild(velocityPanel(vel));
@@ -4176,8 +4590,8 @@ function renderSprints(){
     matched += rows.length;
     wrap.appendChild(sprintSection(s, all, rows, by));
   };
-  for (const s of openSprints()) section(s, leaves.filter(t => t.sprint === s.id).sort(order));
-  section(null, leaves.filter(inBacklog).sort(order));
+  for (const s of openSprints()) section(s, shownOrder(leaves.filter(t => t.sprint === s.id), s.id));
+  section(null, shownOrder(leaves.filter(inBacklog), null));
   const finished = leaves.filter(t => isDone(t) && notInSprint(t)).length;
   if (finished) wrap.lastChild.insertAdjacentHTML("beforeend", `<p class="hint sphint">${finished} finished
     task${finished > 1 ? "s" : ""} outside any sprint ${finished > 1 ? "aren't" : "isn't"} listed.</p>`);
@@ -4187,7 +4601,7 @@ function renderSprints(){
     d.innerHTML = `<summary>Completed sprints (${closed.length})</summary>` + closed.map(s => {
       const ts = S.tasks.filter(t => t.sprint === s.id && isDone(t));
       return `<div class="spold"><b>${esc(s.name)}</b><span>${fmtDay(s.start)} – ${fmtDay(s.end)}</span>
-        <span title="${esc(ts.map(t => `${t.key} ${t.title}`).join("\n"))}">${ts.length} done</span>${s.done
+        <span title="${esc(ts.map(t => `${num(t)} ${t.title}`).join("\n"))}">${ts.length} done</span>${s.done
           ? `<span>${fmtPts(s.done.pts)} pts</span><span>${Object.entries(s.done.by).map(([n, v]) => `${esc(n)} ${fmtPts(v)}`).join(" · ")}</span>` : ""}</div>`;
     }).join("");
     d.ontoggle = () => { spDoneOpen = d.open; };
@@ -4224,20 +4638,33 @@ function sprintSection(s, all, rows, by){
       fmtLoad(R.total)} pts of everyone's room on its days${low ? `: under ${Math.round(CFG.sprint.fullShare * 100)}% planned` : ""}`)}">${
       Math.round(R.used / R.total * 100)}% planned</span>` : "";
     const act = s.state === "active" ? "complete" : "start";
+    const resort = all.some(t => t.spos != null) ? `<button type="button" class="ghost" data-rescore title="Let go of the order set by hand">Sort by score</button>` : "";
     sec.innerHTML = `<div class="sphd"><button type="button" class="spname" title="Rename, change the dates, or delete">${esc(s.name)}</button>
         <span class="spdates">${fmtDay(s.start)} – ${fmtDay(s.end)}</span>
         ${s.state === "active" ? '<span class="spstate">Active</span>' : ""}${sum}${roomTxt}${velc}${chips}<span class="spacer"></span>
-        <button type="button" class="ghost" data-fill title="Add the backlog's highest scores that fit everyone's room">Fill…</button>
+        ${resort}<button type="button" class="ghost" data-fill title="Add the backlog's highest scores that fit everyone's room">Fill…</button>
         <button type="button" class="ghost" data-act="${act}">${act === "complete" ? "Complete sprint" : "Start sprint"}</button></div>
       <div class="spbody"></div>`;
     sec.querySelector(".spname").onclick = () => editSprint(s.id);
     sec.querySelector("[data-act]").onclick = () => act === "start" ? startSprint(s.id) : completeSprint(s.id);
     sec.querySelector("[data-fill]").onclick = () => fillSprint(s.id);
   } else {
-    sec.innerHTML = `<div class="sphd"><b class="spname">Backlog</b>${sum}</div><div class="spbody"></div>`;
+    sec.innerHTML = `<div class="sphd"><b class="spname">Backlog</b>${sum}<span class="spacer"></span>${all.some(t => t.spos != null)
+      ? `<button type="button" class="ghost" data-rescore title="Let go of the order set by hand">Sort by score</button>` : ""}</div><div class="spbody"></div>`;
   }
+  sec.querySelector("[data-rescore]")?.addEventListener("click", () => sortByScore(s ? s.id : null));
   const body = sec.querySelector(".spbody");
-  for (const t of rows) body.appendChild(sprintRow(t, s, by));
+  if (splitsDay(s?.id, all)){
+    // a heading for each part of the day that has something in it
+    for (const part of partOrder()){
+      const mine = rows.filter(t => partOf(t) === part); if (!mine.length) continue;
+      const box = document.createElement("div"); box.className = "sppart"; box.dataset.part = part;
+      const pp = mine.reduce((a, t) => a + (t.points > 0 && !isDone(t) ? t.points : 0), 0);
+      box.innerHTML = `<div class="spsub">${esc(PARTS[part])}<span>${mine.length}${pp ? ` · ${fmtPts(pp)} pts` : ""}</span></div>`;
+      for (const t of mine) box.appendChild(sprintRow(t, s, by));
+      body.appendChild(box);
+    }
+  } else for (const t of rows) body.appendChild(sprintRow(t, s, by));
   if (!rows.length) body.innerHTML = `<p class="spempty">${all.length ? "Nothing here matches the filter."
     : s ? "Empty. Drag tasks in from the backlog, or add one below." : "Nothing waiting: every unfinished task is in a sprint."}</p>`;
   sec.appendChild(quickBox("spr:" + (s ? s.id : ""), {sprint: s ? s.id : null, peers: all, where: s ? s.name : "the backlog"}));
@@ -4246,40 +4673,60 @@ function sprintSection(s, all, rows, by){
 
 function sprintRow(t, s, by){
   const r = document.createElement("div");
-  r.className = "srow"; r.dataset.id = t.id;
+  r.className = "srow"; r.dataset.id = t.id; r.dataset.part = partOf(t);
   if (sel === t.id) r.dataset.sel = 1;
   if (isDone(t)) r.dataset.done = 1;
   const b = bars?.get(t.id), p = t.parent_id != null ? by.get(t.parent_id) : null, due = dueState(t);
   const after = s && b && !b.unscheduled && !isDone(t) && iso(b.finish) > s.end;
-  r.innerHTML = `<span class="skey" title="Drag to a sprint or the backlog">${esc(t.key)}</span>
+  r.innerHTML = `<span class="skey" title="Drag to a sprint or the backlog">${esc(num(t))}</span>
     <span class="stitle">${p ? `<span class="sgrp">${esc(p.title)} › </span>` : ""}${esc(t.title)}${
       t.repeat ? ` <span class="crep" title="Repeats ${esc(repeatName(t.repeat))}">↻</span>` : ""}${
       after ? ` <span class="safter" title="Planned to finish ${fmtDate(b.finish)}, after ${esc(s.name)} ends on ${fmtDate(s.end)}">after sprint</span>` : ""}</span>
     <span class="chip sst">${esc(t.status)}</span>
     <span class="swho" title="${esc(shareText(t))}">${avatars(t)}<span>${esc(whoShort(t))}</span></span>
     <span class="spts">${t.points != null ? `${fmtPts(t.points)} pts` : ""}</span>
-    <span class="sdue${due === "late" ? " late" : ""}" title="Planned finish">${b && !b.unscheduled ? (due === "late" ? "late · " : "") + fmtDay(iso(b.finish)) : b ? "—" : ""}</span>`;
+    <span class="sdue${due === "late" ? " late" : ""}" title="Planned finish">${b && !b.unscheduled ? (due === "late" ? "late · " : "") + fmtDay(iso(b.finish)) : b ? "—" : ""}</span>
+    <button type="button" class="smore" aria-label="More for ${esc(num(t))}" title="Move it to a sprint, or to the top or foot of its list">⋯</button>`;
   r.onclick = () => { if (performance.now() < noClickUntil) return; sel = t.id; render(); drawer(); };
+  r.querySelector(".smore").onclick = e => { e.stopPropagation(); sprintMenu(t, e.currentTarget); };
+  r.addEventListener("contextmenu", e => { e.preventDefault(); sprintMenu(t, {x: e.clientX, y: e.clientY}); });
   sprintGrab(r, t);
   return r;
 }
 
-/* Drag a row onto another sprint, or the backlog. With a mouse the whole
-   row is a handle; by touch only its number is (touch-action:none there),
-   so a swipe anywhere else still scrolls the page -- as on the Gantt. */
+/* Drag a row onto another sprint, or the backlog -- where it takes its
+   place by score -- or up or down its own list, to put it where it is
+   dropped (a line shows where). In a list split by the part of the day,
+   dropping it among another part's work makes it that part's (its When).
+   With a mouse the whole row is a handle; by touch only its number is
+   (touch-action:none there), so a swipe anywhere else still scrolls the
+   page -- as on the Gantt. */
 function sprintGrab(node, t){
   node.addEventListener("pointerdown", ev => {
-    if (!ev.isPrimary || ev.button > 0) return;
+    if (!ev.isPrimary || ev.button > 0 || ev.target.closest(".smore")) return;
     if (ev.pointerType !== "mouse" && !ev.target.closest(".skey")) return;
     const pid = ev.pointerId, sx = ev.clientX, sy = ev.clientY;
     const SLOP = ev.pointerType === "mouse" ? CFG.ui.slopMouse : CFG.ui.slopTouch;
     const from = node.closest(".spr")?.dataset.sprint ?? "";
-    let moved = false, ghost = null, over = null, cx = sx, cy = sy, raf = 0;
+    let moved = false, ghost = null, over = null, cx = sx, cy = sy, raf = 0, at = null, part = null;
+    const unmark = () => { at?.classList.remove("dropbefore");
+                           for (const n of document.querySelectorAll("#sprints .spend")) n.classList.remove("spend"); };
     const paint = () => {
-      const s = document.elementFromPoint(cx, cy)?.closest?.("#sprints .spr[data-sprint]") || null;
+      const hit = document.elementFromPoint(cx, cy);
+      const s = hit?.closest?.("#sprints .spr[data-sprint]") || null;
+      unmark();
       if (over !== s){ over?.classList.remove("dropinto"); over = s; over?.classList.add("dropinto"); }
       const to = over?.dataset.sprint;
-      ghost.textContent = to == null ? t.key : to === from ? `${t.key} is already here` : `${t.key} → ${sprintName(to || null)}`;
+      at = null; part = null;
+      if (to != null && to === from){
+        // its own list: before the first row whose middle is below the pointer, in the part pointed at
+        const box = hit.closest(".sppart") || over.querySelector(".spbody");
+        part = hit.closest(".sppart")?.dataset.part ?? null;
+        at = [...box.querySelectorAll(".srow")].find(r => r !== node && cy < r.getBoundingClientRect().top + r.getBoundingClientRect().height / 2) || null;
+        at ? at.classList.add("dropbefore") : box.classList.add("spend");
+      }
+      ghost.textContent = to == null ? t.key : to === from ? (part != null && part !== partOf(t) ? `${t.key} → ${PARTS[part]}` : `${t.key}: here`)
+                        : `${t.key} → ${sprintName(to || null)}`;
     };
     // near the top or bottom of the page, scroll it, so a far sprint can be reached
     const edgeScroll = () => {
@@ -4309,16 +4756,36 @@ function sprintGrab(node, t){
       document.removeEventListener("pointercancel", up);
       cancelAnimationFrame(raf);
       if (!moved) return;
-      ghost.remove(); node.classList.remove("dragging"); over?.classList.remove("dropinto");
+      unmark(); ghost.remove(); node.classList.remove("dragging"); over?.classList.remove("dropinto");
       noClickUntil = performance.now() + 300;
       const to = over?.dataset.sprint;
-      if (e.type === "pointercancel" || to == null || to === from) return;
-      moveToSprint(t.id, to || null);
+      if (e.type === "pointercancel" || to == null) return;
+      if (to !== from) return moveToSprint(t.id, to || null);
+      reorderInList(t, to || null, at?.dataset.id ?? null, part);
     };
     document.addEventListener("pointermove", move);
     document.addEventListener("pointerup", up);
     document.addEventListener("pointercancel", up);
   });
+}
+
+/* A drop in its own list: its place there, and its part of the day if it
+   was dropped among another part's work. Nothing if nothing would change. */
+function reorderInList(t, to, before, part){
+  const when = part == null || part === partOf(t) ? undefined : part || null;
+  const now = shownOrder(listTasks(to), to).map(x => x.id).join();
+  const was = {when: t.when, spos: new Map(listTasks(to).map(x => [x.id, x.spos]))};
+  if (when !== undefined) t.when = when;
+  placeInList(t, to, before);
+  const then = shownOrder(listTasks(to), to).map(x => x.id).join();
+  // tried, then put back: the commit below redoes it with the journal watching
+  t.when = was.when; for (const x of listTasks(to)) x.spos = was.spos.get(x.id);
+  if (when === undefined && then === now) return;
+  commit(when !== undefined ? `${t.key} to ${PARTS[part]}` : `Reorder ${t.key}`, () => {
+    if (when !== undefined) t.when = when;
+    placeInList(t, to, before);
+  });
+  render(); drawer();
 }
 
 let arrowEls = new Map();        // drawn arrow key -> {html, els}, for drag frames
@@ -4513,7 +4980,7 @@ function fillSprint(id){
   el("fiInfo").textContent = `${fmtLoad(R.used)} of ${fmtLoad(R.total)} pts of room planned so far. Ticked: the highest `
     + `scores that fit everyone's room. Untick any you would rather leave.`;
   el("fiList").innerHTML = rows.length ? rows.map(r => `<label class="fil"><input type="checkbox" value="${esc(r.t.id)}"${r.tick ? " checked" : ""}>
-      <span class="key">${esc(r.t.key)}</span><span class="fit">${esc(r.t.title)}</span>
+      <span class="key">${esc(num(r.t))}</span><span class="fit">${esc(r.t.title)}</span>
       <span class="fim">${r.pts ? `${fmtPts(r.pts)} pts` : ""}${whoShort(r.t) ? ` · ${esc(whoShort(r.t))}` : ""}${r.why ? ` · ${r.why}` : ""}</span>
       <b class="fisc" title="${esc(scoreTip(SCORES.get(r.t.id)))}">${SCORES.get(r.t.id).total}</b></label>`).join("")
     : `<p class="hint">Nothing in the backlog to add.</p>`;
@@ -4524,7 +4991,7 @@ el("fiOk").onclick = () => {
   const ids = [...el("fiList").querySelectorAll("input:checked")].map(n => n.value);
   el("dfill").close();
   if (!s || !ids.length) return;
-  commit(`Fill ${s.name}`, () => { for (const t of S.tasks) if (ids.includes(t.id)) t.sprint = s.id; });
+  commit(`Fill ${s.name}`, () => { for (const t of S.tasks) if (ids.includes(t.id)) setSprint(t, s.id); });
   render(); drawer();
   note(`${ids.length} task${ids.length > 1 ? "s" : ""} added to ${s.name}.`, {undo:true});
 };
@@ -4619,7 +5086,7 @@ function assessPopup(){
   const higher = pushed.filter(x => x.score > N.score).sort((a, b) => b.score - a.score);
   const unfitNow = unfitOf(N.P, "popup-trial"), unfitA = unfitOf(A.P, "popup-trial"), landA = endOf(A.P, "popup-trial");
   const by = d.needed === today ? "today" : fmtDate(d.needed);
-  const list = xs => xs.map(x => `<li><span class="key">${esc(x.t.key)}</span> ${esc(x.t.title)} (score ${x.score}): `
+  const list = xs => xs.map(x => `<li><span class="key">${esc(num(x.t))}</span> ${esc(x.t.title)} (score ${x.score}): `
     + (x.lost > PLAN_EPS ? `${fmtLoad(x.lost)} pts no longer fit its dates` : `done ${esc(fmtDate(x.e1))} instead of ${esc(fmtDate(x.e0))}`)
     + `</li>`).join("");
 
@@ -4629,12 +5096,12 @@ function assessPopup(){
   else h += `<p>Doing it now pushes out:</p><ul class="pulist">${list(pushed)}</ul>`;
   if (higher.length){
     const top = higher[0];
-    h += `<p class="warnt">That would push out <b>${esc(top.t.key)} ${esc(top.t.title)}</b> (score ${top.score})`
+    h += `<p class="warnt">That would push out <b>${esc(num(top.t))} ${esc(top.t.title)}</b> (score ${top.score})`
        + `${top.t.id && SCORES.get(top.t.id)?.blk > 1 ? ", which holds up other work" : ""} — more important than this (score ${N.score}).</p>`
-       + `<p>Better: do it after ${esc(top.t.key)}`
+       + `<p>Better: do it after ${esc(num(top.t))}`
        + (landA ? `, which gets it done by ${esc(fmtDate(landA))}${unfitA > PLAN_EPS ? ", though not all of it by " + esc(by) : ""}` : ", when there's room")
        + `, or leave it in the backlog.</p>`;
-    after.textContent = `Do it after ${top.t.key}`; after.classList.add("primary");
+    after.textContent = `Do it after ${num(top.t)}`; after.classList.add("primary");
     now.textContent = "Do it now anyway"; now.classList.remove("primary");
   } else if (landA) h += `<p class="hint" style="margin:0">Left to its score instead, it would be done by ${esc(fmtDate(landA))}.</p>`;
   say.innerHTML = h;
@@ -4726,12 +5193,18 @@ function paintHealth(){
   lastHealth = all;
 }
 let lastHealth = [];
+/* The check runs the day planner, ~15 ms on a 600-task plan: a render does
+   not wait for it. It runs once the render is done, once however many
+   renders came first, and a click on the count works it out fresh. */
+let healthTimer = 0;
+const soonHealth = () => { clearTimeout(healthTimer); healthTimer = setTimeout(paintHealth, 0); };
 
 el("health").onclick = () => {
+  paintHealth();
   const list = lastHealth, rows = (lvl, head) => {
     const xs = list.filter(x => x.level === lvl);
     return xs.length ? `<h3>${head}</h3>` + xs.map((x, i) => `<button type="button" class="hlrow" data-i="${list.indexOf(x)}">`
-      + (x.t ? `<span class="key">${esc(x.t.key)}</span> <span class="ht">${esc(x.t.title)}</span> — ` : "") + `${esc(x.text)}</button>`).join("") : "";
+      + (x.t ? `<span class="key">${esc(num(x.t))}</span> <span class="ht">${esc(x.t.title)}</span> — ` : "") + `${esc(x.text)}</button>`).join("") : "";
   };
   el("hlList").innerHTML = list.length ? rows("problem", "Problems") + rows("warning", "Warnings")
                                        : `<p class="hint">Nothing wrong: no deadline missed, nothing late, everyone within their room.</p>`;
@@ -4744,6 +5217,109 @@ el("hlList").addEventListener("click", e => {
   if (x.t){ if (view === "load" || view === "prio") setView("gantt"); sel = x.t.id; render(); drawer(); }
   else if (x.sprint){ fillSprint(x.sprint.id); }
 });
+
+/* ------------------------------------------------------------------ *
+ * Reminders: one per task, at a time on its day, or a set time before.
+ *
+ * t.remind_at is "HH:MM", local time; t.remind_lead is how many minutes
+ * before that (15, 60, or 1440 for the day before; none is on time). "Its
+ * day" is its planned start -- for a repeating task, the day it is next due,
+ * so a chore on Tuesdays and Fridays reminds on each of them. A task with no
+ * dates, or finished, has no reminder due.
+ *
+ * While the app is open a reminder comes once: a card in the corner with
+ * Done and Snooze, and a system notification where the browser allows one.
+ * Never again for that time, unless snoozed. Which have been shown is this
+ * device's own record (localStorage), never journalled -- each device
+ * reminds for itself. Opened after some went by, the app says so in one
+ * line, not an alert each, and only for the last CFG.remind.missedDays.
+ * With the app closed nothing here can remind anyone (there is no server),
+ * so File -> Export to calendar carries reminders as timed events with an
+ * alert, repeating as the task does, for the phone's calendar to deliver.
+ * ------------------------------------------------------------------ */
+const LEADS = [[0, "on time"], [15, "15 min before"], [60, "1 hour before"], [1440, "a day before"]];
+const REM_KEY = "pm.reminded", SNOOZE_KEY = "pm.snoozed";
+const remStore = k => { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch { return {}; } };
+const remSave = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage blocked */ } };
+const leadOf = t => Number.isInteger(t.remind_lead) && t.remind_lead > 0 ? t.remind_lead : 0;
+const fmtClock = d => d.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
+
+// when a task's reminder is next due, as a local Date; or null
+function remindMoment(t){
+  if (!/^\d{2}:\d{2}$/.test(t.remind_at || "")) return null;
+  const b = bars?.get(t.id);
+  if (!b || b.summary || b.unscheduled || b.finished || isDone(t)) return null;
+  const [h, m] = t.remind_at.split(":").map(Number), d = b.start;
+  return new Date(+new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), h, m) - leadOf(t) * 60000);
+}
+const remindText = t => { const m = remindMoment(t); return m ? `${DOW[(m.getDay() + 6) % 7]} ${fmtDate(iso(new Date(Date.UTC(m.getFullYear(), m.getMonth(), m.getDate()))))}, ${fmtClock(m)}` : ""; };
+
+// asked for only when someone sets a reminder: a click, which the browser requires
+function askToNotify(){
+  try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission().catch(() => {}); }
+  catch { /* not offered here -- a file:// page, say: the card still comes */ }
+}
+
+/* What is due by `now`. `opening`: the app has just opened, so anything
+   already gone by is summed up in one line rather than alerted one by one. */
+function checkReminders(now = new Date(), opening = false){
+  if (!bars) return;
+  const fired = remStore(REM_KEY), snoozed = remStore(SNOOZE_KEY), live = [], missed = [];
+  const lateMs = CFG.remind.lateMin * 60000, oldMs = CFG.remind.missedDays * DAY;
+  for (const t of S.tasks){
+    const m = remindMoment(t);
+    if (snoozed[t.id] && +new Date(snoozed[t.id]) <= +now){ delete snoozed[t.id]; if (m) live.push({t, m}); continue; }
+    if (!m || +m > +now || fired[t.id] === m.toISOString()) continue;
+    fired[t.id] = m.toISOString();
+    const ago = +now - +m;
+    if (ago > oldMs) continue;                                     // long gone: marked, not mentioned
+    (opening || ago > lateMs ? missed : live).push({t, m});
+  }
+  remSave(REM_KEY, fired); remSave(SNOOZE_KEY, snoozed);
+  for (const r of live) showReminder(r.t, r.m);
+  if (missed.length) note(`${missed.length} reminder${missed.length === 1 ? "" : "s"} went by while the app was closed: `
+    + missed.slice(0, 3).map(r => `${r.t.title} (${fmtClock(r.m)})`).join(", ") + (missed.length > 3 ? " …" : "") + ".");
+}
+
+// one card per task, in the corner; and the system's own notification if allowed
+function showReminder(t, m){
+  const box = el("remind");
+  if (box.querySelector(`[data-id="${CSS.escape(t.id)}"]`)) return;
+  const c = document.createElement("div");
+  c.className = "rmc"; c.dataset.id = t.id;
+  c.innerHTML = `<div class="rmt">⏰ ${esc(fmtClock(m))}</div><div class="rmn"><span class="key">${esc(num(t))}</span> ${esc(t.title)}</div>
+    <div class="rmb"><button type="button" data-act="done">✓ Done</button><button type="button" data-act="snooze">Snooze ${CFG.remind.snoozeMin} min</button>
+    <button type="button" data-act="x" aria-label="Dismiss">✕</button></div>`;
+  box.appendChild(c); box.hidden = false;
+  try {
+    if ("Notification" in window && Notification.permission === "granted"){
+      const n = new Notification(`${num(t)} ${t.title}`, {body: `Reminder, ${fmtClock(m)}`, tag: t.id});
+      n.onclick = () => { window.focus(); sel = t.id; render(); drawer(); n.close(); };
+    }
+  } catch { /* the card is enough */ }
+}
+el("remind").addEventListener("click", e => {
+  const c = e.target.closest(".rmc"), act = e.target.closest("button[data-act]")?.dataset.act;
+  if (!c) return;
+  const t = taskOf(c.dataset.id);
+  c.remove(); el("remind").hidden = !el("remind").children.length;
+  if (!t) return;
+  if (act === "done"){
+    const d = firstDone(); if (!d) return note("No column is ticked Done in Settings → Columns.", {warn:true});
+    commit(`Done: ${t.key}`, () => setStatus(t, d)); render(); drawer();
+  } else if (act === "snooze"){
+    const s = remStore(SNOOZE_KEY); s[t.id] = new Date(Date.now() + CFG.remind.snoozeMin * 60000).toISOString(); remSave(SNOOZE_KEY, s);
+  } else if (!act){ sel = t.id; render(); drawer(); }             // the card itself opens the task
+});
+setInterval(() => checkReminders(), CFG.remind.checkMs);
+
+/* For the calendar: its repeat as an RRULE, if it has one. */
+const ICS_DAY = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+function rruleOf(t){
+  const r = parseRepeat(t.repeat); if (!r) return null;
+  const freq = {d: "DAILY", w: "WEEKLY", m: "MONTHLY", y: "YEARLY"}[r.unit];
+  return `RRULE:FREQ=${freq};INTERVAL=${r.n}` + (r.days ? `;BYDAY=${r.days.map(i => ICS_DAY[i]).join(",")}` : "");
+}
 
 /* ------------------------------------------------------------------ *
  * Load: the day planner's view (planner.js). A row per person and a column
@@ -4813,7 +5389,7 @@ function renderLoadView(){
         if (c.over) overDays++;
         const tip = [`${fmtDate(d)} · daytime ${fmtLoad(c.day)} of ${fmtLoad(c.cap.day)}, evening ${fmtLoad(c.night)} of ${fmtLoad(c.cap.night)}`
                      + (lim ? "" : " (no limit)")]
-          .concat(c.items.map(x => `${x.part === "day" ? "Day" : "Evening"}: ${x.t.key} ${x.t.title} · ${fmtLoad(x.pts)}${x.over ? " (does not fit)" : ""}`))
+          .concat(c.items.map(x => `${x.part === "day" ? "Day" : "Evening"}: ${num(x.t)} ${x.t.title} · ${fmtLoad(x.pts)}${x.over ? " (does not fit)" : ""}`))
           .join("\n");
         const bar = (n, room) => `<i class="lb"><i style="--f:${room > PLAN_EPS ? Math.min(1, n / room) : n > PLAN_EPS ? 1 : 0}"></i></i>`;
         h += `<td class="lcell${u > PLAN_EPS ? " busy" : ""}" data-over="${c.over ? 1 : 0}" data-date="${esc(c.date)}"
@@ -4829,7 +5405,7 @@ function renderLoadView(){
     }
     const nf = p.unfit.reduce((a, u) => a + u.pts, 0);
     unfitPts += nf;
-    h += `<td class="lunfit" title="${esc(p.unfit.map(u => `${u.t.key} ${u.t.title}: ${fmtLoad(u.pts)} pts `
+    h += `<td class="lunfit" title="${esc(p.unfit.map(u => `${num(u.t)} ${u.t.title}: ${fmtLoad(u.pts)} pts `
          + (u.late ? "late, and more than there is room for" : `will not fit by ${fmtDate(u.by)}`)).join("\n"))}">`
        + (nf > PLAN_EPS ? `<b>${fmtLoad(nf)}</b>` : "") + `</td></tr>`;
   }
@@ -4897,7 +5473,7 @@ function renderPrioView(){
     return `<div class="pri${beyond ? " beyond" : ""}${sel === t.id ? " sel" : ""}" data-id="${esc(t.id)}">
       <span class="prn">${n}</span>
       <div class="prb">
-        <div class="prt"><span class="key">${esc(t.key)}</span> ${esc(t.title)}</div>
+        <div class="prt"><span class="key">${esc(num(t))}</span> ${esc(t.title)}</div>
         <div class="prm">${pts != null ? `<span>${esc(fmtLoad(pts))} pts ${esc(parts)}</span>` : ""}
           ${s ? `<span class="prs" title="${esc(scoreTip(s))}">imp ${Math.round(s.imp)} · urg ${Math.round(s.urg)} · blocks ${Math.round(s.blk)}${
             s.st ? ` · started ${Math.round(s.st)}` : ""}</span>` : ""}</div>
@@ -4937,7 +5513,7 @@ function renderPrioView(){
         || `<p class="hint prnone">${c.away ? "Time off." : room > PLAN_EPS ? "Nothing planned for the day." : "No room this day."}</p>`}
       ${beyond.length ? `<div class="prdiv">Beyond capacity</div>` + beyond.map(e => item(e.t, ++n, e.pts, [...e.parts].join(""), true)).join("") : ""}</div>
       ${next.length ? `<div class="prdiv soft">Next up</div><div class="prl">${next.map(t => { const fd = firstDay(t);
-        return `<div class="pri next${sel === t.id ? " sel" : ""}" data-id="${esc(t.id)}"><div class="prb"><div class="prt"><span class="key">${esc(t.key)}</span> ${esc(t.title)}</div>
+        return `<div class="pri next${sel === t.id ? " sel" : ""}" data-id="${esc(t.id)}"><div class="prb"><div class="prt"><span class="key">${esc(num(t))}</span> ${esc(t.title)}</div>
           <div class="prm"><span>${fd ? `planned ${esc(fmtDate(fd))}` : t.points > 0 ? "not planned yet" : "no points, so not planned"}</span></div></div>
           <span class="prsc" title="${esc(scoreTip(SCORES.get(t.id)))}">${scoreOf(t)}</span></div>`; }).join("")}</div>` : ""}
     </section>`;
@@ -4967,6 +5543,455 @@ el("prio").addEventListener("click", e => {
     render(); drawer(); note(`${t.key} is done.`, {undo:true}); return;
   }
   sel = t.id; render(); drawer();
+});
+
+/* ------------------------------------------------------------------ *
+ * A small menu of actions for one thing: opened by its ⋯ button, or by a
+ * right-click -- which a long press on a tablet also fires. One is open at
+ * a time; a tap elsewhere, Esc, a scroll or a resize closes it.
+ *
+ * items: {label, act, disabled} for a choice, {head} for a heading over the
+ * ones after it, {sep: true} for a line between.
+ * ------------------------------------------------------------------ */
+let popMenuEl = null;
+function closePopMenu(){ popMenuEl?.remove(); popMenuEl = null; }
+function popMenu(at, items){           // at: the element to open under, or {x, y}
+  closePopMenu();
+  const m = document.createElement("div");
+  m.className = "popmenu"; m.setAttribute("role", "menu");
+  m.innerHTML = items.map((it, i) => it.sep ? "<hr>" : it.head != null ? `<p class="pmh">${esc(it.head)}</p>`
+    : `<button type="button" role="menuitem" data-i="${i}"${it.disabled ? " disabled" : ""}>${esc(it.label)}</button>`).join("");
+  document.body.appendChild(m); popMenuEl = m;
+  // under the button, or at the pointer; kept on the screen either way
+  const el_ = at instanceof Element, r = el_ ? at.getBoundingClientRect() : {left: at.x, right: at.x, top: at.y, bottom: at.y};
+  const w = m.offsetWidth, h = m.offsetHeight;
+  let x = el_ ? r.right - w : r.left, y = r.bottom + 2;
+  x = Math.max(4, Math.min(x, innerWidth - w - 4));
+  if (y + h > innerHeight - 4) y = Math.max(4, r.top - h - 2);
+  m.style.left = x + "px"; m.style.top = y + "px";
+  m.addEventListener("click", e => {
+    const b = e.target.closest("button[data-i]"); if (!b) return;
+    closePopMenu(); items[+b.dataset.i].act();
+  });
+  m.addEventListener("keydown", e => {
+    if (e.key === "Escape"){ e.stopPropagation(); closePopMenu(); if (el_) at.focus(); return; }
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    e.preventDefault();
+    const bs = [...m.querySelectorAll("button:not(:disabled)")], i = bs.indexOf(document.activeElement);
+    bs[(i + (e.key === "ArrowDown" ? 1 : -1) + bs.length) % bs.length]?.focus();
+  });
+  m.querySelector("button:not(:disabled)")?.focus({preventScroll: true});
+  return m;
+}
+document.addEventListener("pointerdown", e => { if (popMenuEl && !popMenuEl.contains(e.target)) closePopMenu(); }, true);
+document.addEventListener("scroll", () => closePopMenu(), true);       // any scroller: it would leave the menu behind
+addEventListener("resize", () => closePopMenu());
+
+/* ------------------------------------------------------------------ *
+ * Table: the tasks as a spreadsheet, edited where they stand.
+ *
+ * A row per task, in tree order -- indented, folding with the Gantt's task
+ * list -- or sorted by any column: click a heading, again for the other
+ * way, a third time for tree order again. The sort and which columns show
+ * are this device's (localStorage), like the zoom. A column shows by
+ * default only if some task has something in it, so an unused field is not
+ * a strip of blanks across the screen; Columns overrides that either way.
+ *
+ * A cell is its own editor. Text, numbers and dates land when the cell is
+ * left (Tab, Enter, a click elsewhere) and a pick list the moment it is
+ * picked: one journal entry each (invariant 7), through the same EDITS as
+ * the drawer. Enter goes down a row and Shift+Enter up; Esc puts the cell
+ * back. The table is redrawn after an edit, since a duration moves dates,
+ * and the cell the cursor went to is found again in the new rows by task
+ * and column. A group's own fields come from its tasks (invariant 2), so
+ * those cells are read-only on its row.
+ *
+ * Tick rows to set one field to one value on all of them -- one entry, so
+ * one Ctrl+Z takes it all back -- or to delete them together.
+ * ------------------------------------------------------------------ */
+let tsort = (() => { try { const v = JSON.parse(localStorage.getItem("pm.tsort") || "null");
+                           return v && typeof v.k === "string" && (v.dir === 1 || v.dir === -1) ? v : null; }
+                     catch { return null; } })();
+let tcolPref = (() => { try { const v = JSON.parse(localStorage.getItem("pm.tcols") || "{}");
+                              return v && typeof v === "object" && !Array.isArray(v) ? v : {}; }
+                        catch { return {}; } })();
+const ticked = new Set();            // rows ticked for a bulk edit: this session's, never stored
+let tickFrom = null;                 // the row last ticked, where a Shift+click range starts
+let bulkK = "status", bulkV = "";    // the bulk edit's field and the value typed for it so far
+let TCX = null;                      // what a render worked out once, for the cells to read (invariant 14)
+let tRows = [], tStat = null;        // the rows drawn, in order; and what the status line says of them
+
+const blank = v => v == null || v === "" || (typeof v === "number" && !Number.isFinite(v));
+// one collator, made once: localeCompare with options builds one per call
+const COLL = new Intl.Collator(undefined, {numeric: true, sensitivity: "base"});
+// blanks last whichever way it is sorted; ENG-9 before ENG-10
+const cmpSort = (a, b, dir) => { const na = blank(a), nb = blank(b);
+  if (na || nb) return na - nb;
+  return dir * (typeof a === "number" && typeof b === "number" ? a - b : COLL.compare(String(a), String(b))); };
+const linkShort = d => d.kind !== "FS" || d.lag ? ` ${d.kind}${d.lag ? (d.lag > 0 ? "+" : "−") + Math.abs(d.lag) : ""}` : "";
+
+/* The columns, after Key and Task, which always show. Each may have:
+   w      width, in units of the text size (invariant 11b)
+   ed     its editor: "text", "num", "date" or "sel"; none is read-only
+   val    the value, as the editor holds it (or the text, if read-only)
+   show   the text when read-only, if not val
+   opts   a pick list's choices, [value, label]
+   set    what an edit does: EDITS, as the drawer's
+   can    whether a row may edit it; by default any row but a group's
+   sort   what it sorts by; null or "" goes last
+   has    whether a row has something in it; by default a sort key
+   def    shown by default when it has data (true unless said)
+   avail  whether it exists in this project at all
+   need   bulk edit wants a value: a blank Days would make every ticked task a milestone
+   name   what the journal calls an edit of it, if not its label */
+const TBASE = [
+  {k:"wbs",    label:"WBS",     w:4.2, def:() => S.numbering === "wbs", tip:"Its place in the tree: 1, 1.1, 1.2 ... renumbered as tasks move",
+               val:x => WBS.get(x.t.id) || "", sort:x => x.i},
+  {k:"parent", label:"Parent",  w:5.6, def:false, val:x => x.p ? num(x.p) : "", tipOf:x => x.p?.title || "",
+               sort:x => x.p ? TCX.idx.get(x.p.id) : null},
+  {k:"status", label:"Status",  w:8.5, ed:"sel", val:x => x.t.status, show:x => x.sum ? "" : x.t.status,
+               opts:() => S.statuses.map(s => [s, s]), set:EDITS.status, sort:x => x.sum ? null : S.statuses.indexOf(x.t.status)},
+  {k:"who",    label:"Who",     w:8.5, ed:"text", list:"tlPeople", name:"People", val:x => x.t.assignee || "", show:x => whoShort(x.t),
+               can:x => !x.sum && peopleOf(x.t).length < 2, bulk:x => !x.sum, set:EDITS.who, sort:x => whoText(x.t) || null,
+               tipOf:x => peopleOf(x.t).length > 1 ? `${shareText(x.t)}. Shares are changed in the task panel.` : ""},
+  {k:"sprint", label:"Sprint",  w:8.5, ed:"sel", avail:() => S.sprints.length > 0, val:x => x.t.sprint || "",
+               show:x => x.sum ? "" : sprintOf(x.t)?.name ?? "", opts:x => sprintOpts(x.t), set:EDITS.sprint,
+               sort:x => x.sum ? null : sprintOf(x.t)?.start ?? null},
+  "fields",                                  // the custom fields go here, as Work Planner has them
+  {k:"dur",    label:"Days",    w:4.2, num:true, ed:"num", name:"Duration", tip:"Duration, in working days", need:true,
+               val:x => x.sum ? "" : String(x.t.duration ?? ""), set:EDITS.duration, sort:x => x.sum ? null : x.t.duration},
+  {k:"pts",    label:"Points",  w:4.6, num:true, ed:"num", tip:"About an hour of work each",
+               val:x => x.sum || x.t.points == null ? "" : String(x.t.points), set:EDITS.points, sort:x => x.sum ? null : x.t.points},
+  {k:"pct",    label:"% done",  w:4.6, num:true, ed:"num", step:"any", def:false,
+               val:x => String((x.sum ? rollPct(x.t.id) : x.t.pct) ?? ""), set:EDITS.pct,
+               sort:x => x.sum ? rollPct(x.t.id) : x.t.pct},
+  {k:"imp",    label:"Importance", w:7.4, ed:"sel", tip:"How much it matters, whatever the date",
+               val:x => x.t.importance || "", show:x => IMP_NAME[x.t.importance] || "",
+               opts:() => [["", "—"], ...IMPORTANCE.map(k => [k, IMP_NAME[k]])], set:EDITS.importance,
+               sort:x => x.t.importance ? IMPORTANCE.indexOf(x.t.importance) : null},
+  {k:"when",   label:"When",    w:5.8, ed:"sel", tip:"The part of the day it can be done in",
+               val:x => x.t.when || "", show:x => WHEN_NAME[x.t.when] || "",
+               opts:() => [["", "Any time"], ["day", "Day"], ["night", "Night"]], set:EDITS.when, sort:x => x.t.when || null},
+  {k:"score",  label:"Score",   w:4.2, num:true, tip:"Priority, 1-100: importance, urgency, what waits on it, started",
+               val:x => String(SCORES.get(x.t.id)?.total ?? ""), tipOf:x => scoreTip(SCORES.get(x.t.id)),
+               sort:x => SCORES.get(x.t.id)?.total ?? null},
+  {k:"start",  label:"Start",   w:6.8, num:true, val:x => x.b.unscheduled ? "—" : fmtDate(x.b.start),
+               sort:x => x.b.unscheduled ? null : +x.b.start, cls:x => x.b.suggested ? "sugg" : "",
+               tipOf:x => x.b.unscheduled ? NO_DATES : x.b.suggested ? SUGGESTED : ""},
+  {k:"finish", label:"Finish",  w:6.8, num:true, val:x => x.b.unscheduled ? "—" : fmtDate(x.b.finish),
+               sort:x => x.b.unscheduled ? null : +x.b.finish, cls:x => x.b.suggested ? "sugg" : ""},
+  {k:"float",  label:"Float",   w:4.2, num:true, def:false, tip:"Working days it can slip without moving the finish",
+               val:x => x.sum || x.b.unscheduled ? "" : String(x.b.slack), sort:x => x.sum || x.b.unscheduled ? null : x.b.slack,
+               cls:x => !x.sum && !x.b.unscheduled && x.b.slack <= 0 ? "zero" : ""},
+  {k:"nb",     label:"Not before", w:8.8, ed:"date", def:false, name:"Date", tip:"The earliest it may start",
+               val:x => x.t.not_before || "", set:EDITS.not_before},
+  {k:"due",    label:"Due date", w:8.8, ed:"date", can:() => true,
+               tip:"A deadline: it never moves the task, but missing it shows as negative float",
+               val:x => x.t.due_date || "", set:EDITS.due_date},
+  {k:"as",     label:"Started", w:8.8, ed:"date", def:false, val:x => x.t.actual_start || "", set:EDITS.actual_start},
+  {k:"af",     label:"Finished", w:8.8, ed:"date", def:false, val:x => x.t.actual_finish || "", set:EDITS.actual_finish},
+  {k:"rep",    label:"Repeats", w:9, tip:"Set in the task panel", val:x => repeatName(x.t.repeat)},
+  {k:"links",  label:"Waits for", w:9, def:false, tip:"What it waits for. Links are drawn on the Gantt, or edited in the task panel",
+               val:x => (TCX.preds.get(x.t.id) || []).map(d => { const p = TCX.byId.get(d.pred); return (p ? num(p) : "?") + linkShort(d); }).join(", ")},
+];
+// a custom field, as a column: a pick list, a number, or text, as the drawer has it
+const cfCol = f => ({k:`cf:${f.name}`, label:f.label, f, w:f.kind === "number" ? 6 : 8.5, num:f.kind === "number",
+  ed:f.kind === "select" ? "sel" : f.kind === "number" ? "num" : "text", step:"any", can:() => true,
+  val:x => x.t.custom?.[f.name] == null ? "" : String(x.t.custom[f.name]),
+  opts:() => [["", "—"], ...(f.options || []).map(o => [o, o])], set:(t, v) => setCustom(t, f, v),
+  sort:x => { const v = x.t.custom?.[f.name];
+    if (blank(v)) return null;
+    if (f.kind !== "select") return v;
+    const i = (f.options || []).indexOf(v); return i < 0 ? f.options.length : i; }});
+const tableCols = () => TBASE.flatMap(c => c === "fields" ? S.fields.map(cfCol) : [c]).filter(c => c.avail?.() !== false);
+const TKEY = {k:"key", label:"Key", sort:x => x.t.key};
+const TTITLE = {k:"title", label:"Task", name:"Title", ed:"text", can:() => true, set:EDITS.title, sort:x => x.t.title};
+const tcol = k => k === "title" ? TTITLE : k === "key" ? TKEY : tableCols().find(c => c.k === k);
+// a sprint to pick: the open ones, and a completed one it is still filed under
+const sprintOpts = t => { const mine = sprintOf(t);
+  return [["", "Backlog"], ...(TCX?.open || openSprints()).map(s => [s.id, s.name + (s.state === "active" ? " (active)" : "")]),
+          ...(mine?.state === "closed" ? [[mine.id, `${mine.name} (completed)`]] : [])]; };
+const canEdit = (c, x) => !!c.ed && (c.can ? c.can(x) : !x.sum);
+const defOn = c => c.def === undefined ? true : typeof c.def === "function" ? c.def() : c.def;
+
+// a row as the columns read it: the task, its bar, whether it is a group
+function rowX(t, depth = 0, ctx = false){
+  const kids = (TCX.km.get(t.id) || []).length;
+  return {t, b: bars.get(t.id), sum: kids > 0, kids, depth, ctx, i: TCX.idx.get(t.id),
+          p: t.parent_id != null ? TCX.byId.get(t.parent_id) || null : null};
+}
+
+function renderTableView(){
+  el("pname").textContent = S.name || "Untitled project";
+  document.title = S.name || "Schedule";
+  el("gFold").style.display = tsort ? "none" : "";         // folding means nothing to a sorted list
+  if (!S.tasks.length){
+    el("tbl").innerHTML = ""; el("empty").hidden = false; el("nomatch").hidden = true;
+    ticked.clear(); tRows = []; paintBulk();
+    el("stat").textContent = "empty project"; syncUndoButtons(); return;
+  }
+  el("empty").hidden = true;
+  if (!recompute()) return;
+
+  // The cell with the cursor, and anything typed into it: found again in the
+  // new rows, so a redraw -- after an edit, as the cursor moves on -- keeps it.
+  const a = document.activeElement;
+  const keep = a?.classList?.contains("ted") && el("tbl").contains(a) ? {id: a.closest("tr")?.dataset.id, k: a.dataset.k,
+    v: a.value, typed: a.tagName === "INPUT" && a.value !== a.defaultValue, range: (() => {
+      try { return a.selectionStart == null ? null : [a.selectionStart, a.selectionEnd]; } catch { return null; } })()} : null;
+
+  // everything the cells look up, made once: a scan per row is quadratic (invariant 14)
+  const km = childMap(), byId = new Map(S.tasks.map(t => [t.id, t])), idx = new Map(), preds = new Map();
+  let n = 0; const walk = p => { for (const t of km.get(p) || []){ idx.set(t.id, n++); walk(t.id); } }; walk(null);
+  for (const d of S.deps) (preds.get(d.succ) ?? preds.set(d.succ, []).get(d.succ)).push(d);
+  TCX = {km, byId, idx, preds, open: openSprints()};
+
+  const cols = tableCols(), all = S.tasks.map(t => rowX(t));
+  const hasData = new Map(cols.map(c => [c.k, all.some(x => c.has ? c.has(x) : !blank(c.sort ? c.sort(x) : c.val(x)))]));
+  const shown = cols.filter(c => tcolPref[c.k] ?? (defOn(c) && hasData.get(c.k)));
+
+  // the rows: tree order through visible(), which folds and filters as the
+  // Gantt's list does; or every task that matches, sorted, flat
+  const sc = tsort && [TKEY, TTITLE, ...cols].find(c => c.k === tsort.k);
+  let rows;
+  if (sc){
+    const f = filterSets(km);
+    rows = (f ? all.filter(x => f.self.has(x.t.id)) : all).slice();
+    const key = new Map(rows.map(x => [x, sc.sort ? sc.sort(x) : sc.val(x)]));
+    rows.sort((p, q) => cmpSort(key.get(p), key.get(q), tsort.dir) || p.i - q.i);
+  } else rows = visible().map(r => rowX(r.t, r.depth, r.ctx));
+  el("nomatch").hidden = !(filtering() && !rows.length);
+
+  const shownIds = new Set(rows.map(x => x.t.id));
+  for (const id of ticked) if (!shownIds.has(id)) ticked.delete(id);     // nothing is changed out of sight
+  tRows = rows.map(x => x.t.id);
+
+  const W = {tck: 2.2, key: 5.6, title: 20};
+  const width = W.tck + W.key + W.title + shown.reduce((s, c) => s + c.w, 0);
+  const arrow = k => tsort?.k === k ? (tsort.dir > 0 ? " ▲" : " ▼") : "";
+  const th = (c, cls = "") => `<th data-k="${esc(c.k)}" class="${cls}${c.num ? " num" : ""}" aria-sort="${
+      tsort?.k === c.k ? (tsort.dir > 0 ? "ascending" : "descending") : "none"}"${c.tip ? ` title="${esc(c.tip)}"` : ""}>`
+    + `<button type="button" class="tsrt">${esc(c.label)}${arrow(c.k)}</button></th>`;
+  const CHEV = '<svg width="9" height="9" viewBox="0 0 9 9"><path d="M1 2.5 4.5 6.5 8 2.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
+
+  const cell = (c, x) => {
+    const cls = [c.num ? "num" : "", c.cls?.(x) || ""], tip = c.tipOf?.(x);
+    const td = (inner, ed) => `<td class="${cls.concat(ed ? "ed" : "").filter(Boolean).join(" ")}"${tip ? ` title="${esc(tip)}"` : ""}>${inner}</td>`;
+    if (!canEdit(c, x)) return td(esc(c.show ? c.show(x) : c.ed === "date" ? fmtDate(c.val(x)) : c.val(x)));
+    const v = c.val(x), al = ` aria-label="${esc(c.label)}, ${esc(x.t.key)}"`;
+    if (c.ed === "sel"){
+      const os = [...c.opts(x)];
+      if (!os.some(o => o[0] === v)) os.push([v, v]);          // a value no longer offered still shows as itself
+      return td(`<select class="ted" data-k="${esc(c.k)}"${al}>${os.map(([ov, ol]) =>
+        `<option value="${esc(ov)}"${ov === v ? " selected" : ""}>${esc(ol)}</option>`).join("")}</select>`, true);
+    }
+    const type = c.ed === "num" ? `type="number" step="${c.step || 1}"${c.f ? "" : ' min="0"'}`
+               : `type="${c.ed === "date" ? "date" : "text"}"`;
+    return td(`<input class="ted" data-k="${esc(c.k)}" ${type} value="${esc(v)}"${al}${c.list ? ` list="${c.list}"` : ""}>`, true);
+  };
+  const row = x => {
+    const t = x.t, cr = !x.sum && x.b.critical, tk = ticked.has(t.id);
+    const cls = [x.sum && "tsum", x.ctx && "tctx", sel === t.id && "tsel", cr && "tcr", tk && "ttk"].filter(Boolean).join(" ");
+    const fold = x.kids && !sc ? `<button type="button" class="chev" data-fold data-open="${collapsed.has(t.id) ? 0 : 1}" tabindex="-1"
+        aria-label="${collapsed.has(t.id) ? "Expand" : "Collapse"}">${CHEV}</button>` : sc ? "" : '<span class="chev" aria-hidden="true"></span>';
+    return `<tr data-id="${esc(t.id)}"${cls ? ` class="${cls}"` : ""}>`
+      + `<td class="tck"><input type="checkbox" data-tick tabindex="-1" aria-label="Tick ${esc(t.key)}"${tk ? " checked" : ""}></td>`
+      + `<td class="tkey"><button type="button" class="key" data-open tabindex="-1" title="Open it in the task panel">${esc(t.key)}</button></td>`
+      + `<td class="tttl ed"${cr ? ' title="On the critical path: a day late here is a day late at the end"' : ""}><div class="tname" style="--d:${x.depth}">${fold}`
+      + `<input class="ted" data-k="title" value="${esc(t.title)}" aria-label="Title, ${esc(t.key)}"></div></td>`
+      + shown.map(c => cell(c, x)).join("") + `</tr>`;
+  };
+
+  el("tbl").style.width = `calc(var(--fs) * ${width})`;
+  el("tbl").innerHTML = `<colgroup><col style="width:calc(var(--fs)*${W.tck})"><col style="width:calc(var(--fs)*${W.key})">`
+    + `<col style="width:calc(var(--fs)*${W.title})">${shown.map(c => `<col style="width:calc(var(--fs)*${c.w})">`).join("")}</colgroup>`
+    + `<thead><tr><th class="tck"><input type="checkbox" id="tAll" tabindex="-1" aria-label="Tick every row shown"></th>`
+    + th(TKEY, "tkey") + th(TTITLE, "tttl") + shown.map(c => th(c)).join("") + `</tr></thead>`
+    + `<tbody>${rows.map(row).join("")}</tbody>`;
+  el("tlPeople").innerHTML = allPeople().map(p => `<option value="${esc(p)}">`).join("");
+
+  if (keep){
+    const m = el("tbl").querySelector(`tr[data-id="${CSS.escape(keep.id)}"] .ted[data-k="${CSS.escape(keep.k)}"]`);
+    if (m){
+      if (keep.typed) m.value = keep.v;
+      m.focus({preventScroll: true});
+      try { keep.range ? m.setSelectionRange(...keep.range) : m.select?.(); } catch { /* a date has no selection */ }
+    }
+  }
+
+  // Columns: every one this project has, ticked if shown; an empty one says so
+  el("tColPick").innerHTML = cols.map(c => `<label class="tog"${c.tip ? ` title="${esc(c.tip)}"` : ""}><input type="checkbox"
+      data-tcol="${esc(c.k)}"${shown.includes(c) ? " checked" : ""}> ${esc(c.label)}${hasData.get(c.k) ? "" : ' <span class="tcempty">empty</span>'}</label>`).join("");
+  tStat = {n: rows.length, crit: rows.filter(x => !x.sum && x.b.critical).length, by: sc ? `${sc.label} ${tsort.dir > 0 ? "▲" : "▼"}` : null};
+  syncTicks();
+  syncUndoButtons();
+}
+
+/* The ticks' own paint, without a redraw: a tick is not an edit. */
+function syncTicks(){
+  const all = el("tAll");
+  if (all){ const n = tRows.filter(id => ticked.has(id)).length;
+            all.checked = n > 0 && n === tRows.length; all.indeterminate = n > 0 && n < tRows.length; }
+  for (const r of el("tbl").tBodies[0]?.rows || []){
+    const on = ticked.has(r.dataset.id);
+    r.classList.toggle("ttk", on); const c = r.querySelector("[data-tick]"); if (c) c.checked = on;
+  }
+  paintBulk();
+  if (tStat) el("stat").innerHTML = `${tStat.n} of ${S.tasks.length} task${S.tasks.length === 1 ? "" : "s"}`
+    + (tStat.by ? ` · sorted by ${esc(tStat.by)}` : " · tree order")
+    + (ticked.size ? ` · <span class="tks">${ticked.size} ticked</span>` : "")
+    + ` · <b title="On the critical path">${tStat.crit}</b> critical`;
+}
+
+/* Bulk edit: which field, what value, and Apply. The value survives a
+   redraw -- ticking another row redraws -- as bulkV. */
+function paintBulk(){
+  const box = el("tBulk"), n = ticked.size;
+  box.hidden = !n;
+  if (!n){ box.innerHTML = ""; return; }
+  const bc = tableCols().filter(c => c.ed);
+  if (!bc.some(c => c.k === bulkK)){ bulkK = bc[0]?.k; bulkV = ""; }
+  const c = bc.find(c => c.k === bulkK);
+  let ed = "";
+  if (c?.ed === "sel"){
+    const os = c.opts({t: {}});
+    if (!os.some(o => o[0] === bulkV)) bulkV = os[0]?.[0] ?? "";
+    ed = `<select id="tbV" aria-label="Its new value">${os.map(([v, l]) => `<option value="${esc(v)}"${v === bulkV ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+  } else if (c) ed = `<input id="tbV" aria-label="Its new value" type="${c.ed === "num" ? "number" : c.ed === "date" ? "date" : "text"}"
+      value="${esc(bulkV)}"${c.list ? ` list="${c.list}"` : ""} placeholder="${c.ed === "date" ? "" : "blank clears it"}">`;
+  box.innerHTML = `<b>${n} ticked</b><span>Set</span><select id="tbF" aria-label="Which field">${bc.map(x =>
+      `<option value="${esc(x.k)}"${x.k === bulkK ? " selected" : ""}>${esc(x.label)}</option>`).join("")}</select><span>to</span>${ed}
+    <button type="button" class="primary" id="tbGo">Apply</button><button type="button" class="ghost" id="tbDel">Delete</button>
+    <button type="button" class="ghost" id="tbNone">Untick all</button>`;
+}
+
+function bulkApply(){
+  const c = tcol(bulkK); if (!c?.set) return;
+  const v = el("tbV")?.value ?? "", ids = tRows.filter(id => ticked.has(id));
+  if (c.need && v === "") return note(`Give the ${c.label.toLowerCase()} to set them to.`, {warn: true});
+  const byId = new Map(S.tasks.map(t => [t.id, t])), km = childMap();
+  const ts = ids.map(id => byId.get(id)).filter(Boolean);
+  // a group's own fields come from its tasks: those rows are left alone, and said so
+  const x = t => ({t, sum: (km.get(t.id) || []).length > 0});
+  const ok = ts.filter(t => { const r = x(t); return c.bulk ? c.bulk(r) : c.can ? c.can(r) : !r.sum; }), skip = ts.length - ok.length;
+  if (!ok.length) return note(`${c.label} is worked out from their tasks for all of these: tick the tasks themselves.`, {warn: true});
+  const shownV = c.ed === "sel" ? (c.opts({t: {}}).find(o => o[0] === v)?.[1] ?? v) : c.ed === "date" && v ? fmtDate(v) : v;
+  commit(`${c.name || c.label} on ${ok.length} task${ok.length === 1 ? "" : "s"}`, () => { for (const t of ok) c.set(t, v); });
+  render(); drawer();
+  // after whatever setStatus queued -- a repeating task's word on coming back
+  const m = `${c.label} ${v === "" ? "cleared" : `set to ${shownV}`} on ${ok.length} task${ok.length === 1 ? "" : "s"}`
+          + (skip ? `; ${skip} group${skip === 1 ? "" : "s"} left alone, as ${c.label} comes from their tasks` : "") + ".";
+  queueMicrotask(() => note(m, {undo: true}));
+}
+
+/* Delete the ticked rows at once. A group goes only with everything under
+   it: a child left behind would lose its parent. */
+function bulkDelete(){
+  const ids = new Set(tRows.filter(id => ticked.has(id))), km = childMap();
+  const byId = new Map(S.tasks.map(t => [t.id, t]));
+  const bad = [...ids].map(id => byId.get(id)).find(t => t && (km.get(t.id) || []).some(k => !ids.has(k.id)));
+  if (bad) return note(`${bad.key} has sub-tasks that are not ticked. Tick them too, or move them out first.`, {warn: true});
+  const n = ids.size;
+  commit(`Delete ${n} task${n === 1 ? "" : "s"}`, () => {
+    S.deps     = S.deps.filter(d => !ids.has(d.pred) && !ids.has(d.succ));
+    S.comments = S.comments.filter(c => !ids.has(c.task_id));
+    S.tasks    = S.tasks.filter(t => !ids.has(t.id));
+  });
+  if (ids.has(sel)) sel = null;
+  ticked.clear();
+  render(); drawer();
+  note(`Deleted ${n} task${n === 1 ? "" : "s"}, with their links and comments.`, {undo: true});
+}
+
+/* One cell's edit, as one entry. The redraw waits a moment: an edit lands
+   as the cursor leaves the cell, and by then the next cell has it -- the
+   redraw finds that one again in the new rows. Redrawn at once, the cell
+   being tabbed to would be torn out first and the cursor lost. */
+let tRedraw = 0;
+const soonRedraw = () => { clearTimeout(tRedraw); tRedraw = setTimeout(() => { render(); drawer(); }, 0); };
+function commitCell(n){
+  const id = n.closest("tr[data-id]")?.dataset.id, t = id && taskOf(id), c = tcol(n.dataset.k);
+  if (!t || !c?.set) return;
+  if (n.tagName === "INPUT") n.defaultValue = n.value;   // landed: nothing left pending for flushEdits
+  commit(`${c.name || c.label} on ${t.key}`, () => c.set(t, n.value));
+  soonRedraw();
+}
+// the same column in the next row down (or up) that has an editor there
+function cellNear(n, d){
+  const k = n.dataset.k;
+  for (let r = n.closest("tr"); (r = d > 0 ? r.nextElementSibling : r.previousElementSibling);){
+    const m = r.querySelector(`.ted[data-k="${CSS.escape(k)}"]`); if (m) return m;
+  }
+  return null;
+}
+function tickRows(id, on, range){
+  const i = tRows.indexOf(id), j = range && tickFrom ? tRows.indexOf(tickFrom) : -1;
+  for (const r of j < 0 ? [id] : tRows.slice(Math.min(i, j), Math.max(i, j) + 1)) on ? ticked.add(r) : ticked.delete(r);
+  tickFrom = id;
+  syncTicks();
+}
+
+const tbl = el("tbl");
+tbl.addEventListener("focusout", e => {
+  const n = e.target;
+  if (n.tagName === "INPUT" && n.classList.contains("ted") && n.value !== n.defaultValue) commitCell(n);
+});
+tbl.addEventListener("change", e => { if (e.target.matches("select.ted")) commitCell(e.target); });
+tbl.addEventListener("keydown", e => {
+  const n = e.target; if (!n.classList?.contains("ted")) return;
+  if (e.key === "Escape"){
+    e.stopPropagation();                         // it puts the cell back; it does not close the task panel
+    if (n.tagName === "INPUT") n.value = n.defaultValue;
+    n.blur(); return;
+  }
+  if (e.key === "Enter" && !e.isComposing){
+    e.preventDefault();
+    const to = cellNear(n, e.shiftKey ? -1 : 1);
+    if (!to) return n.blur();
+    to.focus(); try { to.select?.(); } catch { /* a date */ }
+  }
+});
+tbl.addEventListener("click", e => {
+  const tk = e.target.closest("[data-tick]");
+  if (tk) return tickRows(tk.closest("tr").dataset.id, tk.checked, e.shiftKey);
+  if (e.target.id === "tAll"){
+    const all = tRows.every(id => ticked.has(id));
+    for (const id of tRows) all ? ticked.delete(id) : ticked.add(id);
+    tickFrom = null; return syncTicks();
+  }
+  const h = e.target.closest("th[data-k]");
+  if (h){
+    const k = h.dataset.k;
+    tsort = tsort?.k !== k ? {k, dir: 1} : tsort.dir > 0 ? {k, dir: -1} : null;
+    try { tsort ? localStorage.setItem("pm.tsort", JSON.stringify(tsort)) : localStorage.removeItem("pm.tsort"); }
+    catch { /* storage blocked */ }
+    return render();
+  }
+  const id = e.target.closest("tr[data-id]")?.dataset.id; if (!id) return;
+  if (e.target.closest("[data-fold]")){ collapsed.has(id) ? collapsed.delete(id) : collapsed.add(id); return render(); }
+  if (e.target.closest("[data-open]")){ sel = id; render(); drawer(); }
+});
+
+el("tColPick").addEventListener("change", e => {
+  const k = e.target.dataset.tcol; if (!k) return;
+  tcolPref = {...tcolPref, [k]: e.target.checked};
+  try { localStorage.setItem("pm.tcols", JSON.stringify(tcolPref)); } catch { /* storage blocked */ }
+  render();
+});
+el("tColReset").onclick = () => {
+  tcolPref = {};
+  try { localStorage.removeItem("pm.tcols"); } catch { /* storage blocked */ }
+  render();
+};
+el("tBulk").addEventListener("change", e => {
+  if (e.target.id === "tbF"){ bulkK = e.target.value; bulkV = ""; paintBulk(); }
+  else if (e.target.id === "tbV") bulkV = e.target.value;
+});
+el("tBulk").addEventListener("input", e => { if (e.target.id === "tbV") bulkV = e.target.value; });
+el("tBulk").addEventListener("click", e => {
+  if (e.target.id === "tbGo") bulkApply();
+  else if (e.target.id === "tbDel") bulkDelete();
+  else if (e.target.id === "tbNone"){ ticked.clear(); tickFrom = null; syncTicks(); }
 });
 /* ------------------------------------------------------------------ *
  * Drag: move sets a not-before constraint, resize sets duration.
@@ -5127,10 +6152,10 @@ function drawer(){
   // of user-entered fields (titles, assignees, custom fields)
   const fmt = v => v === null || v === undefined || v === ""
     ? "—" : esc(typeof v === "object" ? JSON.stringify(v) : v);
-  const keyAt = id => esc(taskOf(id)?.key ?? "?");
+  const keyAt = id => { const x = taskOf(id); return esc(x ? num(x) : "?"); };
   // Bookkeeping says nothing to a person: `pos` moves whenever a sibling is
   // re-ordered, `status_since` with every status change.
-  const QUIET = new Set(["pos", "cpos", "status_since"]);
+  const QUIET = new Set(["pos", "cpos", "spos", "status_since"]);
   const LABEL = {actual_start:"started", actual_finish:"finished", pct:"% done", not_before:"not before"};
   // A create or delete has no field, from or to -- it used to print as
   // ": — → —". Say what happened instead.
@@ -5186,15 +6211,20 @@ function drawer(){
   const rpt = parseRepeat(t.repeat), rn = rpt?.n ?? 1, dd = t.done_dates || [];
   const unitOpts = [["", "never"], ...Object.entries(UNITS).map(([u, w]) => [u, rn === 1 ? w : w + "s"])]
     .map(([v, l]) => `<option value="${v}"${v === (rpt?.unit ?? "") ? " selected" : ""}>${l}</option>`).join("");
-  // Parent: every task it could go under, in tree order. Skipping its own
-  // row skips its subtree too, so nothing inside it is offered.
-  const km = childMap(), popts = [`<option value="">none — top level</option>`];
-  const walkP = (p, depth) => { for (const x of km.get(p) || []){
+  // Parent: every task it could go under, in tree order, found by typing any
+  // part of its number or name -- a list of hundreds is no way to pick one.
+  // Skipping its own row skips its subtree too, so nothing inside it is offered.
+  const km = childMap(), byId = new Map(S.tasks.map(x => [x.id, x])), pmap = new Map([[TOP_LEVEL, null]]);
+  const pname = x => `${num(x)} ${x.title}`;
+  const popts = [`<option value="${esc(TOP_LEVEL)}"></option>`];
+  const walkP = p => { for (const x of km.get(p) || []){
     if (x.id === sel) continue;
-    popts.push(`<option value="${esc(x.id)}"${x.id === t.parent_id ? " selected" : ""}>${" ".repeat(depth)}${esc(x.key)} `
-             + `${esc(x.title.length > 42 ? x.title.slice(0, 41) + "…" : x.title)}</option>`);
-    walkP(x.id, depth + 1); } };
-  walkP(null, 0);
+    const v = pname(x), up = x.parent_id != null ? byId.get(x.parent_id) : null;
+    if (!pmap.has(v)) pmap.set(v, x.id);
+    popts.push(`<option value="${esc(v)}"${up ? ` label="in ${esc(pname(up))}"` : ""}></option>`);
+    walkP(x.id); } };
+  walkP(null);
+  const parentNow = t.parent_id != null && byId.get(t.parent_id) ? pname(byId.get(t.parent_id)) : "";
   // Sprint: the open ones, plus a completed one it is still filed under
   const mySpr = sprintOf(t);
   const sprOpts = `<option value="">backlog — no sprint</option>`
@@ -5220,10 +6250,12 @@ function drawer(){
     + (gist ? `<span class="gist">${gist}</span>` : "") + `</summary>`;
   d.innerHTML = `
     <div class="dhd"><button type="button" class="dx" id="dClose" aria-label="Close" title="Close (Esc)">✕</button>
-      <div class="key">${esc(t.key)}</div><h2>${esc(t.title)}</h2></div>
+      <div class="key">${esc(num(t))}${S.numbering === "wbs" ? ` <span class="kk">${esc(t.key)}</span>` : ""}</div><h2>${esc(t.title)}</h2></div>
     <div class="sect">
       <div class="fld"><label>Title</label><input id="fTi" value="${esc(t.title)}"></div>
-      <div class="fld"><label>Parent</label><span class="pwrap"><select id="fPa">${popts.join("")}</select>${t.parent_id != null
+      <div class="fld"><label for="fPa">Parent</label><span class="pwrap"><input id="fPa" list="dlParent" autocomplete="off"
+        value="${esc(parentNow)}" placeholder="None: top level. Type to find one"
+        title="Type part of a task's number or name, and pick it from the list"><datalist id="dlParent">${popts.join("")}</datalist>${t.parent_id != null
         ? `<button type="button" id="fOut" title="Out of ${keyAt(t.parent_id)}, to just below it (Alt+Shift+←)">Move out</button>` : ""}</span></div>
       <div class="fld"><label>Status</label>
         <select id="fSt" ${isSum?"disabled":""}>${S.statuses.map(s=>`<option ${s===t.status?"selected":""}>${esc(s)}</option>`).join("")}</select></div>
@@ -5240,6 +6272,13 @@ function drawer(){
         ${[["", "Not set"], ...IMPORTANCE.map(k => [k, IMP_NAME[k]])].map(([v, l]) =>
           `<option value="${v}" ${(t.importance ?? "") === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>
       ${SCORES.has(sel) ? `<p class="hint" style="margin:-2px 0 7px">${esc(scoreTip(SCORES.get(sel)))}</p>` : ""}`}
+      ${isSum ? "" : `<div class="fld"><label>Remind me</label><span class="pwrap rmset"><input id="fRmT" type="time" value="${esc(t.remind_at || "")}"
+          aria-label="Reminder time" title="A time on its day; for a repeating task, each time it comes back">${t.remind_at
+          ? `<button type="button" id="fRmX" class="rmx" title="No reminder" aria-label="Clear the reminder">✕</button>` : ""}</span></div>
+      ${t.remind_at ? `<div class="fld"><label>How early</label><select id="fRmL" aria-label="How long before">${LEADS.map(([v, l]) =>
+          `<option value="${v}"${leadOf(t) === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>` : ""}
+      ${remindMoment(t) ? `<p class="hint" style="margin:-2px 0 7px">Next reminder: ${esc(remindText(t))}. It comes once, while the
+        app is open; File → Export to calendar hands it to your phone.</p>` : ""}`}
       ${isSum ? "" : `<div class="fld"><label>When</label><select id="fWh" title="The part of the day this can be done in: the day planner puts it only there">
         ${[["", "Any time"], ["day", "Day"], ["night", "Night"]].map(([v, l]) =>
           `<option value="${v}" ${(t.when ?? "") === v ? "selected" : ""}>${l}</option>`).join("")}</select></div>`}
@@ -5279,8 +6318,12 @@ function drawer(){
            <div class="fld"><label>Repeats</label><span class="rep"><span class="every"${rpt ? "" : " hidden"}>every</span><input id="fRpN"
              type="number" min="1" max="999" step="1" value="${rn}" aria-label="Every how many"${rpt ? "" : " hidden"}><select id="fRpU"
              aria-label="Repeats">${unitOpts}</select></span></div>
+           ${rpt?.unit === "w" ? `<div class="fld"><label>On</label><span class="spdays rpdays">${DOW.map((d, i) =>
+             `<label class="tog"><input type="checkbox" data-rpd="${i}"${rpt.days?.includes(i) ? " checked" : ""}> ${d}</label>`).join("")}</span></div>` : ""}
+           ${rpt ? `<div class="fld"><label>Comes back to</label><select id="fRpT" title="The column it returns to each time it is done">${
+             S.statuses.filter(s => !S.statusCfg[s]?.done).map((s, i) => `<option value="${esc(s)}"${(S.statuses.includes(t.repeat_to) ? t.repeat_to : S.statuses[0]) === s ? " selected" : ""}>${esc(s)}</option>`).join("")}</select></div>` : ""}
            ${dd.length ? `<p class="hint" style="margin:0 0 7px">Done ${dd.length === 1 ? "once" : `${dd.length} times`}, most recently
-             ${esc(fmtDate(dd[dd.length - 1]))}. Each time it comes back to the first column, same number.</p>` : ""}`}
+             ${esc(fmtDate(dd[dd.length - 1]))}. Each time it comes back, same number.</p>` : ""}`}
       ${bl ? `<div class="fld"><label>Baseline</label><span>${fmtDate(bl[0])} → ${fmtDate(bl[1])}${fslip
                ? ` · <b style="color:${fslip > 0 ? "var(--crit)" : "var(--bar-done)"}">finish ${fslip > 0 ? "+" : "−"}${Math.abs(fslip)} d</b>`
                : " · on plan"}</span></div>` : ""}
@@ -5326,8 +6369,8 @@ function drawer(){
   d.querySelectorAll("details.sect").forEach(n => n.ontoggle = () => setFold(n.dataset.sec, n.open));
   const bind = (id, label, fn) => { const n = el(id); if (n) n.onchange = e => {
     commit(`${label} on ${t.key}`, () => fn(e.target.value)); render(); drawer(); }; };
-  bind("fTi", "Title",    v => t.title = v.trim() || t.title);
-  bind("fSt", "Status",   v => setStatus(t, v));
+  bind("fTi", "Title",    v => EDITS.title(t, v));
+  bind("fSt", "Status",   v => EDITS.status(t, v));
   // People: any change rewrites the whole list through setPeople(), as one entry
   const readPeople = () => [...d.querySelectorAll(".pprow")].map(r => ({
     name: r.querySelector(".ppname").value, pct: r.querySelector(".ppsh")?.value ?? 100}));
@@ -5359,13 +6402,15 @@ function drawer(){
     commitPeople(list, "People");
   });
   if (el("fPpAdd")) el("fPpAdd").onclick = () => { addingPerson = sel; drawer(); el("fAs" + ppl.length)?.focus(); };
-  // whole days: the schedule counts in them (invariant 3), and 1.5 took the chart down
-  bind("fDu", "Duration", v => { t.duration = Math.max(0, Math.round(+v) || 0); push(t); });
-  // whole numbers, about an hour each; anything above nothing is at least one
-  bind("fPt", "Points",   v => { const n = parseFloat(v); t.points = Number.isFinite(n) ? (n > 0 ? Math.max(1, Math.round(n)) : 0) : null; });
-  bind("fWh", "When",     v => { t.when = v === "day" || v === "night" ? v : null; });
-  bind("fIm", "Importance", v => { t.importance = IMPORTANCE.includes(v) ? v : null; });
-  bind("fNb", "Date",     v => { t.not_before = v || null; push(t); });
+  // what each field does to the task is in edits.js, shared with the table
+  bind("fDu", "Duration", v => EDITS.duration(t, v));
+  bind("fPt", "Points",   v => EDITS.points(t, v));
+  bind("fWh", "When",     v => EDITS.when(t, v));
+  bind("fIm", "Importance", v => EDITS.importance(t, v));
+  bind("fRmT", "Reminder", v => { t.remind_at = /^\d{2}:\d{2}$/.test(v) ? v : null; if (!t.remind_at) t.remind_lead = null; else askToNotify(); });
+  bind("fRmL", "Reminder", v => { t.remind_lead = +v > 0 ? +v : null; });
+  if (el("fRmX")) el("fRmX").onclick = () => { commit(`Reminder on ${t.key}`, () => { t.remind_at = null; t.remind_lead = null; }); render(); drawer(); };
+  bind("fNb", "Date",     v => EDITS.not_before(t, v));
   if (el("fNbX")) el("fNbX").onclick = () => {
     commit(`Clear the fixed date on ${t.key}`, () => { t.not_before = null; });
     render(); drawer();
@@ -5383,24 +6428,48 @@ function drawer(){
   bind("fSk", "Starts after", v => { t.start_key = v || null; t.start_days = v ? (Number.isInteger(t.start_days) ? t.start_days : 0) : null; push(t); });
   bind("fSd", "Starts after", v => { const n = parseInt(v, 10); t.start_days = Number.isFinite(n) ? n : 0; push(t); });
   bind("fDk", "Due by",       v => { t.due_key = v || null; });
-  bind("fDd", "Due date",     v => { t.due_date = v || null; });
+  bind("fDd", "Due date",     v => EDITS.due_date(t, v));
   if (el("fDdX")) el("fDdX").onclick = () => { commit(`Clear the due date on ${t.key}`, () => { t.due_date = null; }); render(); drawer(); };
-  bind("fPc", "% done",   v => { const n = parseFloat(v); t.pct = Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : null; });
-  bind("fAS", "Started",  v => { t.actual_start = v || null; });
-  bind("fAF", "Finished", v => {
-    t.actual_finish = v || null;
-    // finished means done: take the card to a done column as well, through
-    // setStatus, so a repeating task still leaves its next one behind
-    if (v && !S.statusCfg[t.status]?.done){ const dn = S.statuses.find(s => S.statusCfg[s]?.done); if (dn) setStatus(t, dn); }
-  });
+  bind("fPc", "% done",   v => EDITS.pct(t, v));
+  bind("fAS", "Started",  v => EDITS.actual_start(t, v));
+  bind("fAF", "Finished", v => EDITS.actual_finish(t, v));
   const repeatVal = () => { const u = el("fRpU").value, n = Math.max(1, Math.round(+el("fRpN").value || 1));
-                            return u ? `${n}${u}` : null; };
-  bind("fRpU", "Repeat",  () => { t.repeat = repeatVal(); });
-  bind("fRpN", "Repeat",  () => { if (el("fRpU").value) t.repeat = repeatVal(); });
-  bind("fSp", "Sprint",   v => { t.sprint = v || null; });
-  // re-parenting journals itself (reparent() checks for loops first); the
-  // second drawer() puts the list back if it refused
-  el("fPa").onchange = e => { reparent(t.id, e.target.value || null); drawer(); };
+                            const days = u === "w" ? [...d.querySelectorAll("[data-rpd]:checked")].map(x => +x.dataset.rpd) : [];
+                            return u ? `${n}${u}` + (days.length ? `@${days.join(",")}` : "") : null; };
+  // Picking days puts its next date on the first of them from today on:
+  // garbage on Tuesdays and Fridays, set up on a Wednesday, is next due
+  // Friday -- whichever order the days were ticked in. Not before can be set
+  // after, to start later.
+  const setRepeat = () => {
+    t.repeat = repeatVal();
+    const r = parseRepeat(t.repeat), today = todayDate();
+    if (r?.days) t.not_before = iso(r.days.includes((today.getUTCDay() + 6) % 7) ? today : stepDate(today, r));
+  };
+  bind("fRpU", "Repeat",  () => setRepeat());
+  bind("fRpN", "Repeat",  () => { if (el("fRpU").value) setRepeat(); });
+  d.querySelectorAll("[data-rpd]").forEach(n => n.onchange = () => { commit(`Repeat on ${t.key}`, setRepeat); render(); drawer(); });
+  bind("fRpT", "Comes back to", v => { t.repeat_to = v === S.statuses[0] ? null : v; });
+  bind("fSp", "Sprint",   v => EDITS.sprint(t, v));
+  // Re-parenting journals itself (reparent() checks for loops first); the
+  // second drawer() puts the field back if it refused. Picked from the list,
+  // or typed: then the one task whose number or name holds what was typed.
+  const pa = el("fPa");
+  pa.onfocus = () => pa.select();                    // typing replaces it, and the list shows what matches
+  pa.onchange = () => {
+    const v = pa.value.trim();
+    let to;
+    if (!v || pmap.has(v)) to = v ? pmap.get(v) : null;
+    else {
+      const q = v.toLowerCase(), hits = [...pmap].filter(([k, id]) => id && k.toLowerCase().includes(q));
+      if (hits.length !== 1){
+        note(hits.length ? `${hits.length} tasks match “${v}”: pick one from the list.` : `No task matches “${v}”.`, {warn:true});
+        return drawer();
+      }
+      to = hits[0][1];
+    }
+    if (to === (t.parent_id ?? null)) return drawer();
+    reparent(t.id, to); drawer();
+  };
   if (el("fOut")) el("fOut").onclick = () => outdent(t.id);
   d.querySelectorAll("[data-link]").forEach(n => n.onclick = () => openLink(n.dataset.link));
   d.querySelectorAll("[data-rmatt]").forEach(n => n.onclick = () => {
@@ -5418,11 +6487,7 @@ function drawer(){
   d.querySelectorAll("[data-cf]").forEach(n => n.onchange = e => {
     const k = n.dataset.cf, v = e.target.value;
     const f = S.fields.find(x => x.name === k);
-    commit(`${f.label} on ${t.key}`, () => {
-      const c = {...t.custom};
-      v === "" ? delete c[k] : c[k] = (n.type === "number" ? +v : v);
-      t.custom = c;                       // replace, don't mutate: the diff needs both
-    });
+    commit(`${f.label} on ${t.key}`, () => setCustom(t, f, v));
     render(); drawer();
   });
   el("cadd").onclick = () => {
@@ -5903,8 +6968,9 @@ function setView(v){
   view = v; quickSlot = null;
   try { localStorage.setItem("pm.view", v); } catch { /* storage blocked */ }
   [...el("vw").children].forEach(c => c.setAttribute("aria-pressed", c.dataset.v === v));
-  // zoom and the Show menu only mean anything on the timeline
-  for (const id of ["zoom","mShow","bToday","gFold"]) el(id).style.display = v === "gantt" ? "" : "none";
+  // zoom and the Show menu only mean anything on the timeline; folding, on the table's tree too
+  for (const id of ["zoom","mShow","bToday","gFold"])
+    el(id).style.display = v === "gantt" || (v === "table" && id === "gFold") ? "" : "none";
   render(); drawer();
 }
 el("vw").onclick = e => {
@@ -6058,6 +7124,18 @@ function icsText(){
     if (parents.has(t.id) || (f && !f.self.has(t.id))) continue;
     const b = bars.get(t.id);
     if (!b || b.unscheduled || b.finished || S.statusCfg[t.status]?.done) continue;
+    if (/^\d{2}:\d{2}$/.test(t.remind_at || "")){
+      // a reminder: a short event at its time on its day, its alert that long before,
+      // repeating as the task does -- the phone's calendar delivers it with the app closed
+      const rr = rruleOf(t), lead = leadOf(t);
+      L.push("BEGIN:VEVENT", `UID:${t.id}@schedule`, `DTSTAMP:${stamp}`,
+        `DTSTART:${d8(b.start)}T${t.remind_at.replace(":", "")}00`, "DURATION:PT15M",
+        `SUMMARY:${txt(`${t.key} ${t.title}`)}`, ...(rr ? [rr] : []),
+        `DESCRIPTION:${txt([t.assignee && `For ${whoText(t)}`, ...(t.attach || []).map(a => a.url)].filter(Boolean).join("\n"))}`,
+        "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${txt(t.title)}`, `TRIGGER:${lead ? `-PT${lead}M` : "PT0M"}`,
+        "END:VALARM", "END:VEVENT");
+      continue;
+    }
     L.push("BEGIN:VEVENT", `UID:${t.id}@schedule`, `DTSTAMP:${stamp}`,
       `DTSTART;VALUE=DATE:${d8(b.finish)}`, `DTEND;VALUE=DATE:${d8(addD(b.finish, 1))}`,
       `SUMMARY:${txt(`Due: ${t.key} ${t.title}`)}`,
@@ -6233,6 +7311,7 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape"){
     // an open menu first, then the search box (which clears itself); only
     // a bare Escape clears the selection
+    if (popMenuEl){ closePopMenu(); return; }
     const open = [...menus()].find(m => m.open);
     if (open){ open.open = false; return; }
     if (e.target === el("q")) return;
@@ -6313,6 +7392,9 @@ el("bSet").onclick = () => {
   el("sHol").value    = (S.holidays || []).join("\n");
   el("sBoardFrom").value = String(S.boardFrom || 1);
   el("sDoneDays").value = S.doneDays ?? "";
+  el("sNum").value = S.numbering || "";
+  const ww = S.workWeek?.length ? S.workWeek : WORK_WEEK_DEFAULT;
+  el("sWeek").innerHTML = DOW.map((d, i) => `<label class="tog"><input type="checkbox" data-wd="${i}"${ww.includes(i) ? " checked" : ""}> ${d}</label>`).join("");
   el("sWarn").hidden  = true;
   dCols   = S.statuses.map(n => ({name:n, orig:n, ...S.statusCfg[n]}));
   dFields = S.fields.map(f => ({...f, orig:f.name, options:[...(f.options||[])]}));
@@ -6551,6 +7633,11 @@ el("sOk").onclick = () => {
     if (bad) return warnSet(`${p.name}'s time off needs a first day and a last day, in that order.`);
   }
 
+  // ---- the work week: null while it is the default, so an older build sees what it expects
+  const wwDays = [...el("sWeek").querySelectorAll("input:checked")].map(n => +n.dataset.wd);
+  if (!wwDays.length) return warnSet("The work week needs at least one day.");
+  const workWeek = wwDays.join() === WORK_WEEK_DEFAULT.join() ? null : wwDays;
+
   // ---- the sprint pattern ----
   const spDays = [...el("spDays").querySelectorAll("input:checked")].map(n => +n.dataset.sd);
   if (el("spOn").checked && !spDays.length) return warnSet("Pick at least one day for the sprints.");
@@ -6567,7 +7654,8 @@ el("sOk").onclick = () => {
   const keyIds = new Set(keys.map(k => k.id));
 
   commit("Project settings", () => {
-    S.name = name; S.origin = origin; S.holidays = hol;
+    S.name = name; S.origin = origin; S.holidays = hol; S.workWeek = workWeek;
+    S.numbering = el("sNum").value === "wbs" ? "wbs" : null;
     S.statuses = names;
     const cfg = {};
     for (const c of dCols)
@@ -6598,6 +7686,7 @@ el("sOk").onclick = () => {
     // a settings list is not a trade worth making.
     for (const t of S.tasks){
       if (moved.has(t.status)) t.status = moved.get(t.status);       // rename, not a move
+      if (t.repeat_to){ const to = moved.get(t.repeat_to) ?? t.repeat_to; t.repeat_to = names.includes(to) ? to : null; }
       if (!names.includes(t.status)) setStatus(t, names[0]);
       if (peopleOf(t).some(p => renamed.has(p.name)))                       // likewise, shares and all
         setPeople(t, peopleOf(t).map(p => ({...p, name: renamed.get(p.name) ?? p.name})));
@@ -6671,6 +7760,7 @@ const TASK_RULES = {
   sprint:        [opt(isStr), "must be a sprint id"],
   pos:           [opt(isNum), "must be a number"],
   cpos:          [opt(isNum), "must be a number"],
+  spos:          [opt(isNum), "must be a number"],
   custom:        [opt(isObj), "must be a set of fields"],
   attach:        [opt(listOf(a => isObj(a) && isStr(a.url) && opt(isStr)(a.label))), "must be a list of links"],
   done_dates:    [opt(listOf(isDay)), "must be a list of dates"],
@@ -6682,6 +7772,9 @@ const TASK_RULES = {
   due_date:      [opt(isDay), "must be a date"],
   popup:         [opt(v => typeof v === "boolean"), "must be yes or no"],
   rush:          [opt(v => typeof v === "boolean"), "must be yes or no"],
+  repeat_to:     [opt(isStr), "must be a column"],
+  remind_at:     [opt(v => isStr(v) && /^([01]\d|2[0-3]):[0-5]\d$/.test(v)), "must be a time"],
+  remind_lead:   [opt(v => Number.isInteger(v) && v >= 0 && v <= 10080), "must be minutes"],
 };
 const PROJECT_RULES = {
   name:      ["name", opt(isStr), "must be text"],
@@ -6703,6 +7796,9 @@ const PROJECT_RULES = {
               "must each have a name, a number or nothing for a limit, and seven days of room if a week"],
   keyDates:  ["key dates", opt(listOf(k => isObj(k) && isStr(k.id) && !!k.id && isStr(k.name) && isDay(k.date))),
               "must each have a name and a date"],
+  numbering: ["task numbers", opt(v => v === "wbs"), "must be WBS, or nothing for the keys"],
+  workWeek:  ["work week", opt(v => listOf(i => Number.isInteger(i) && i >= 0 && i <= 6)(v) && v.length > 0 && new Set(v).size === v.length),
+              "must be one to seven different days of the week"],
   sprintPattern: ["sprint pattern", opt(p => isObj(p) && listOf(i => Number.isInteger(i) && i >= 0 && i <= 6)(p.days)
                 && opt(v => Number.isInteger(v) && v >= 1)(p.every) && opt(v => Number.isInteger(v) && v >= 1 && v <= 26)(p.ahead)
                 && opt(isDay)(p.from) && opt(listOf(isDay))(p.skip)), "must be days of the week, how often and how far ahead"],
@@ -6820,7 +7916,9 @@ function normalize(st){
   st.fields    = st.fields   || [];
   st.people    = st.people   || [];
   st.keyDates  = st.keyDates || [];      // named dates tasks start after or are due by; see keydates.js
-  st.sprintPattern = st.sprintPattern ?? null;   // sprints made by themselves; see sprintauto.js      // points-per-week limits; see workload()
+  st.sprintPattern = st.sprintPattern ?? null;   // sprints made by themselves; see sprintauto.js
+  st.workWeek  = st.workWeek ?? null;    // working days, Monday 0; null is Monday to Friday
+  st.numbering = st.numbering ?? null;  // "wbs" shows WBS numbers in place of keys; see wbsAll()      // points-per-week limits; see workload()
   st.boardFrom = st.boardFrom || 1;      // first level of the tree that gets cards
   if (st.doneDays === undefined) st.doneDays = 14;   // days of finished cards a done column shows; null: all
   st.baseline  = st.baseline  || null;   // never undefined: undo JSON.parses it back
@@ -7006,6 +8104,7 @@ async function load(){
       adopt(rec);
       if (topUpSprints()) render();
       warnUnderPlanned();
+      checkReminders(new Date(), true);         // what went by while the app was closed, in one line
       offerClearStarts();
       // A file carrying its own project, opened where a DIFFERENT project
       // is already saved. Silently ignoring the file would be baffling --
